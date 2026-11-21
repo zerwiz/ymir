@@ -52,6 +52,8 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   done
   unset _c
 fi
+[ -r "$ROOT/bin/time/sol-lib.sh" ] && . "$ROOT/bin/time/sol-lib.sh"
+command -v sol_stamped >/dev/null 2>&1 || sol_stamped() { printf '%s — %s' "$(date '+%Y-%m-%d %H:%M %Z')" "$*"; }
 STATE=""; hoard_state_dir STATE 2>/dev/null || true
 [ -n "$STATE" ] || { printf 'review-watch: the state dir is unresolved\n' >&2; exit 1; }
 
@@ -102,9 +104,29 @@ esac
 [ "$KEEPER_FLAG" = 1 ] && KEEPER=1
 [ -n "$JUDGE" ] || [ -n "$TIMER_ACTION" ] && KEEPER=0
 if [ "${#REPOS[@]}" -eq 0 ] && [ "$KEEPER" = 1 ] && [ -z "${YMIR_REVIEW_REPOS:-}" ]; then
-  # the keeper watches every repository the registry's git{} blocks name — never a guessed list
-  mapfile -t REPOS < <(python3 "$ROOT/bin/forge/warden-policy.py" repos 2>/dev/null | sed -n 's/^  "\(.*\)"$/\1/p')
-  [ "${#REPOS[@]}" -gt 0 ] || die "the registry names no repository (warden-policy.py repos) — the keeper has nothing it may watch"
+  # the keeper watches only the KEPT repositories: owned by the operator's own login (read from the
+  # home), or marked `git.keep: true` in the registry. A registry row may name an upstream the house
+  # merely tracks; the keeper never judges, comments or merges there (review of #863, 2026-11-21).
+  mapfile -t REPOS < <(python3 "$ROOT/bin/forge/warden-policy.py" kept 2>/dev/null | sed -n 's/^  "\(.*\)"$/\1/p')
+  [ "${#REPOS[@]}" -gt 0 ] || die "no repository is kept (warden-policy.py kept: none owned by the operator's login, none marked git.keep: true) — the keeper has nothing it may watch"
+fi
+if [ "$KEEPER" = 1 ]; then
+  # an explicit --repo or YMIR_REVIEW_REPOS is filtered by the same law: a repository that is not kept
+  # is dropped by name, never watched. YMIR_REVIEW_REPOS is read HERE, before the filter (review of
+  # #863, second rework): read after it, REPOS was still empty and the keeper died with 'no kept
+  # repository is left to watch' even for a kept repository.
+  if [ "${#REPOS[@]}" -eq 0 ] && [ -n "${YMIR_REVIEW_REPOS:-}" ]; then
+    # shellcheck disable=SC2206
+    IFS=', ' read -r -a REPOS <<<"$YMIR_REVIEW_REPOS"
+  fi
+  _kept=()
+  for _r in "${REPOS[@]}"; do
+    [ -n "$_r" ] || continue
+    if python3 "$ROOT/bin/forge/warden-policy.py" keeps "$_r" >/dev/null 2>&1; then _kept+=("$_r")
+    else printf 'review-watch: %s is not kept (not the operator'"'"'s own, not git.keep: true) — the keeper leaves it alone\n' "$_r" >&2; fi
+  done
+  REPOS=("${_kept[@]}"); unset _kept _r
+  [ "${#REPOS[@]}" -gt 0 ] || die "no kept repository is left to watch"
 fi
 if [ "${#REPOS[@]}" -eq 0 ]; then
   # shellcheck disable=SC2206
@@ -238,6 +260,10 @@ PY
   command -v "$judge_h" >/dev/null 2>&1 || seat_here=0
   [ "${YMIR_REVIEW_SEAT_HERE:-auto}" = 0 ] && seat_here=0
   [ "${YMIR_REVIEW_SEAT_HERE:-auto}" = 1 ] && seat_here=1
+  pr_key() {  # <owner/repo> <n> → pr-<owner>--<repo>-<n> (the spine's key, bin/agents/eindri-review-spawn.sh)
+    local slug; slug="$(printf '%s' "$1" | tr 'A-Z' 'a-z')"
+    printf 'pr-%s--%s-%s' "${slug%%/*}" "${slug#*/}" "$2"
+  }
   hand_to() {  # <host> <line> — the arm wire AND a turn typed into the holder's herdr pane
     local h="$1" l="$2" road okw=0
     timeout 60 bash "${YMIR_ARM_SEND_DOOR:-$ROOT/bin/fleet/arm-send.sh}" "$h" "$l" >/dev/null 2>&1 && okw=1
@@ -248,6 +274,7 @@ except Exception: x = {}
 if x.get("user") and x.get("tailnet"): print(f"{x['user']}@{x['tailnet']}")
 PY
 )"
+    [ "${YMIR_NO_INJECT:-0}" = 1 ] && road=""   # a test types into nobody's pane
     if [ -n "$road" ] && timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=6 "$road" \
         "d=\${YMIR_RUNTIME_DIR:-\$HOME/ymir-runtime}; [ -f \$d/bin/agents/eindri-notify.sh ] || d=\$HOME/ymir; cd \$d && bash bin/agents/eindri-notify.sh --from review-watch -- $(printf '%q' "$l")" \
         </dev/null >/dev/null 2>&1; then okw=1; fi
@@ -274,6 +301,22 @@ for row in doc.get("projects") or []:
                 print(p); sys.exit(0)
 PY
   }
+  # the operator's own GitHub logins, read once from the home (the same rule as pr-seal.sh's merge hand)
+  operator_logins=" $(python3 "$ROOT/bin/forge/warden-policy.py" operator-logins 2>/dev/null | tr 'A-Z' 'a-z' | tr '\n' ' ') "
+  judged_on_pr() {  # <owner/repo> <n> <head> — does the PR carry the judge's comment naming this head?
+    # judge-merge.sh writes 'The judge approved head `<12>`' or 'The judge asks for rework on head `<12>`'
+    # under the operator's own login. This is a public repository: anyone may comment, so a match
+    # counts ONLY when its author is one of the operator's logins — a stranger's comment that copies
+    # the judge's words must never take a head out of review (review of #863, third rework).
+    local login body
+    while IFS=$'\t' read -r login body; do
+      login="$(printf '%s' "$login" | tr 'A-Z' 'a-z')"
+      [ -n "$login" ] || continue
+      case "$operator_logins" in *" $login "*) ;; *) continue ;; esac
+      printf '%s\n' "$body" | grep -qE "^The judge (approved|asks for rework on) head \`${3:0:12}\`" && return 0
+    done < <(gh pr view "$2" -R "$1" --json comments -q '.comments[] | [.author.login, .body] | @tsv' 2>/dev/null)
+    return 1
+  }
   if [ "$seat_here" = 1 ]; then handed_max="${YMIR_REVIEW_HANDOFF_MAX:-1}"; else handed_max="${YMIR_REVIEW_HANDOFF_MAX:-3}"; fi
   handed=0; spawned=0; waiting=0; SEEN=0
   printf 'review-watch[keeper]{repos,inflight,judge_here,handoff}:\n  "%s","%s","%s","%s"\n' "${REPOS[*]}" "$inflight" \
@@ -285,8 +328,43 @@ PY
     while IFS=$'\t' read -r num head url; do
       [ -n "$num" ] || continue
       SEEN=$((SEEN + 1))
+      # the PR's one name on the review shelf carries its repository (pr-<owner>--<repo>-<n>), the
+      # same key bin/agents/eindri-review-spawn.sh writes — PR #7 of two repositories is two PRs
+      key="$(pr_key "$repo" "$num")"
+      handed_mark="$STATE/.reviewed/handed-$key.$head"
+      # a hand-off nobody acted on EXPIRES (review of #863): after YMIR_REVIEW_HANDOFF_TTL seconds
+      # (default 1h) with no judge seated for the head, the marker is dropped and the head handed on
+      # again — an unacted hand-off must never leave a head unjudged forever
+      #
+      # The home's state/ is not shared between machines (it is gitignored), so the seat that judged a
+      # handed head leaves no marker HERE. Before handing on, the PR itself is asked: a judge's comment
+      # naming this head means a verdict exists. And a head is re-handed at most
+      # YMIR_REVIEW_REHAND_MAX times (default 2); after that ONE wake is raised for the helm instead of
+      # typing the same line into a seat's pane every hour, forever (review of #863, second rework).
+      if [ -e "$handed_mark" ] && [ ! -e "$STATE/.reviewed/$key.$head" ] \
+         && [ $(( $(date +%s) - $(stat -c %Y "$handed_mark" 2>/dev/null || echo 0) )) -ge "${YMIR_REVIEW_HANDOFF_TTL:-3600}" ]; then
+        rehand_file="$STATE/.reviewed/rehanded-$key.$head"
+        rehands="$(cat "$rehand_file" 2>/dev/null)"; case "$rehands" in ''|*[!0-9]*) rehands=0 ;; esac
+        if judged_on_pr "$repo" "$num" "$head"; then
+          [ "$DRY" = 1 ] || printf 'judged elsewhere: the judge commented on %s#%s at %s\n' "$repo" "$num" "$head" >"$STATE/.reviewed/$key.$head"
+          printf '  "%s#%s","%s","the judge already commented on this head (another seat judged it) — not handed again"\n' "$repo" "$num" "${head:0:12}"
+          continue
+        fi
+        if [ "$rehands" -ge "${YMIR_REVIEW_REHAND_MAX:-2}" ]; then
+          woke="$STATE/.reviewed/rehand-woke-$key.$head"
+          if [ ! -e "$woke" ] && [ "$DRY" != 1 ]; then
+            printf '%s\tclass=report\n' "$(sol_stamped "review-watch: $repo PR #$num head ${head:0:12} was handed $((rehands + 1)) times and no judge's verdict reached the PR — seat a judge for it by hand: bin/agents/eindri-review-spawn.sh --pr $url")" \
+              >>"$STATE/.wake-queue" 2>/dev/null && : >"$woke"
+          fi
+          printf '  "%s#%s","%s","handed %s times with no verdict on the PR — one wake raised for the helm, not handed again"\n' "$repo" "$num" "${head:0:12}" "$((rehands + 1))"
+          continue
+        fi
+        if [ "$DRY" != 1 ]; then rm -f "$handed_mark"; printf '%s\n' "$((rehands + 1))" >"$rehand_file"; fi
+        printf '  "%s#%s","%s","the hand-off expired with no judge seated — handed on again"\n' "$repo" "$num" "${head:0:12}"
+        [ "$DRY" = 1 ] && handed_mark="$handed_mark.expired-dry"
+      fi
       # a verdict exists — or is coming — for this head: the spine's marker, any judged record, a handoff
-      if [ -e "$STATE/.reviewed/pr-$num.$head" ] || [ -e "$STATE/.reviewed/handed-pr-$num.$head" ] \
+      if [ -e "$STATE/.reviewed/$key.$head" ] || [ -e "$handed_mark" ] \
          || grep -lqs "^head=$head\$" "$STATE/.reviewed/"*.judged; then
         continue
       fi
@@ -311,11 +389,14 @@ PY
       fi
       if [ "${#dev_hosts[@]}" -gt 0 ] && [ "$handed" -lt "$handed_max" ]; then
         handoff_host="${dev_hosts[$((handed % ${#dev_hosts[@]}))]}"
-        line="review PR $url at head ${head:0:12} with the judge (harness $judge_h) in a herdr pane on your seat — $([ "$seat_here" = 1 ] && echo "the keeper's judge is busy" || echo "the keeper has no $judge_h CLI"): bin/agents/eindri-review-spawn.sh --pr $url"
+        # the line carries the repository and its clone, resolved from the registry (the home is the
+        # fleet's, so the path is the receiving seat's too): a judge must sit in THAT repo's clone
+        hproj="$(clone_of "$repo")"
+        line="review PR $url ($repo) at head ${head:0:12} with the judge (harness $judge_h) in a herdr pane on your seat — $([ "$seat_here" = 1 ] && echo "the keeper's judge is busy" || echo "the keeper has no $judge_h CLI"): bin/agents/eindri-review-spawn.sh --pr $url${hproj:+ --project $hproj}"
         if [ "$DRY" = 1 ]; then
           printf '  "%s#%s","%s","would hand to %s"\n' "$repo" "$num" "${head:0:12}" "$handoff_host"
         elif hand_to "$handoff_host" "$line"; then
-          printf 'handed to %s at %s\n' "$handoff_host" "$(date -u +%FT%TZ)" >"$STATE/.reviewed/handed-pr-$num.$head"
+          printf 'handed to %s at %s\n' "$handoff_host" "$(date -u +%FT%TZ)" >"$handed_mark"
           printf '  "%s#%s","%s","handed to %s (arm wire and pane)"\n' "$repo" "$num" "${head:0:12}" "$handoff_host"
         else
           printf 'review-watch: the hand-off of %s#%s to %s did not land — it waits for the next pass\n' "$repo" "$num" "$handoff_host" >&2

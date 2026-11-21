@@ -34,10 +34,10 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "LICENSE","MIT No Attribution License","data","wired","keep",3,8
   "LICENSE.MIT","MIT License","data","wired","keep",1,22
   "LICENSE.txt","The arc42 template and documentation is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.","data","wired","keep",1,19
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",68,-
-  "README.md","The collaboration kit — the same discipline in every repository, and nothing left behind","data","tested","keep",68,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",68,-
-  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",68,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",69,-
+  "README.md","The collaboration kit — the same discipline in every repository, and nothing left behind","data","tested","keep",69,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",69,-
+  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",69,-
   "TEMPLATE.md","---","data","wired","keep",5,48
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "__init__.py","'''kitlib — the collaboration kit's modules, imported by scripts/kit.py.'''","tool","tested","migrate → src/ymir_runtime/tests/__init__.py",2,3
@@ -64,7 +64,7 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "collaborator-door.md","---","data","wired","keep",3,101
   "concept.md","Concept template","data","wired","keep",1,116
   "config.py","'''config — one file, project.yaml, read by every kit tool; defaults for everything it leaves out.","tool","wired","keep",1,255
-  "containers.py","'''containers — the door every container and image command of a project goes through.","tool","wired","keep",2,185
+  "containers.py","'''containers — the door every container and image command of a project goes through.","tool","wired","keep",3,185
   "containers.sh","containers.sh — the container door (RULES/23): builds here, never removes on a product host.","tool","wired","keep",3,9
   "decision-minimal.md","{short title, representative of solved problem and found solution}","data","wired","keep",1,30
   "decision.md","---","data","wired","keep",1,80
@@ -108,7 +108,7 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",2,31
   "node.yaml","project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).","data","wired","keep",0,55
   "notices.md","---","data","wired","keep",1,52
-  "notify.sh","notify.sh — hand a gate's refusal to whoever should hear it, not only to the terminal that typed the command.","tool","tested","keep",29,38
+  "notify.sh","notify.sh — hand a gate's refusal to whoever should hear it, not only to the terminal that typed the command.","tool","tested","keep",31,38
   "plan.md","---","data","tested","keep",11,58
   "platform.py","'''platform — the one place the kit asks the operating system to stop a process.","tool","wired","keep",1,33
   "pr-check.sh","pr-check — is every commit that exists proposed for review?","tool","tested","keep",7,26

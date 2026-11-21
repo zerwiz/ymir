@@ -42,6 +42,9 @@ gated (the door still keeps every other law of the house).
     warden-policy.py identity <door>         # the name the machine gives that duty (may be empty)
     warden-policy.py owns <owner/repo>       # exit 0 when the operator's registry lists it
     warden-policy.py repos                   # every repository the operator's registry claims
+    warden-policy.py operator-logins         # the GitHub logins the home records as the operator's own
+    warden-policy.py kept                    # the repositories the keeper may judge, comment on and merge
+    warden-policy.py keeps <owner/repo>      # exit 0 when the keeper may act on that repository
 
 Exit: 0 yes · 1 no (the answer is no, and that is not an error) · 2 usage or a file that cannot be read.
 """
@@ -245,6 +248,70 @@ def owns(home: Path, target: str) -> tuple[bool, str]:
     return False, f"{target} is not in {source} — an outward act touches only the operator's own repositories"
 
 
+# ── the operator's own hand, and the keeper's repositories (RULES/08, 2026-11-21) ──
+# A registry row names a repository the house WORKS with — an upstream it tracks (a project it
+# vendors) is listed too. The keeper judges, comments and merges only where the hand is the
+# operator's: a repository OWNED by one of the operator's logins, or one the registry marks
+# `git.keep: true` (an organisation's repository the operator keeps). `git.keep: false` refuses
+# even an owned one. Nothing is guessed: the logins come from the home, never from a repo slug.
+def _as_list(value) -> list[str]:
+    if isinstance(value, str):
+        return [v.strip() for v in value.replace(",", " ").split() if v.strip()]
+    if isinstance(value, dict):
+        return _as_list(value.get("login") or value.get("logins") or "")
+    if isinstance(value, (list, tuple)):
+        out: list[str] = []
+        for v in value:
+            out.extend(_as_list(v))
+        return out
+    return []
+
+
+def operator_logins(home: Path) -> list[str]:
+    """YMIR_OPERATOR_GITHUB, else operator.yaml `github` (or allfather.github), else its `aliases`."""
+    env = os.environ.get("YMIR_OPERATOR_GITHUB", "").strip()
+    if env:
+        return [v.lower() for v in _as_list(env)]
+    path = Path(os.environ.get("YMIR_OPERATOR_FILE") or home / "hodd" / "identity" / "operator.yaml")
+    try:
+        doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return []
+    if not isinstance(doc, dict):
+        return []
+    for value in (doc.get("github"), (doc.get("allfather") or {}).get("github")
+                  if isinstance(doc.get("allfather"), dict) else None):
+        names = _as_list(value)
+        if names:
+            return [v.lower() for v in names]
+    return [v.lower() for v in _as_list(doc.get("aliases"))]
+
+
+def kept_repos(home: Path) -> list[str]:
+    logins = set(operator_logins(home))
+    path = registry_path(home)
+    try:
+        doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return []
+    found: set[str] = set()
+    for row in (doc.get("projects") or []):
+        if not isinstance(row, dict):
+            continue
+        git = row.get("git") or {}
+        if not isinstance(git, dict):
+            continue
+        owner, repo = norm(git.get("owner")), norm(git.get("repo"))
+        if not (owner and repo):
+            continue
+        keep = git.get("keep")
+        if keep is False or str(keep).lower() in ("false", "no", "off", "0"):
+            continue
+        if keep is True or str(keep).lower() in ("true", "yes", "on", "1") or owner.lower() in logins:
+            found.add(f"{owner}/{repo}".lower())
+    return sorted(found)
+
+
 # ── output ─────────────────────────────────────────────────────────────────
 def toon_rows(name: str, rows: list[tuple[str, ...]], cols: list[str]) -> str:
     out = [f"{name}[{len(rows)}]{{{','.join(cols)}}}:"
@@ -346,6 +413,29 @@ def main(argv: list[str]) -> int:
         print(toon_rows("repos", [(r,) for r in sorted(repos)], ["repo"]))
         print(f"# {source}")
         return 0 if repos else 1
+
+    if verb == "operator-logins":
+        names = operator_logins(home)
+        for n in names:
+            print(n)
+        return 0 if names else 1
+
+    if verb == "kept":
+        repos = kept_repos(home)
+        print(toon_rows("kept", [(r,) for r in repos], ["repo"]))
+        return 0 if repos else 1
+
+    if verb == "keeps":
+        if len(args) < 2:
+            print("usage: warden-policy.py keeps <owner/repo>", file=sys.stderr)
+            return 2
+        target = args[1].strip().strip("/").removesuffix(".git").lower()
+        if target in kept_repos(home):
+            print(f"{target} is kept", file=sys.stderr)
+            return 0
+        print(f"{target} is not kept — not owned by the operator's login and not marked git.keep: true; "
+              "the keeper judges, comments and merges nowhere else", file=sys.stderr)
+        return 1
 
     print(f"warden-policy: unknown verb {verb}", file=sys.stderr)
     return 2

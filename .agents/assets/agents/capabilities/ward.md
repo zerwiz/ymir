@@ -26,6 +26,8 @@
 | test_garmr_identity_named.sh | test_garmr_identity_named.sh — a CRITICAL must name what changed, or i | tested | keep (a human or a cron row must run it) |
 | test_restart_storm.sh | test_restart_storm.sh — the storm ward's proof, with no real fault (pl | tested | keep (a human or a cron row must run it) |
 | test_soak_sampler.sh | test_soak_sampler.sh — the leak ledger's proof, without a real leak (p | tested | keep (a human or a cron row must run it) |
+| test_trouble.sh | test_trouble.sh — the trouble panel's proof, with no real fault (plan  | tested | keep (a human or a cron row must run it) |
+| trouble.sh | trouble.sh — the trouble panel: the house says it is in trouble before | tested | keep (a human or a cron row must run it) |
 | verdr.sh | verdr.sh — VÖRÐR, the warden: the standing report. | tested | keep (a human or a cron row must run it) |
 | vidarr-agent.sh | vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast roa | tested | keep (a human or a cron row must run it) |
 | vidarr.sh | vidarr.sh — VÍÐARR, the silent avenger: the defender's own door. | tested+named | keep (a human or a cron row must run it) |

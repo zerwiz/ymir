@@ -30,7 +30,7 @@ bin[35]{file,does,kind,verdict,disposition,callers,lines}:
   "kokoro_url.py","'''kokoro_url.py — the Python face of bin/voice/kokoro-lib.sh (plan 326.0, Rule 07).","tool","wired","keep",0,55
   "mic-check.sh","mic-check.sh — what the microphone gives the machine, measured, never guessed (plan 326.6).","tool","wired","keep",1,98
   "model-sync.sh","model-sync.sh — take the voice models over the LOCAL NETWORK, never from the internet.","tool","wired","keep",0,99
-  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","tested","keep",17,676
+  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","tested","keep",18,676
   "rodd-head.py","'''rodd-head.py — whose mind answers in Rödd's window, and where that key lives.","tool","tested","keep",3,234
   "rodd-helm.sh","rodd-helm.sh — Nanna's duty loop: she holds the helm and carries its five duties.","tool","wired","keep",2,227
   "rodd-room.sh","rodd-room.sh — the ARM HOLDER's half of Rödd's room: the one writer of <state>/rodd/room.jsonl.","tool","wired","keep",1,43
@@ -53,7 +53,7 @@ bin[35]{file,does,kind,verdict,disposition,callers,lines}:
   "voice-model-lib.sh","voice-model-lib.sh — WHERE THE VOICE'S MODEL WEIGHTS LIVE, and the one pinned upstream.","lib","wired","keep",3,72
   "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",1,434
   "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,407
-  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,3335
+  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",5,3335
   "voices.py","'''voices.py — every Kokoro voice this machine holds, by id and by name (plan 326.1–326.5).","tool","wired","keep",1,371
   "voices.sh","voices.sh — the door to every Kokoro voice on this machine (plan 326.1–326.5).","tool","wired","keep",3,41
   "ymir-vad.py","'''","tool","wired","keep",3,183

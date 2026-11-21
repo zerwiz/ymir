@@ -44,6 +44,8 @@ esac
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   . "$ROOT/bin/vault/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1
 fi
+[ -r "$ROOT/bin/time/sol-lib.sh" ] && . "$ROOT/bin/time/sol-lib.sh"
+command -v sol_stamped >/dev/null 2>&1 || sol_stamped() { printf '%s — %s' "$(date '+%Y-%m-%d %H:%M %Z')" "$*"; }
 STATE=""; hoard_state_dir STATE
 [ -n "$STATE" ] || { printf 'judge-merge: the state dir is unresolved\n' >&2; exit 1; }
 REVIEWED="$STATE/.reviewed"
@@ -64,7 +66,7 @@ for a in "$@"; do case "$a" in --dry-run) DRY=1 ;; *) ARGS+=("$a") ;; esac; done
 say() { printf '%s\n' "$*"; }
 
 # ── the verdict block, read from the report's tail ─────────────────────────────────────────────
-parse_verdict() {  # <report> → result<TAB>count<TAB>list<TAB>judged-head
+parse_verdict() {  # <report> → result<US>count<US>list<US>judged-head (US = \x1f)
   python3 - "$1" <<'PY'
 import csv, io, re, sys
 text = open(sys.argv[1], encoding="utf-8", errors="replace").read()
@@ -85,7 +87,9 @@ for i in range(len(lines) - 1, -1, -1):
         items = row[2].strip() if len(row) > 2 else ""
         break
 m = re.findall(r"judged-head:\s*([0-9a-f]{40})", text)
-print("\t".join([result, count.replace("\t", " "), items.replace("\t", " ").replace("\n", " "), m[-1] if m else ""]))
+# \x1f, not a tab: a tab is IFS whitespace, so an empty field (an APPROVE with no list) would fold
+# and shift the judged-head into the list
+print("\x1f".join([result, count.replace("\x1f", " "), items.replace("\x1f", " ").replace("\n", " "), m[-1] if m else ""]))
 PY
 }
 
@@ -109,19 +113,34 @@ wake_author() {  # <repo> <n> <task> <items> <head>
   # either may be down (the arm wire failed on 2026-11-21): the arm wire (rodd-arm tell / arm-send)
   # AND a turn typed into the holder's herdr pane (eindri-notify). The holder starts a coder errand
   # on the PR's branch; when the coder's new head lands, review-watch seats the judge for it again.
-  local repo="$1" n="$2" task="$3" items="$4" head="$5" json body branch host line road
-  json="$(gh pr view "$n" -R "$repo" --json body,headRefName 2>/dev/null || true)"
+  local repo="$1" n="$2" task="$3" items="$4" head="$5" json body branch host line road author ops
+  json="$(gh pr view "$n" -R "$repo" --json body,headRefName,author 2>/dev/null || true)"
   body="$(printf '%s' "$json" | python3 -c 'import json,sys
 try: print(json.load(sys.stdin).get("body") or "")
 except Exception: pass' 2>/dev/null)"
   branch="$(printf '%s' "$json" | python3 -c 'import json,sys
 try: print(json.load(sys.stdin).get("headRefName") or "")
+except Exception: pass' 2>/dev/null | tr -cd 'A-Za-z0-9._/-')"
+  author="$(printf '%s' "$json" | python3 -c 'import json,sys
+try: print(((json.load(sys.stdin).get("author") or {}).get("login") or "").lower())
 except Exception: pass' 2>/dev/null)"
-  host="$(printf '%s\n' "$body" | sed -nE 's/^[[:space:]]*Arm:[[:space:]]*([^@[:space:]]+@)?([A-Za-z0-9._-]+)[[:space:]]*$/\2/p' | head -1)"
+  # The 'Arm: <host>' line in the PR body names the seat that opened it. This is a public repository:
+  # anyone may open a PR and write any body, so the line is believed ONLY when the PR's author is one
+  # of the operator's own logins (warden-policy.py operator-logins, the rule pr-seal.sh uses); from
+  # anyone else the rework goes to this machine's arm holder (review of #863, third rework).
+  ops=" $(python3 "$ROOT/bin/forge/warden-policy.py" operator-logins 2>/dev/null | tr 'A-Z' 'a-z' | tr '\n' ' ') "
+  host=""
+  if [ -n "$author" ]; then
+    case "$ops" in *" $author "*)
+      host="$(printf '%s\n' "$body" | sed -nE 's/^[[:space:]]*Arm:[[:space:]]*([^@[:space:]]+@)?([A-Za-z0-9._-]+)[[:space:]]*$/\2/p' | head -1)" ;;
+    esac
+  fi
   [ -n "$host" ] || host="$ME"
   line="PR #$n ($repo) NEEDS-REWORK from the judge at head ${head:0:12}: $items — start a coder errand on branch ${branch:-the branch of the PR} to fix these items and push to that same branch; the judge reviews the new head and an APPROVE on green merges at once."
   if [ "$DRY" = 1 ]; then say "  would hand the rework to the arm holder on $host: $line"; return 0; fi
-  printf '%s\n' "$line" >>"$QUEUE" 2>/dev/null || true
+  # the house wake format: '<sol stamp> — <text>\tclass=<kind>' (bin/agents/eindri-wake-lib.sh); a
+  # rework is a report the arm holder acts on
+  printf '%s\tclass=report\n' "$(sol_stamped "judge $line")" >>"$QUEUE" 2>/dev/null || true
   if [ "$host" = "$ME" ]; then
     timeout 30 bash "$RODD" tell --from judge "$line" >/dev/null 2>&1 \
       || printf 'judge-merge: the arm wire did not take the rework for %s#%s here\n' "$repo" "$n" >&2
@@ -138,6 +157,7 @@ except Exception: h = {}
 if h.get("user") and h.get("tailnet"): print(f"{h['user']}@{h['tailnet']}")
 PY
 )"
+  [ "${YMIR_NO_INJECT:-0}" = 1 ] && road=""   # a test types into nobody's pane
   if [ -n "$road" ]; then
     timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=6 "$road" \
       "d=\${YMIR_RUNTIME_DIR:-\$HOME/ymir-runtime}; [ -f \$d/bin/agents/eindri-notify.sh ] || d=\$HOME/ymir; cd \$d && bash bin/agents/eindri-notify.sh --from judge -- $(printf '%q' "$line")" \
@@ -146,6 +166,77 @@ PY
   else
     printf 'judge-merge: no road to %s in the fleet registry — the rework stands in the arm wire and the local queue\n' "$host" >&2
   fi
+}
+
+clone_of() {  # <owner/repo> → the local clone the registry names (this tree for its own origin)
+  local r="$1" mine
+  mine="$(git -C "$ROOT" remote get-url origin 2>/dev/null | sed -E 's#\.git$##; s#^.*github\.com[:/]##' | tr 'A-Z' 'a-z')"
+  if [ -n "$mine" ] && [ "$mine" = "$(printf '%s' "$r" | tr 'A-Z' 'a-z')" ]; then printf '%s\n' "$ROOT"; return; fi
+  python3 - "${PROJECTS_YAML:-$FLEET_HOME/hodd/identity/projects.yaml}" "$r" "$FLEET_HOME" <<'PY' 2>/dev/null
+import os, sys, yaml
+path, want, home = sys.argv[1], sys.argv[2].lower(), sys.argv[3]
+try: doc = yaml.safe_load(open(path)) or {}
+except Exception: doc = {}
+for row in doc.get("projects") or []:
+    if not isinstance(row, dict): continue
+    g = row.get("git") or {}
+    if f"{g.get('owner','')}/{g.get('repo','')}".lower() != want: continue
+    for key in ("local_clone", "repo"):
+        v = row.get(key)
+        if isinstance(v, str) and v:
+            p = os.path.expanduser(os.path.expandvars(v.replace("$YMIR_HOME", home)))
+            if os.path.exists(os.path.join(p, ".git")):
+                print(p); sys.exit(0)
+PY
+}
+
+pr_field() {  # <json> <key> [default]
+  printf '%s' "$1" | python3 -c 'import json,sys
+try: print(json.load(sys.stdin).get(sys.argv[1]) or sys.argv[2])
+except Exception: print(sys.argv[2])' "$2" "${3:-}" 2>/dev/null
+}
+
+carry_over() {  # <repo> <n> <approved> <rid> → 0 when the approval carried to the new head and merged
+  local repo="$1" n="$2" approved="$3" rid="$4" json cur base basename clone out rc
+  json="$(gh pr view "$n" -R "$repo" --json headRefOid,baseRefOid,baseRefName 2>/dev/null || true)"
+  cur="$(pr_field "$json" headRefOid)"; base="$(pr_field "$json" baseRefOid)"; basename="$(pr_field "$json" baseRefName main)"
+  [ -n "$cur" ] && [ -n "$base" ] || { say "judge-merge: $rid — the new head cannot be read; the approval does not carry"; return 1; }
+  clone="$(clone_of "$repo")"
+  [ -n "$clone" ] || { say "judge-merge: $rid — no local clone of $repo is named; the approval does not carry"; return 1; }
+  if ! git -C "$clone" cat-file -e "$cur^{commit}" 2>/dev/null || ! git -C "$clone" cat-file -e "$base^{commit}" 2>/dev/null \
+     || ! git -C "$clone" cat-file -e "$approved^{commit}" 2>/dev/null; then
+    timeout 120 git -C "$clone" fetch -q origin "refs/pull/$n/head" "$basename" >/dev/null 2>&1 || true
+  fi
+  out="$(python3 "$ROOT/bin/forge/judge-carry.py" "$clone" "$approved" "$cur" "$base" 2>&1)"; rc=$?
+  printf '%s\n' "$out"
+  [ "$rc" = 0 ] || return 1
+  say "judge-merge: $rid — the approval of ${approved:0:12} carries to ${cur:0:12} (only base merges and change-log lines since)"
+  if [ "$DRY" = 1 ]; then say "  would run: $SEAL seal $n --repo $repo --head $cur --review $rid"; return 0; fi
+  out="$("$SEAL" seal "$n" --repo "$repo" --head "$cur" --review "$rid" 2>&1)"; rc=$?
+  printf '%s\n' "$out"
+  if [ "$rc" != 0 ]; then
+    # the carried head's own gates are still turning (the base merge re-ran CI), or it moved again:
+    # not settled — the next pass carries the same approval again
+    case "$(printf '%s\n' "$out" | sed -n 's/^  "#[0-9]*","\([^"]*\)",.*/\1/p' | head -1)" in
+      "pending gate"|"not mergeable yet"|"head moved"|"the brake"|"hold label"|"draft") return 3 ;;
+    esac
+    return 1
+  fi
+  printf 'merged %s#%s at %s (approval of %s carried)\n' "$repo" "$n" "$cur" "$approved" >"$REVIEWED/$rid.$approved.acted"
+  return 0
+}
+
+may_act() {  # <owner/repo> → 0 when the repository is kept AND this gh hand can write it
+  MAY_WHY=""
+  if ! python3 "$ROOT/bin/forge/warden-policy.py" keeps "$1" >/dev/null 2>&1; then
+    MAY_WHY="not kept: not owned by the operator's login and not marked git.keep: true"; return 1
+  fi
+  local perm
+  perm="$(gh repo view "$1" --json viewerPermission -q .viewerPermission 2>/dev/null | tr -d '[:space:]')"
+  case "$perm" in
+    ADMIN|MAINTAIN|WRITE) return 0 ;;
+    *) MAY_WHY="this hand holds ${perm:-no readable} permission there, not write"; return 1 ;;
+  esac
 }
 
 act() {  # <review-id>
@@ -166,9 +257,17 @@ act() {  # <review-id>
   fi
   settled="$REVIEWED/$rid.$head.acted"
   [ -e "$settled" ] && { say "judge-merge: $rid — already settled for ${head:0:12}"; return 0; }
+  # THE KEEPER ACTS ONLY WHERE IT MAY MERGE (review of #863, 2026-11-21). A repository that is not
+  # kept (not the operator's own login, not git.keep: true — an upstream the house only tracks), or
+  # one this hand cannot write, gets no comment, no wake and no merge: settled in silence.
+  if ! may_act "$repo"; then
+    say "judge-merge: $rid — $repo is not a repository this hand may merge ($MAY_WHY); settled with nothing said"
+    [ "$DRY" = 1 ] || printf 'not kept: %s\n' "$MAY_WHY" >"$settled"
+    return 0
+  fi
 
   v="$(parse_verdict "$report")"
-  IFS=$'\t' read -r result count items named <<<"$v"
+  IFS=$'\x1f' read -r result count items named <<<"$v"
   if [ -n "$named" ] && [ "$named" != "$head" ]; then
     say "judge-merge: $rid — the report judged ${named:0:12} but the spine seated it for ${head:0:12}; refused"
     return 0
@@ -176,6 +275,12 @@ act() {  # <review-id>
 
   case "$result" in
     APPROVE)
+      # an approval must NAME the head it judged: a report with no `judged-head:` line cannot prove
+      # which head it read, so it merges nothing (review of #863, 2026-11-21)
+      if [ "$named" != "$head" ]; then
+        say "judge-merge: $rid — APPROVE names no judged-head (want ${head:0:12}); nothing merges on an approval that cannot say what it read"
+        return 0
+      fi
       if [ "$DRY" = 1 ]; then say "judge-merge: $rid — APPROVE; would run: $SEAL seal $n --repo $repo --head $head --review $rid"; return 0; fi
       out="$("$SEAL" seal "$n" --repo "$repo" --head "$head" --review "$rid" 2>&1)"; rc=$?
       printf '%s\n' "$out"
@@ -190,14 +295,24 @@ act() {  # <review-id>
           say_once "$REVIEWED/$rid.$head.said-red" "$repo" "$n" \
             "The judge approved head \`${head:0:12}\`, but it is **not merged**: a required gate is red — $detail. Push a fix; the new head is reviewed again."
           printf 'red: %s\n' "$detail" >"$settled" ;;
-        "head moved"|"not open"|"conflicts")
+        "head moved")
+          # THE APPROVAL CARRIES when every commit since it is a clean merge of the base branch or
+          # change-log lines only (bin/forge/judge-carry.py); anything else is new work, judged again
+          carry_over "$repo" "$n" "$head" "$rid"; rc=$?
+          [ "$rc" = 0 ] && return 0
+          [ "$rc" = 3 ] && { say "judge-merge: $rid — the approval carries; the new head's merge waits for its gates"; return 0; }
+          printf '%s: %s\n' "$cond" "$detail" >"$settled" ;;
+        "not open"|"conflicts")
+          printf '%s: %s\n' "$cond" "$detail" >"$settled" ;;
+        "wrong identity"|"not the house's")
+          # a fault of THIS hand, not of the PR: settled without a word on GitHub — a comment per head
+          # would repeat the same refusal on every push (review of #863, 2026-11-21)
+          printf 'judge-merge: %s#%s approved but REFUSED: %s — %s\n' "$repo" "$n" "$cond" "$detail" >&2
           printf '%s: %s\n' "$cond" "$detail" >"$settled" ;;
         *)
           # pending, held, draft, not yet mergeable, a hand that is not the operator's: not now
           say_once "$REVIEWED/$rid.$head.said-$(printf '%s' "${cond:-unknown}" | tr -c 'a-z0-9' '-')" "$repo" "$n" \
             "The judge approved head \`${head:0:12}\`; the merge waits — ${cond:-not ready}: $detail. It is tried again on the next pass."
-          [ "$cond" = "wrong identity" ] || [ "$cond" = "not the house's" ] && \
-            printf 'judge-merge: %s#%s approved but REFUSED: %s — %s\n' "$repo" "$n" "$cond" "$detail" >&2
           ;;
       esac
       return 0 ;;
@@ -215,7 +330,7 @@ act() {  # <review-id>
 }
 
 case "$ACTION" in
-  verdict) [ -n "${ARGS[0]:-}" ] || { printf 'usage: judge-merge.sh verdict <report>\n' >&2; exit 2; }; parse_verdict "${ARGS[0]}" ;;
+  verdict) [ -n "${ARGS[0]:-}" ] || { printf 'usage: judge-merge.sh verdict <report>\n' >&2; exit 2; }; parse_verdict "${ARGS[0]}" | tr '\037' '\t' ;;
   act)     [ -n "${ARGS[0]:-}" ] || { printf 'usage: judge-merge.sh act <review-id>\n' >&2; exit 2; }; act "${ARGS[0]}" ;;
   sweep)
     command -v gh >/dev/null 2>&1 || { printf 'judge-merge: gh is not on PATH — no verdict can be carried out here\n' >&2; exit 1; }
