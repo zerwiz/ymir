@@ -127,7 +127,7 @@ def _resolve(tier: str) -> str:
     root = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
     door = os.path.join(root, "bin", "model", "agent-model.sh")
     try:
-        out = subprocess.run(["bash", door, "forseti", "--tier", tier, "--plain"],
+        out = subprocess.run(["bash", door, "forseti", "--harness", "pi", "--tier", tier, "--plain"],
                              capture_output=True, text=True, timeout=25)
         return out.stdout.strip() if out.returncode == 0 else ""
     except Exception:

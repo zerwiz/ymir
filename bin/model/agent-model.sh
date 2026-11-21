@@ -25,6 +25,18 @@
 # A seat that cannot serve the fleet's choice says so; it does not quietly pick a different one.
 # The overlay exists so the choice can be corrected per machine, deliberately and on the record.
 #
+# A CLAUDE ROW IS JUDGED BY CLAUDE'S LIST, NOT PI'S (2026-11-21). The judge (RULES/08) is
+# `forseti: { model: opus, harness: claude }`, and pi's catalogue never lists a Claude model, so the
+# row fell through to the fleet default (a pi model) and the review spine then refused to seat
+# Claude on it — no judge for any PR. Now a row whose harness is `claude` (from `--harness`, else
+# the overlay row, else the fleet row) resolves through `bin/seat/claude-seat.sh model`, which
+# reads the operator's allow-list (`models-allowed.yaml`: claude/claude-opus-5-5, aliases opus ·
+# sonnet · haiku) and prints the name the Claude CLI accepts (`claude-opus-5-5`), never a
+# provider/model token. A Claude row naming a pi model is REFUSED by name, never a fall-through;
+# a row with no model takes the allow-list's Claude default. Pi and opencode rows still answer to
+# pi's catalogue, unchanged. A caller that runs pi on a Claude row's agent says `--harness pi`
+# (the row is then judged by pi's catalogue); `--tier` on a Claude row without it is a refusal.
+#
 # Usage:
 #   agent-model.sh <agent>                    # provider/model for that agent on this seat
 #   agent-model.sh <agent> --tier fast        # resolve by capability instead of a named model
@@ -32,6 +44,7 @@
 #   agent-model.sh --check [<agent> …]        # every row this seat would use, or the row that fails
 #   agent-model.sh <agent> --plain             # just the id, for a script that spawns
 #   agent-model.sh --explain <agent>          # the whole chain, step by step, and why each step lost
+#   agent-model.sh <agent> --harness claude   # judge the row against the harness named, not the row's
 #
 # Exit: 0 resolved · 1 a fault · 2 usage · 3 refused (a model this seat cannot serve).
 set -u
@@ -56,6 +69,7 @@ SETTINGS=""; hoard_settings_dir SETTINGS 2>/dev/null || true
 [ -n "$SETTINGS" ] || { printf 'agent-model: the settings dir is unresolved\n' >&2; exit 1; }
 
 CATALOG="$ROOT/bin/model/catalog.sh"
+CLAUDE_SEAT="$ROOT/bin/seat/claude-seat.sh"
 ALLOW="$ROOT/bin/model/model-allow.sh"
 HOST="$(hostname -s 2>/dev/null || hostname 2>/dev/null || echo unknown)"
 
@@ -192,12 +206,14 @@ tier_pick() {  # <tier>
 }
 
 # ── the chain ────────────────────────────────────────────────────────────────────────────────
-AGENT=""; TIER=""; EXPLICIT=""; JSON=0; EXPLAIN=0; CHECK=0; PLAIN=0
+AGENT=""; TIER=""; EXPLICIT=""; JSON=0; EXPLAIN=0; CHECK=0; PLAIN=0; HARNESS_FLAG=""
 while [ $# -gt 0 ]; do case "$1" in
   --tier) TIER="${2:-}"; shift 2 ;;
   --tier=*) TIER="${1#--tier=}"; shift ;;
   --model) EXPLICIT="${2:-}"; shift 2 ;;
   --model=*) EXPLICIT="${1#--model=}"; shift ;;
+  --harness) HARNESS_FLAG="${2:-}"; shift 2 ;;
+  --harness=*) HARNESS_FLAG="${1#--harness=}"; shift ;;
   --json) JSON=1; shift ;;
   --plain) PLAIN=1; shift ;;
   --explain) EXPLAIN=1; shift ;;
@@ -206,38 +222,75 @@ while [ $# -gt 0 ]; do case "$1" in
   *) [ -z "$AGENT" ] && AGENT="$1" || usage "one agent at a time"; shift ;;
 esac; done
 
-refresh_catalog || die "the catalogue cannot be read on this seat (bin/model/catalog.sh --check) — without it every model id is a guess, and this door refuses to guess"
+need_catalog() {
+  refresh_catalog || die "the catalogue cannot be read on this seat (bin/model/catalog.sh --check) — without it every model id is a guess, and this door refuses to guess"
+}
+
+# ── the harness a row runs on: --harness, else the overlay row, else the fleet row ────────────
+agent_harness() {  # <agent> → the harness name, or empty (pi's catalogue then judges)
+  local agent=$1 h=""
+  if [ -n "$HARNESS_FLAG" ]; then printf '%s' "$HARNESS_FLAG"; return 0; fi
+  h="$(row_value "$OVERLAY" "$agent" harness || true)"
+  [ -n "$h" ] || h="$(row_value "$FLEET" "$agent" harness || true)"
+  printf '%s' "$h"
+}
+
+# ── a Claude row: the allow-list judges it, and the answer is the name the CLI takes ─────────
+claude_name() {  # <request> → prints the Claude CLI name; on refusal prints the reason, exit 3
+  local req=$1 out rc
+  [ -x "$CLAUDE_SEAT" ] || { printf 'the Claude seat door is missing (%s)' "$CLAUDE_SEAT"; return 1; }
+  out="$("$CLAUDE_SEAT" model "$req" 2>&1)"; rc=$?
+  if [ "$rc" -eq 0 ] && [ -n "$out" ]; then printf '%s' "$out" | tail -1; return 0; fi
+  # the refusal's reason: the last quoted field of the allow-list's TOON row, else its first line
+  printf '%s' "$out" | sed -n '2p' | sed -E 's/.*,"([^"]*)"$/\1/' | grep . || printf '%s' "$out" | head -1
+  return 3
+}
+
+resolve_claude() {  # <agent> <envkey> <envval> → "model<TAB>source<TAB>why"; exit 3 when refused
+  local agent=$1 envkey=$2 envval=$3 name reason f label row
+  if [ -n "$EXPLICIT" ]; then
+    name="$(claude_name "$EXPLICIT")" || refuse "harness 'claude' cannot serve --model '$EXPLICIT': $name — name a Claude model (claude-opus-5-5, or the alias opus)"
+    printf '%s\t%s\t%s' "$name" "explicit --model" "the operator named it for this run; Claude's allow-list serves it"
+    return 0
+  fi
+  if [ -n "$envval" ]; then
+    name="$(claude_name "$envval")" || refuse "$envkey names '$envval' for a Claude row, and Claude cannot serve it: $name — set it to a Claude model (claude-opus-5-5, or opus)"
+    printf '%s\t%s\t%s' "$name" "$envkey" "an environment override, honoured because Claude's allow-list serves it"
+    return 0
+  fi
+  for f in "$OVERLAY" "$FLEET"; do
+    case "$f" in "$OVERLAY") label="overlay agents.$HOST.yaml" ;; *) label="fleet agents.yaml" ;; esac
+    row="$(row_value "$f" "$agent" model || true)"
+    [ -n "$row" ] || continue
+    name="$(claude_name "$row")" || refuse "$label names '$row' for '$agent' on harness 'claude', and Claude cannot serve it: $name — a Claude row names a Claude model (claude-opus-5-5, or opus), never a pi or opencode id"
+    printf '%s\t%s\t%s' "$name" "$label" "declared there; a Claude row, served by Claude's allow-list"
+    return 0
+  done
+  name="$("$CLAUDE_SEAT" default 2>/dev/null | tail -1)"
+  [ -n "$name" ] || refuse "agent '$agent' runs on harness 'claude' and names no model, and the allow-list names no Claude default (bin/model/model-allow.sh default claude)"
+  printf '%s\t%s\t%s' "$name" "allow-list claude default" "a Claude row with no model takes the allow-list's Claude default"
+}
 
 resolve_one() {  # <agent> → prints "model<TAB>source<TAB>why"; exit 3 when refused
   local agent=$1 model="" source="" why="" envkey envval
   envkey="YMIR_$(printf '%s' "$agent" | tr '[:lower:]-' '[:upper:]_')_MODEL"
   envval="$(printenv "$envkey" 2>/dev/null || true)"
 
+  if [ "$(agent_harness "$agent")" = claude ]; then
+    # A tier is a pi-catalogue capability; Claude's list has no tiers. A caller that asks a Claude
+    # row for a tier is a pi consumer that forgot to say so — refused, never a silent drop of the
+    # tier (a Claude name handed to `pi --model` would fail later and further away).
+    [ -z "$TIER" ] || refuse "agent '$agent' runs on harness 'claude', and --tier '$TIER' is a pi-catalogue capability — a pi caller passes --harness pi (agent-model.sh $agent --harness pi --tier $TIER)"
+    resolve_claude "$agent" "$envkey" "$envval"
+    return $?
+  fi
+  need_catalog
+
   if [ -n "$EXPLICIT" ]; then
     local nope; nope="$(not_allowed "$EXPLICIT")" && refuse "the model '$EXPLICIT' is not on this fleet's allow-list ($nope) — bin/model/model-allow.sh list"
     listed "$EXPLICIT" || refuse "the model '$EXPLICIT' is NOT in this seat's catalogue — a model a machine does not list is not a preference, it is a promise it cannot keep"
     printf '%s\t%s\t%s' "$EXPLICIT" "explicit --model" "the operator named it for this run"
     return 0
-  fi
-  # A CLAUDE-HARNESS AGENT (RULES/08, 2026-11-21 — the judge is forseti: harness claude, model opus).
-  # The Claude harness serves Anthropic names from its own catalogue, which pi's catalogue never lists,
-  # so the row was refused and the fleet default (a pi model the claude harness refuses) won. For an
-  # agent whose row names harness claude, a Claude name in the row is honoured as written, and an
-  # environment pin naming a provider/model token yields to it (the claude harness cannot serve one).
-  local crow_h crow_m
-  crow_h="$(row_value "$OVERLAY" "$agent" harness || true)"; [ -n "$crow_h" ] || crow_h="$(row_value "$FLEET" "$agent" harness || true)"
-  if [ "$crow_h" = claude ]; then
-    crow_m="$(row_value "$OVERLAY" "$agent" model || true)"; [ -n "$crow_m" ] || crow_m="$(row_value "$FLEET" "$agent" model || true)"
-    if [ -n "$envval" ]; then
-      case "$envval" in
-        */*) printf 'agent-model: FINDING — %s names %s, a provider/model token the claude harness cannot serve; the row wins\n' "$envkey" "$envval" >&2 ;;
-        opus|sonnet|haiku|claude-*) printf '%s\t%s\t%s' "$envval" "$envkey" "an environment override, a Claude name for a claude-harness agent"; return 0 ;;
-      esac
-    fi
-    case "$crow_m" in
-      opus|sonnet|haiku|claude-*)
-        printf '%s\t%s\t%s' "$crow_m" "agents row (harness claude)" "a Claude name, served by the claude harness's own catalogue"; return 0 ;;
-    esac
   fi
   if [ -n "$envval" ]; then
     if listed "$envval"; then printf '%s\t%s\t%s' "$envval" "$envkey" "an environment override, honoured because this seat lists it"
@@ -313,12 +366,13 @@ fi
 
 OUT="$(resolve_one "$AGENT")" || exit $?
 MODEL="${OUT%%$'\t'*}"; REST="${OUT#*$'\t'}"; SRC="${REST%%$'\t'*}"; WHY="${REST#*$'\t'}"
+HARNESS_OUT="$(agent_harness "$AGENT")"
 
 if [ "$PLAIN" = 1 ]; then
   printf '%s\n' "$MODEL"
 elif [ "$JSON" = 1 ]; then
-  printf '{"seat":"%s","agent":"%s","model":"%s","source":"%s","why":"%s"}\n' "$HOST" "$AGENT" "$MODEL" "$SRC" "$WHY"
+  printf '{"seat":"%s","agent":"%s","model":"%s","harness":"%s","source":"%s","why":"%s"}\n' "$HOST" "$AGENT" "$MODEL" "$HARNESS_OUT" "$SRC" "$WHY"
 else
-  printf 'agent-model[4]{seat,agent,model,source}:\n  "%s","%s","%s","%s"\n' "$HOST" "$AGENT" "$MODEL" "$SRC"
+  printf 'agent-model[5]{seat,agent,model,harness,source}:\n  "%s","%s","%s","%s","%s"\n' "$HOST" "$AGENT" "$MODEL" "${HARNESS_OUT:-catalogue}" "$SRC"
   printf 'why[1]{reason}:\n  "%s"\n' "$WHY"
 fi

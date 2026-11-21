@@ -297,8 +297,12 @@ cmd_ensure() {
     mv "$clone/.pi/extensions" "$clone/.pi/extensions.seat-hidden" 2>/dev/null \
       && printf 'review-seat: the clone'"'"'s own extensions set aside (settings.json loads the primary'"'"'s)\n' >&2
   fi
-  local model; model="$(bash "$ROOT/bin/model/agent-model.sh" forseti --plain 2>/dev/null || true)"
-  [ -n "$model" ] || die "no model resolved for the judge on this seat — bin/model/agent-model.sh forseti --explain"
+  # THIS SEAT RUNS PI (`herdr agent start reviewer --kind pi` below), so its model is judged by pi's
+  # catalogue on purpose: `--harness pi`. The forseti row may say `harness: claude` (RULES/08) —
+  # that judge is seated per PR by bin/agents/eindri-review-spawn.sh, which reads the row's harness.
+  # Asking here without `--harness pi` handed `pi --model` a Claude name (2026-11-21).
+  local model; model="$(bash "$ROOT/bin/model/agent-model.sh" forseti --harness pi --plain 2>/dev/null || true)"
+  [ -n "$model" ] || die "no model resolved for the pi review seat — bin/model/agent-model.sh forseti --harness pi --explain"
   local charter; charter="$(write_charter "$clone")"
   # THE SEAT LAW: a seat gets its own machine state, so it never contends for the primary's helm.
   # `--primary` is the deliberate exception — a machine with NO live primary (measured: the heart's

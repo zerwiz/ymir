@@ -17,7 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 VERSION="1.0.0"
 # Resolved for THIS seat (RULES/25): the warden names no model id of its own.
-MODEL="${VIDARR_MODEL:-$(bash "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/bin/model/agent-model.sh" forseti --tier strong --plain 2>/dev/null || true)}"
+MODEL="${VIDARR_MODEL:-$(bash "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/bin/model/agent-model.sh" forseti --harness pi --tier strong --plain 2>/dev/null || true)}"
 PERSONA="$ROOT/.agents/agents/vidarr-defender.md"
 LABEL="${VIDARR_LABEL:-vidarr-defender}"
 
