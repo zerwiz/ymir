@@ -26,3 +26,7 @@ Both red tests are named as part of the third slice in the audit.
 
 - `docs/audits/2026-11-21-the-collaboration-system.md`
 - `docs/fixes/collab/unversioned-2026-11-21-the-collaboration-system-audited.md`
+
+## CHANGE LOG
+
+- 2026-11-21 — review-mend: added missing heading for #877
