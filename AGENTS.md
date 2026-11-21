@@ -995,3 +995,9 @@ An older home is moved by migration `0026-life-and-state-out-of-hodd`, which lea
 and `hodd/state -> ../state` for one release cycle. Eir's `hoard` surface names a shelf holding the wrong kind of
 material, and `bin/gates/guards/retired-path-guard.sh` refuses a new file that teaches a retired path. The how-to is
 `docs/features/the-four-shelves.md`.
+
+## 2026-11-21 — one road to talk to and steer any agent
+
+At the Allfather's word, the way the helm spoke to the fleet became one tool. Every message from one agent to another, on any machine, goes through `bin/fleet/fleet-tell.sh` (the Pi and MCP tool `gna_fleet_tell`). Its targets are a machine (its arm holder), an errand, `machine:errand`, a pane, or `machine:pane`, and `--all` for every arm holder.
+
+It also carries the steer verbs: `--steer` to steer a worker, `--answer` to answer its question, `--stop` to ask it to stop at a safe point. The `steer` action of `ymir_errand` calls this door too. It signs each line, uses the target machine's own `bin/agents/tell.sh` over ssh, falls back to typing into the agent's herdr pane, and reports one row per target. Do not ssh or type into a pane by hand for this. The page is `docs/features/fleet-tell.md`.

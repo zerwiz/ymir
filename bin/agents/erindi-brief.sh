@@ -349,6 +349,7 @@ The report is the only thing that survives, so anything worth keeping must be in
 5. If a decision belongs to the Allfather (product choices, destructive actions), append \`needs-decision: {summary of options}\` and stop. Brokk will reply with the decision.
 6. No AI attribution anywhere you write: no co-author trailer, no "generated with" line, and no model, model-maker or agent-harness name in a commit message, PR title, PR body or status line (RULES/53). Say "the agent harness" or "the worker"; a path or flag stays in \`backticks\`. A ward refuses the rest.
 $LIMIT_RULES
+Any message to another agent, on any machine (an arm holder, another errand, a pane), and any steer, answer or safe-stop request, goes through ONE road: \`bin/fleet/fleet-tell.sh [--steer|--answer|--stop] --to <machine|errand|machine:errand|pane> "<one line>"\`. It signs the line, tries the target machine's own door, falls back to the agent's pane and reports one row per target. Never type into a pane or ssh by hand for this.
 
 $INBOX_SECTION
 
@@ -472,6 +473,7 @@ $ISOLATION_SETUP
 5. If a decision belongs to the Allfather (product choices, destructive actions), append \`needs-decision: {summary of options}\` and stop. Brokk will reply with the decision.
 6. No AI attribution anywhere you write: no co-author trailer, no "generated with" line, and no model, model-maker or agent-harness name in a commit message, PR title, PR body or status line (RULES/53). Say "the agent harness" or "the worker"; a path or flag stays in \`backticks\`. A ward refuses the rest.
 $LIMIT_RULES
+Any message to another agent, on any machine (an arm holder, another errand, a pane), and any steer, answer or safe-stop request, goes through ONE road: \`bin/fleet/fleet-tell.sh [--steer|--answer|--stop] --to <machine|errand|machine:errand|pane> "<one line>"\`. It signs the line, tries the target machine's own door, falls back to the agent's pane and reports one row per target. Never type into a pane or ssh by hand for this.
 
 $INBOX_SECTION
 
