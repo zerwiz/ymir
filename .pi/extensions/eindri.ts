@@ -9,7 +9,7 @@
  * THIN by construction — every action calls the door that already does the work:
  *   start  → bin/agents/einherjar-spawn.sh <id> <project> --mode direct-PR   (the ONE spawn path)
  *   read   → state/<id>.status + state/<id>.meta + the worktree's branch and commits
- *   steer  → bin/agents/eindri-send.sh <id> "<message>"                     (the steering inbox)
+ *   steer  → bin/fleet/fleet-tell.sh --steer --to <id> "<message>"            (the ONE road to any agent; the id may be machine:errand)
  *   close  → bin/agents/eindri-acclaim.sh <id> --terminal … then bin/agents/eindri-control.sh exit <id>
  *
  * It registers nothing the door already owns (register §12): no place, no push, no note.
@@ -212,7 +212,7 @@ export default function eindri(pi: any) {
 
         case "steer": {
           if (!args.message) return piOut("steer needs `message` (one line).");
-          const r = run("bash", [`${ROOT}/bin/agents/eindri-send.sh`, id, String(args.message)]);
+          const r = run("bash", [`${ROOT}/bin/fleet/fleet-tell.sh`, "--steer", "--to", id, "--", String(args.message)]);
           return piOut(`steered ${id}: rc=${r.rc}\n${brief(r.out)}`);
         }
 
