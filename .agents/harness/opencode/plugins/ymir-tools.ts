@@ -248,7 +248,7 @@ export default Plugin.define({
               }
               case "steer": {
                 if (!message) return toolResult("steer needs `message` (one line).")
-                const r = await runShell("bash", [`${root}/bin/agents/eindri-send.sh`, id, message], root)
+                const r = await runShell("bash", [`${root}/bin/fleet/fleet-tell.sh`, "--steer", "--to", id, "--", message], root)
                 return toolResult(`steered ${id}: rc=0\n${r || ""}`)
               }
               case "close": {

@@ -272,8 +272,11 @@ def ymir_studio(action: str = "status") -> str:
 
 @mcp.tool()
 def ymir_errand(action: str, id: str, project: str = "", mode: str = "direct-PR",
-                harness: str = "pi", model: str = "", note: str = "", terminal: str = "done") -> str:
-    """An errand: start an Eindri worker (the one spawn path), read its seat, or close it."""
+                harness: str = "pi", model: str = "", note: str = "", terminal: str = "done",
+                message: str = "") -> str:
+    """An errand: start an Eindri worker (the one spawn path), read its seat, steer it, or close it.
+    steer goes through the ONE road for talking to any agent: bin/fleet/fleet-tell.sh (`id` may be
+    `machine:errand`)."""
     if action == "start":
         if not project:
             return "start needs project — the repo root the errand works in"
@@ -286,7 +289,11 @@ def ymir_errand(action: str, id: str, project: str = "", mode: str = "direct-PR"
         return _run(["bash", str(ROOT / "bin" / "seat" / "seats.sh"), "show", id], 120)
     if action == "close":
         return _run(["bash", str(ROOT / "bin" / "seat" / "seats.sh"), "close", id, terminal, note], 120)
-    return "action must be start | read | close"
+    if action == "steer":
+        if not message:
+            return "steer needs message — one line"
+        return _run(["bash", str(ROOT / "bin" / "fleet" / "fleet-tell.sh"), "--steer", "--to", id, "--", message], 120)
+    return "action must be start | read | steer | close"
 
 
 # --- the house task board: ONE writer, and it is a door in bin/ ---------------
@@ -415,6 +422,30 @@ def ymir_arm(action: str = "status", harness: str = "") -> str:
     if action == "hook":
         return _run(["bash", str(ROOT / "bin" / "pi" / "arm.sh"), "hook", harness or "claude"], 60)
     return _run(["bash", str(ROOT / "bin" / "pi" / "arm.sh"), "status"], 60)
+
+
+@mcp.tool()
+def gna_fleet_tell(to: str = "", line: str = "", verb: str = "tell", all: bool = False,
+                   record_only: bool = False, pane_only: bool = False, arm_only: bool = False,
+                   dry_run: bool = False, sender: str = "") -> str:
+    """The ONE road for talking to and steering any agent on any machine. `to` is a comma list of
+    targets: a machine (its arm holder), an errand id, machine:errand, a pane id, or machine:pane;
+    all=true reaches every arm holder. verb: tell | steer | answer | stop. Uses each machine's own
+    tell.sh over ssh, falls back to typing into the agent's herdr pane, signs the line, returns one
+    row per target."""
+    argv = ["bash", str(ROOT / "bin" / "fleet" / "fleet-tell.sh")]
+    if verb in ("steer", "answer", "stop"):
+        argv.append("--" + verb)
+    for t in [x.strip() for x in to.split(",") if x.strip()]:
+        argv += ["--to", t]
+    for flag, on in (("--all", all), ("--record-only", record_only), ("--pane-only", pane_only),
+                     ("--arm-only", arm_only), ("--dry-run", dry_run)):
+        if on:
+            argv.append(flag)
+    if sender:
+        argv += ["--from", sender]
+    argv += ["--", line]
+    return _run(argv, 300)
 
 
 @mcp.tool()
