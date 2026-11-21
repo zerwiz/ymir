@@ -23,3 +23,7 @@ A to-do's source is often prose ("the command line", `<file> · line 12 · <trai
 ## Proof
 
 `python3 bin/records/tests/test_todo_board.py` — PASS, 0 failed (five new checks on the shape).
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #858
