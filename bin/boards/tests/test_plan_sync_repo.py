@@ -132,5 +132,33 @@ check("the place reported missing while listed is a blink",
 check("a place truly absent is a refusal",
       not b._place_lookup_blinked('{"error": "no such place on the board: acme/Demo", "places": ["acme/Other"]}'))
 
+# a create whose answer is lost must not be written twice: the retry looks for the card first
+import urllib.error  # noqa: E402
+import board_adapter_mcp as bam  # noqa: E402
+posts = []
+
+
+def lost_answer(req, timeout=0):
+    posts.append(1)
+    raise urllib.error.HTTPError("u", 502, "bad gateway", {}, None)
+
+
+real_open, real_sleep = bam.urllib.request.urlopen, bam.time.sleep
+bam.urllib.request.urlopen, bam.time.sleep = lost_answer, (lambda s: None)
+try:
+    b.url, b.token, b.n, b._schemas, b._wrote = "http://board.invalid", "t", 0, {}, 0
+    b.find_cards = lambda label, text: [{"card": 7, "title": "001 · A", "parent": None}]
+    got = b.create_card("001 · A", "d", "backlog", ["plan"])
+    check("a create that landed is found, not written again", got["card"] == 7 and len(posts) == 1, (got, len(posts)))
+    b.find_cards = lambda label, text: [{"card": 9, "title": "001 · A", "parent": 3}]
+    posts.clear()
+    try:
+        b.create_card("001 · A", "d", "backlog", ["plan"])
+    except bam.BoardRefusal:
+        pass
+    check("a card of the same title under another parent is not taken for it", len(posts) == 8, len(posts))
+finally:
+    bam.urllib.request.urlopen, bam.time.sleep = real_open, real_sleep
+
 print(f"{'FAIL' if fails else 'ok'}: {len(fails)} failed")
 sys.exit(1 if fails else 0)

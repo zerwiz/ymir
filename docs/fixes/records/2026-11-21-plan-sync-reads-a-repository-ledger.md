@@ -21,12 +21,16 @@ same answer, because its own lookup had been rate-limited.
 - `board_adapter_mcp.py` waits and retries when the door says "no such place" for a place it lists in the same answer,
   or "no such state" for a state the place has already listed. The second run of the night failed 32 plans on
   exactly that (`no such state …: Backlog`, a state the place has). A state the place truly lacks is still a refusal.
+- A create whose answer is lost (a timeout, a 5xx, a rate limit after the write) no longer writes the card twice.
+  Before each retry the adapter looks for a card of that exact title under the same parent, and returns it when the
+  first attempt landed. That night three plans got a second card this way (055, 080 twice, 081). The empty extras were
+  moved to Cancelled with a comment naming the card kept, and lost their `plan` label. None was deleted.
 
 ### Proof
 
-- `bin/boards/tests/test_plan_sync_repo.py`: 21 checks, all ok. They cover reading at the ref (not the checkout),
+- `bin/boards/tests/test_plan_sync_repo.py`: 23 checks, all ok. They cover reading at the ref (not the checkout),
   unlinked rows, the maps, the link, a refusal for an unknown ref, cleanup, and a home ledger unchanged, and
-  which door answers are retried and which still refuse.
+  which door answers are retried and which still refuse, and that a lost create is not written twice.
 - The old and new readers were compared on the two home ledgers that have boards today. Both gave the same plans and
   the same card text, with no phase differences. So their stamps are unchanged, and a sync of those boards writes nothing.
 

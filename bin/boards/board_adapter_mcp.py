@@ -86,7 +86,10 @@ class McpBoard:
         self._schemas = None
 
     # ── transport ────────────────────────────────────────────────────────────────────────────
-    def _call(self, tool, args, timeout=60):
+    def _call(self, tool, args, timeout=60, before_retry=None):
+        """One door call, retried through the board's hiccups. A call that is not safe to repeat (a create) passes
+        `before_retry`: it runs before every second and later attempt and, when the first attempt landed after all
+        (its answer was lost to a timeout or a rate limit), returns that result instead of writing it again."""
         self.n += 1
         body = json.dumps({"jsonrpc": "2.0", "id": self.n, "method": "tools/call",
                            "params": {"name": tool, "arguments": args}}).encode()
@@ -95,6 +98,13 @@ class McpBoard:
         last = ""
         for attempt in range(8):
             wait = 4.0 * (attempt + 1)
+            if attempt and before_retry is not None:
+                try:
+                    landed = before_retry()
+                except BoardRefusal:
+                    landed = None
+                if landed is not None:
+                    return landed
             try:
                 raw = urllib.request.urlopen(urllib.request.Request(self.url, body, hdr), timeout=timeout).read().decode()
             except urllib.error.HTTPError as e:
@@ -144,11 +154,11 @@ class McpBoard:
             return False
         return self.place in places
 
-    def _write(self, tool, args):
+    def _write(self, tool, args, before_retry=None):
         gap = PACE - (time.time() - self._wrote)
         if gap > 0:
             time.sleep(gap)
-        out = self._call(tool, args, timeout=WRITE_TIMEOUT)
+        out = self._call(tool, args, timeout=WRITE_TIMEOUT, before_retry=before_retry)
         self._wrote = time.time()
         return out
 
@@ -250,9 +260,18 @@ class McpBoard:
             a["description_format"] = fmt
         if source and self._accepts("create_card", "source"):
             a["source"] = source
-        out = self._write("create_card", a)
+        out = self._write("create_card", a, before_retry=lambda: self._landed(title, parent))
         made = out.get("created") or {}
         return {"card": made.get("card"), "diagrams": out.get("diagrams")}
+
+    def _landed(self, title, parent):
+        """The card a create made although its answer was lost, as the door would have answered it; else None.
+        Without this a retried create writes the card twice (it did, 2026-11-21: three plans got a second card)."""
+        want = None if parent is None else str(parent)
+        for c in self.find_cards(None, title[:40]):
+            if c["title"] == title and (None if c.get("parent") is None else str(c["parent"])) == want:
+                return {"created": {"card": c["card"]}, "diagrams": None}
+        return None
 
     def update_card(self, card, title=None, description=None, group=None, fmt=None):
         a = {"place": self.place, "card": str(card)}
