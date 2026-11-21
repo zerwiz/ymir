@@ -57,3 +57,7 @@ and 38 open. It would have ticked four items, and each one was checked by hand a
 The schedule row (`@heart 06:30`, with a `@dev 06:50 --fallback` stand-in) goes into the home's
 `config/cron.yaml`. It stays commented out until this change is merged, because `cron-guard` refuses a
 row for a script that does not ship yet.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #867
