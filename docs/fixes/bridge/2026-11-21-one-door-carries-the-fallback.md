@@ -28,7 +28,14 @@ provider, and several helpers still recognised LM Studio or ollama as a local ro
   (`bin/model/models-detect.sh`, which also stops detecting ollama) and the local-provider heuristics
   (spawn, dispatch, resolve, seat, harness, lock, pretool check). The local-model evaluation test now
   talks to the llama.cpp rail's OpenAI API instead of ollama's.
-- **Kept, on purpose:** the usage counters in Hlidskjalf still recognise `lmstudio`/`ollama` in *old*
+- **The docs follow:** the local-models asset (`.agents/skills/galdr-ymirsystem/assets/local-models.md`)
+  now says only llama.cpp is a local road and drops LM Studio and ollama from detection, choice and
+  documentation; the models runbook drops `lmstudio` from `local_providers`.
+- **Kept, on purpose:** `docs/features/bilskirnir-choose-a-model.md` (lines 35 and 75) still lists the
+  ports Bilskirnir scans, because it describes that app's current default (`BILSKIRNIR_LOCAL_PORTS`),
+  whose code now lives in its own repository; that default changes there first, then this page. The
+  local-models asset still *names* the two engines once, so galdr can recognise one found on a seat and
+  report it for removal. And the usage counters in Hlidskjalf still recognise `lmstudio`/`ollama` in *old*
   usage records, so history is classified correctly (a detector, not a road); and the dated prose that
   records the retirement stays as the record (RULES/06).
 
@@ -47,7 +54,7 @@ A throwaway door on a spare port read the home's chain, and steps were forced do
 closed port. All up: **beam-free answered**. Step 1 down: **the first machine's rail answered**. Steps 1–2
 down: **the second machine's rail answered**. Steps 1–3 down: the second hosted gateway was at first
 *skipped*, because its model list took longer than the 3 s probe. So two things were added: a per-step
-`probe_timeout` (default 5 s), and a **last-ditch pass**. When the health check skips every step, each step
+`probe_timeout` (default 10 s, after the hosted gateways were measured at 6–8 s), and a **last-ditch pass**. When the health check skips every step, each step
 is asked once more before the door answers 503, and the log names it `(last ditch)`. With both, the
 fourth step answered. The fake proof gained case 9 for the last ditch: 16 passed.
 

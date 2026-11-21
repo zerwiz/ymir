@@ -407,7 +407,7 @@ def load_chain(env: dict, path: str) -> list:
         base_spec = PROVIDERS.get(kind)
         step = {"name": raw.get("name") or f"step-{i + 1}", "provider": kind,
                 "model": raw.get("model") or "*", "timeout": int(raw.get("timeout", 120)),
-                "probe_timeout": int(raw.get("probe_timeout", 5)),
+                "probe_timeout": int(raw.get("probe_timeout", 10)),
                 "base": "", "key": "", "key_where": "no key", "problem": ""}
         if not base_spec or kind == "chain":
             step["problem"] = f"unknown provider '{kind}'"
@@ -456,7 +456,7 @@ def _mark(step: dict, ok: bool, why: str) -> None:
 def step_healthy(step: dict) -> tuple[bool, str]:
     """(usable, why). Cached for health_ttl() seconds so a dead machine costs one probe per
     window, not one per request. The probe is GET <base>/models, bounded by the step's
-    probe_timeout (default 5 s; a gateway with a long model list may need more)."""
+    probe_timeout (default 10 s: the hosted gateways were measured at 6–8 s)."""
     if step.get("problem"):
         return False, step["problem"]
     now = __import__("time").time()
@@ -466,7 +466,7 @@ def step_healthy(step: dict) -> tuple[bool, str]:
         return cached[1], cached[2] + " (cached)"
     try:
         req = urllib.request.Request(step["base"].rstrip("/") + "/models", headers=_step_headers(step))
-        r = _curl_open(req, timeout=step.get("probe_timeout", 5))
+        r = _curl_open(req, timeout=step.get("probe_timeout", 10))
         ok = 200 <= r.status < 300
         why = "probe ok" if ok else f"probe http {r.status}"
     except OSError as e:
