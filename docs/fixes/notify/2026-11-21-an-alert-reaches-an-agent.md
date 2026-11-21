@@ -23,7 +23,7 @@ home-sync's words instead of carrying them.
 
 **The owner road.** A HIGH or CRITICAL line (not `--ask`) is handed to the arm holder that owns its source, through
 `bin/fleet/arm-send.sh`, so it arrives as that agent's turn. The owner is the machine named in the line, or the rule in
-the home's `config/notify-owners.conf` (template: `config/notify-owners.conf.example`). When the owner's arm does not
+the home's `config/notify-owners.conf` (template: `.agents/config/notify-owners.conf.example`). When the owner's arm does not
 answer, the heart's arm holder takes it and the line says so.
 
 **The agent answers the operator.** The turn asks for ONE `telegram_message` with what was found and three buttons:
@@ -90,3 +90,8 @@ kind of unkeyed notice.
 Now only measurements fold: an ISO stamp or a clock time, a number with a unit (`25895s`, `3 min`, `91%`, `2 GB`),
 and a number after `age`, `old`, `rc`, `exit` or `took`. Any other number is kept as an identity. New tests: two
 PR numbers and two ports stay two lines each, and changing measurements still fold into one.
+
+## Addendum: the template path (rework of PR #861)
+
+This note and `docs/features/the-hotline.md` named the owner template as `config/notify-owners.conf.example`. The
+file is `.agents/config/notify-owners.conf.example`; both pages now say so.
