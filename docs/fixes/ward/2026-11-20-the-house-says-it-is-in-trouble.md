@@ -59,3 +59,7 @@ silent one.
 - **The timer is registered, not seated.** `bin/engine/units.sh write trouble-panel` seats it once this change
   is in a release and the pin carries it.
 - **The thresholds are counsel** until the Allfather seals them (plan 339, "What only he answers" 3).
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #874
