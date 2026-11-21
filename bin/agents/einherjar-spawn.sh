@@ -600,7 +600,7 @@ is_local_provider() {  # <provider>
   local p=$1
   [ -n "$p" ] || return 1
   case " $LOCAL_PROVIDERS " in *" $p "*) return 0 ;; esac
-  case "$p" in llama*|*llama*|lmstudio|apodex) return 0 ;; *) return 1 ;; esac
+  case "$p" in llama*|*llama*|apodex) return 0 ;; *) return 1 ;; esac
 }
 model_is_token() {  # <model> -> 0 when it is a concrete provider/model token
   case "$1" in */*) return 0 ;; *) return 1 ;; esac

@@ -6,7 +6,7 @@ The bridge grew a provider choice, so the implementation now lives in
 `opencode-go-bridge.py` working by delegating with `--provider opencode-go`.
 
 Prefer `model-bridge.py` (or `bin/bridge/bifrost-bridge.sh --provider NAME`) for new
-work; the full provider list is opencode-go, lmstudio, openai-compatible.
+work; the full provider list is the one `model-bridge.py --providers` prints.
 """
 import os
 import sys

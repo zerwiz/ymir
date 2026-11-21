@@ -82,10 +82,10 @@ printf '%s' "$out" | grep -q '"http://127.0.0.1:8080/v1"' \
   || bad "the registry rail was not used directly: $out"
 
 # ── 4. a provider with no door is refused in words ────────────────────────────
-if out="$(run YMIR_HNOSS_PROVIDER=openrouter YMIR_HNOSS_MODEL=gpt-5 "$LAUNCH" --resolve 2>&1)"; then
+if out="$(run YMIR_HNOSS_PROVIDER=no-such-gateway YMIR_HNOSS_MODEL=gpt-5 "$LAUNCH" --resolve 2>&1)"; then
   bad "a provider with no door was accepted: $out"
 else
-  printf '%s' "$out" | grep -q "no door here for 'openrouter'" \
+  printf '%s' "$out" | grep -q "no door here for 'no-such-gateway'" \
     && ok "a provider with no door is refused, and named" \
     || bad "the refusal did not name the provider: $out"
 fi
@@ -94,21 +94,21 @@ fi
 if (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then
   skip "port $PORT is already in use; the bridge truth cases need a free port"
 else
-  # lmstudio needs no credential, so this instance raises without a network.
-  env YMIR_MODEL_BIND=127.0.0.1 "$BRIDGE" --ensure --port "$PORT" --provider lmstudio >/dev/null 2>&1 \
+  # the local rail needs no credential, so this instance raises without a network.
+  env YMIR_MODEL_BIND=127.0.0.1 "$BRIDGE" --ensure --port "$PORT" --provider local-rail >/dev/null 2>&1 \
     && ok "the bridge raises on a named port" || bad "the bridge did not raise on :$PORT"
   out="$("$BRIDGE" --status --port "$PORT" 2>/dev/null)"
-  printf '%s' "$out" | grep -q '"lmstudio"' \
+  printf '%s' "$out" | grep -q '"local-rail"' \
     && ok "status reports the provider read from the live process" \
-    || bad "--status did not report lmstudio: $out"
-  # The flag says opencode-go; the process says lmstudio. A status that echoed the
+    || bad "--status did not report local-rail: $out"
+  # The flag says opencode-go; the process says local-rail. A status that echoed the
   # flag would print opencode-go here — the false green this test exists to stop.
   out="$("$BRIDGE" --status --port "$PORT" --provider opencode-go 2>/dev/null)"
   printf '%s' "$out" | grep -q '"opencode-go"' \
     && bad "--status echoed the flag instead of the process" \
     || ok "--status ignores the flag and reads the process"
   # `--ensure` on the wrong provider must restart it and never leave two doors.
-  out="$("$BRIDGE" --ensure --port "$PORT" --provider lmstudio 2>/dev/null)"
+  out="$("$BRIDGE" --ensure --port "$PORT" --provider local-rail 2>/dev/null)"
   printf '%s' "$out" | grep -q '"already up"' \
     && ok "--ensure with the SAME provider does nothing" || bad "--ensure re-raised an instance that was already right: $out"
   # An unknown provider may not be called green even though the port answers.

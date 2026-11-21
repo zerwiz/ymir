@@ -9,20 +9,33 @@ registers the provider with baseUrl=http://127.0.0.1:PORT/v1 and any placeholder
 key.
 
 Providers (YMIR_MODEL_PROVIDER):
+    chain         (when the home has a chain file)  every step below, in order, with fallback
     opencode-go   (default)  OpenCode Zen Go gateway — needs a key
     local-rail               the local llama.cpp rail — the second road when no key is here
-    lmstudio                 LM Studio on localhost — ONLY when the operator names it
+    openrouter               the OpenRouter gateway — needs a key
+    llamacpp                 a llama.cpp rail on another machine (a chain step names its host)
     openai-compatible        any OpenAI-compatible server — optional key
 
-THE FALLBACK IS NEVER LM STUDIO (plan 275 item 22, 2026-11-14). It used to be: with no
-OPENCODE_GO_API_KEY in the env file the bridge chose `lmstudio`, a door the Allfather
-retired on 2026-10-24 ("no lm studio we not using that"), and every chat then died with
-`curl: (7) Failed to connect to 127.0.0.1:1234` behind a bare 500. The order is now:
+ONLY LLAMA.CPP LOCALLY (2026-11-21, at the operator's word: "only use llama. no ollama or lm
+studio"). The LM Studio provider is gone from this door; the local road is the llama.cpp rail.
 
-    1. the operator NAMED a provider (--provider / YMIR_MODEL_PROVIDER)  — it wins, even lmstudio
-    2. a key is readable for opencode-go  -> opencode-go
-    3. the local rail answers on :8080    -> local-rail
-    4. neither                            -> REFUSE, naming both roads
+THE CHAIN (2026-11-21). Any machine may be off, so one door carries the fallback for every
+hosted service. The steps live in the home (`<home>/config/model-chain.json`, or the file
+YMIR_MODEL_CHAIN names), never here: a step names a provider, a model, and either a base URL
+or a fleet HOST whose tailnet address is read from the fleet registry (YMIR_FLEET_JSON, or
+fleet.json in YMIR_DATA_DIR). A request goes to the first healthy step; a step that is down,
+times out, rate-limits, refuses its key or fails on its side is marked down for
+YMIR_CHAIN_HEALTH_TTL seconds (default 30) and the next step is tried. The log names the step
+that answered and every step passed over, and each reply carries `X-Ymir-Chain-Step`.
+`GET /chain` shows the steps and their cached health; `--chain` prints them without serving.
+
+The order when nothing is named:
+
+    1. the operator NAMED a provider (--provider / YMIR_MODEL_PROVIDER)  — it wins
+    2. the home carries a chain file      -> chain
+    3. a key is readable for opencode-go  -> opencode-go
+    4. the local rail answers on :8080    -> local-rail
+    5. none                               -> REFUSE, naming the roads
 
 A key is read by a DOOR, never by a guess: the env file, the process environment, the
 vault (`bin/vault/hodd.sh emit secrets/platform.env`) and finally pi's own auth.json.
@@ -39,14 +52,17 @@ Usage:
     python3 model-bridge.py --resolve-provider   # which provider it would serve, and WHY
 
 Env:
-    YMIR_MODEL_PROVIDER       opencode-go | local-rail | lmstudio | openai-compatible
+    YMIR_MODEL_PROVIDER       chain | opencode-go | local-rail | openrouter | llamacpp | openai-compatible
+    YMIR_MODEL_CHAIN          the chain file (default <YMIR_SETTINGS_DIR>/model-chain.json)
+    YMIR_CHAIN_HEALTH_TTL     seconds a step's health is trusted (default 30)
+    YMIR_FLEET_JSON           the fleet registry a chain step's host is read from
     YMIR_MODEL_BASE_URL       override the provider's base URL
     YMIR_MODEL_API_KEY        credential for the selected provider
     YMIR_MODEL_BIND           listen address (default 127.0.0.1); a containerised
                               client on another network names the interface it sees
     OPENCODE_GO_API_KEY       credential when provider=opencode-go
     LLAMA_SWAP_API_KEY        credential when provider=local-rail (the rail's own key)
-    LMSTUDIO_BASE_URL         default http://127.0.0.1:1234/v1
+    OPENROUTER_API_KEY        credential when provider=openrouter (else pi's auth.json)
     OPENCODE_GO_BASE_URL      default https://opencode.ai/zen/go/v1
     YMIR_RAIL_BASE_URL        default http://127.0.0.1:8080/v1 (the local rail)
     OPENCODE_GO_BRIDGE_PORT   default 4603
@@ -70,7 +86,7 @@ DEFAULT_PORT = 4603
 ROOT = __import__("pathlib").Path(__file__).resolve().parents[2]
 
 # Provider catalogue. `key_env` lists the env names checked, in order; an empty
-# key requirement (lmstudio) means the bridge starts with no credential.
+# key requirement (the local rail) means the bridge starts with no credential.
 #
 # `vault_key` and `pi_auth` are the two further doors a credential may sit behind on this
 # machine (plan 275 item 22): the house vault is the private store, and pi's auth.json is
@@ -95,12 +111,22 @@ PROVIDERS = {
         "catalog": "llama-swap",
         "requires_key": False,
     },
-    "lmstudio": {
-        "base_url": "http://127.0.0.1:1234/v1",
-        "base_url_env": "LMSTUDIO_BASE_URL",
-        "key_env": ["LMSTUDIO_API_KEY", "YMIR_MODEL_API_KEY"],
-        "pi_auth": "lmstudio",
-        "catalog": "lmstudio",
+    "openrouter": {
+        "base_url": "https://openrouter.ai/api/v1",
+        "base_url_env": "OPENROUTER_BASE_URL",
+        "key_env": ["OPENROUTER_API_KEY"],
+        "vault_key": "OPENROUTER_API_KEY",
+        "pi_auth": "openrouter",
+        "catalog": "openrouter",
+        "requires_key": True,
+    },
+    # A llama.cpp rail on another machine. It has no default address: a chain step names
+    # the fleet host (or a base URL), and its key, if the rail is keyed, by pi_auth/key_env.
+    "llamacpp": {
+        "base_url": "",
+        "base_url_env": "YMIR_LLAMACPP_BASE_URL",
+        "key_env": [],
+        "catalog": "",
         "requires_key": False,
     },
     "openai-compatible": {
@@ -112,8 +138,8 @@ PROVIDERS = {
     },
 }
 
-# The provider the bridge falls to when no key exists. NEVER lmstudio (plan 275 item 22):
-# a retired door that answers `curl: (7)` is not a fallback, it is a second failure.
+# The provider the bridge falls to when no key exists — the llama.cpp rail, never a
+# retired door (plan 275 item 22): a door that answers `curl: (7)` is a second failure.
 FALLBACK_PROVIDER = "local-rail"
 
 # The static table is the LAST resort, for a machine where neither the provider nor the
@@ -155,19 +181,19 @@ def resolve_provider(env: dict, cli_provider: str | None) -> str:
     """The provider this bridge serves. `cli_provider` is the operator's NAME, if any.
 
     Named beats detected — but when nothing is named the fallback is decided by what is
-    actually here, and it is NEVER lmstudio (plan 275 item 22): a retired door answering
+    actually here, and it is never a retired door (plan 275 item 22): a door answering
     `curl: (7)` behind a bare 500 is how OmniChat lost every model at once.
     """
     name, _why = choose_provider(env, cli_provider)
     if not name:
         print("[bridge] ERROR: no provider to serve — "
               "no key for opencode-go, and the local rail does not answer.\n"
-              "  named:   --provider opencode-go | local-rail | lmstudio | openai-compatible\n"
+              "  named:   --provider chain | opencode-go | local-rail | openrouter | openai-compatible\n"
+              "  chain:   write the steps into <home>/config/model-chain.json\n"
               "  keyed:   put OPENCODE_GO_API_KEY in the vault (bin/vault/hodd.sh emit secrets/platform.env)\n"
-              "  local:   raise the rail on :8080, or set YMIR_RAIL_BASE_URL\n"
-              "  (lmstudio is served only when it is NAMED)", file=sys.stderr)
+              "  local:   raise the llama.cpp rail on :8080, or set YMIR_RAIL_BASE_URL", file=sys.stderr)
         raise SystemExit(1)
-    if name not in PROVIDERS:
+    if name not in PROVIDERS and name != "chain":
         print(f"[bridge] ERROR: unknown provider '{name}'. "
               f"Choose one of: {', '.join(PROVIDERS)}", file=sys.stderr)
         raise SystemExit(2)
@@ -181,6 +207,9 @@ def choose_provider(env: dict, cli_provider: str | None) -> tuple[str, str]:
              or os.environ.get("YMIR_MODEL_PROVIDER") or "").strip()
     if named:
         return named, "named by the operator"
+    chain_file = chain_path(env)
+    if chain_file:
+        return "chain", f"the home carries a chain ({chain_file})"
     spec = PROVIDERS["opencode-go"]
     key, where = resolve_key(env, spec)
     if key:
@@ -323,6 +352,158 @@ def catalog_models(spec: dict) -> list:
     return rows
 
 
+# --------------------------------------------------------------------------- the chain
+# Resolved at startup when the provider is `chain`; HEALTH is the cached answer per step.
+CHAIN: list = []
+HEALTH: dict = {}
+_HEALTH_LOCK = __import__("threading").Lock()
+
+
+def health_ttl() -> float:
+    try:
+        return float(os.environ.get("YMIR_CHAIN_HEALTH_TTL", "30"))
+    except ValueError:
+        return 30.0
+
+
+def chain_path(env: dict) -> str:
+    """The chain file, or "" when this home carries none. Named by YMIR_MODEL_CHAIN, else the
+    home's settings shelf. Never a path in this tree: the steps name the operator's machines."""
+    named = env.get("YMIR_MODEL_CHAIN") or os.environ.get("YMIR_MODEL_CHAIN") or ""
+    if named:
+        return named if os.path.exists(named) else ""
+    settings = os.environ.get("YMIR_SETTINGS_DIR") or ""
+    if not settings and os.environ.get("YMIR_HOME"):
+        settings = os.path.join(os.environ["YMIR_HOME"], "config")
+    if settings:
+        cand = os.path.join(settings, "model-chain.json")
+        if os.path.exists(cand):
+            return cand
+    return ""
+
+
+def fleet_hosts() -> dict:
+    path = os.environ.get("YMIR_FLEET_JSON") or ""
+    if not path and os.environ.get("YMIR_DATA_DIR"):
+        path = os.path.join(os.environ["YMIR_DATA_DIR"], "fleet.json")
+    if not path:
+        return {}
+    try:
+        with open(path) as f:
+            return (json.load(f) or {}).get("hosts", {}) or {}
+    except Exception:
+        return {}
+
+
+def load_chain(env: dict, path: str) -> list:
+    """Read the steps and resolve each one's address and key. A step whose host or key
+    cannot be resolved stays in the list, marked, so the log and /chain can say why."""
+    with open(path) as f:
+        data = json.load(f)
+    hosts = fleet_hosts()
+    steps = []
+    for i, raw in enumerate(data.get("steps", [])):
+        kind = raw.get("provider", "")
+        base_spec = PROVIDERS.get(kind)
+        step = {"name": raw.get("name") or f"step-{i + 1}", "provider": kind,
+                "model": raw.get("model") or "*", "timeout": int(raw.get("timeout", 120)),
+                "base": "", "key": "", "key_where": "no key", "problem": ""}
+        if not base_spec or kind == "chain":
+            step["problem"] = f"unknown provider '{kind}'"
+            steps.append(step)
+            continue
+        spec = dict(base_spec)
+        if raw.get("pi_auth"):
+            spec["pi_auth"] = raw["pi_auth"]
+        if raw.get("key_env"):
+            spec["key_env"] = [raw["key_env"]] + list(spec.get("key_env", []))
+            spec["vault_key"] = raw["key_env"]
+        base = raw.get("base_url", "")
+        if not base and raw.get("host"):
+            h = hosts.get(raw["host"]) or {}
+            addr = h.get("tailnet") or h.get("lan") or ""
+            if addr:
+                base = f"http://{addr}:{int(raw.get('port', 8080))}/v1"
+            else:
+                step["problem"] = f"host '{raw['host']}' has no address in the fleet registry"
+        if not base and not raw.get("host"):
+            base = env.get(spec["base_url_env"]) or os.environ.get(spec["base_url_env"]) or spec["base_url"]
+        step["base"] = base
+        if base:
+            step["key"], step["key_where"] = resolve_key(env, spec)
+            if spec.get("requires_key") and not step["key"]:
+                step["problem"] = "no key readable"
+        steps.append(step)
+    return steps
+
+
+def _step_headers(step: dict, stream: bool = False) -> dict:
+    h = {"Content-Type": "application/json",
+         "Accept": "text/event-stream" if stream else "application/json",
+         "User-Agent": USER_AGENT,
+         "x-opencode-session": SESSION_ID}
+    if step.get("key"):
+        h["Authorization"] = f"Bearer {step['key']}"
+    return h
+
+
+def _mark(step: dict, ok: bool, why: str) -> None:
+    with _HEALTH_LOCK:
+        HEALTH[step["name"]] = (__import__("time").time(), ok, why)
+
+
+def step_healthy(step: dict) -> tuple[bool, str]:
+    """(usable, why). Cached for health_ttl() seconds so a dead machine costs one probe per
+    window, not one per request. The probe is GET <base>/models, bounded to 3 s."""
+    if step.get("problem"):
+        return False, step["problem"]
+    now = __import__("time").time()
+    with _HEALTH_LOCK:
+        cached = HEALTH.get(step["name"])
+    if cached and now - cached[0] < health_ttl():
+        return cached[1], cached[2] + " (cached)"
+    try:
+        req = urllib.request.Request(step["base"].rstrip("/") + "/models", headers=_step_headers(step))
+        r = _curl_open(req, timeout=3)
+        ok = 200 <= r.status < 300
+        why = "probe ok" if ok else f"probe http {r.status}"
+    except OSError as e:
+        ok, why = False, "probe unreachable: " + str(e).strip().splitlines()[0][:80] if str(e).strip() else "probe unreachable"
+    _mark(step, ok, why)
+    return ok, why
+
+
+# Statuses that say the STEP is unwell (mark it down for the window). Any other non-2xx
+# falls through to the next step for this request only: a 400 may be the request's fault.
+_STEP_DOWN = {401, 403, 408, 429}
+
+
+def _is_error_body(body: bytes, stream: bool) -> bool:
+    """A 200 that carries an error and no answer is a refusal, not an answer."""
+    head = body[:4096]
+    if stream:
+        return b'"error"' in head and b'"choices"' not in head
+    try:
+        d = json.loads(body or b"{}")
+    except Exception:
+        return False
+    return isinstance(d, dict) and "error" in d and "choices" not in d
+
+
+def chain_status() -> list:
+    rows = []
+    for st in CHAIN:
+        with _HEALTH_LOCK:
+            h = HEALTH.get(st["name"])
+        rows.append({"step": st["name"], "provider": st["provider"], "model": st["model"],
+                     "base_url": st["base"], "key": "present" if st["key"] else st["key_where"],
+                     "problem": st["problem"],
+                     "health": None if not h else {"ok": h[1], "why": h[2],
+                                                   "age_s": round(__import__("time").time() - h[0], 1)}})
+    return rows
+
+
+
 def is_https(url: str) -> bool:
     return url.startswith("https://")
 
@@ -367,6 +548,21 @@ class Handler(BaseHTTPRequestHandler):
         return [{"id": m["id"], "object": "model"} for m in MODELS]
 
     def do_GET(self):
+        if self.path.split("?")[0] in ("/chain", "/v1/chain"):
+            for st in CHAIN:
+                step_healthy(st)
+            self._send(200, json.dumps({"provider": PROVIDER, "steps": chain_status()}).encode(),
+                       "application/json")
+            return
+        if self.path.split("?")[0] == "/v1/models" and PROVIDER == "chain":
+            ids = ["auto"] + [st["model"] for st in CHAIN if st["model"] != "*"]
+            seen = []
+            for i in ids:
+                if i not in seen:
+                    seen.append(i)
+            payload = {"object": "list", "data": [{"id": i, "object": "model"} for i in seen]}
+            self._send(200, json.dumps(payload).encode(), "application/json")
+            return
         if self.path.split("?")[0] == "/v1/models":
             payload = {"object": "list", "data": self._models()}
             self._send(200, json.dumps(payload).encode(), "application/json")
@@ -381,6 +577,9 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length) if length else b"{}"
             req = json.loads(body)
+            if PROVIDER == "chain":
+                self._chain(req, bool(req.get("stream")))
+                return
             mid = req.get("model", "")
             # opencode-go rejects the `opencode-go/` prefix; strip provider prefixes.
             if PROVIDER == "opencode-go" and "/" in mid and mid.split("/", 1)[0] != "openai":
@@ -396,6 +595,71 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(500, json.dumps({"error": str(e)}).encode(), "application/json")
             except Exception:
                 pass
+
+    def _chain(self, req: dict, stream: bool) -> None:
+        """Walk the chain: the first healthy step that answers is relayed; every step passed
+        over is named in the log, so the operator can see which road carried the call."""
+        asked = req.get("model", "")
+        passed = []
+        last = None
+        for st in CHAIN:
+            ok, why = step_healthy(st)
+            if not ok:
+                passed.append(f"{st['name']}=skip({why})")
+                continue
+            r = dict(req)
+            if st["model"] != "*":
+                r["model"] = st["model"]
+            elif st["provider"] == "opencode-go" and "/" in str(asked):
+                r["model"] = str(asked).split("/", 1)[1]
+            up = urllib.request.Request(st["base"].rstrip("/") + "/chat/completions",
+                                        data=json.dumps(r).encode(), headers=_step_headers(st, stream),
+                                        method="POST")
+            try:
+                resp = _curl_open(up, timeout=st["timeout"])
+            except OSError as e:
+                why = "unreachable or timed out: " + (str(e).strip().splitlines() or [""])[0][:80]
+                _mark(st, False, why)
+                passed.append(f"{st['name']}={why}")
+                continue
+            whole = resp.read()
+            if 200 <= resp.status < 300 and not _is_error_body(whole, stream):
+                _mark(st, True, "answered")
+                print(f"[chain] answered step={st['name']} provider={st['provider']} model={r['model']} "
+                      f"asked={asked or '-'} stream={stream} passed=[{'; '.join(passed)}]", flush=True)
+                self._relay(resp.status, whole, stream, st["name"])
+                return
+            why = f"http {resp.status}" + (" refusal" if 200 <= resp.status < 300 else "")
+            if resp.status in _STEP_DOWN or resp.status >= 500 or 200 <= resp.status < 300:
+                _mark(st, False, why)
+            passed.append(f"{st['name']}={why}")
+            last = (resp.status, whole)
+        print(f"[chain] NO STEP ANSWERED asked={asked or '-'} passed=[{'; '.join(passed)}]", flush=True)
+        payload = {"error": {"message": "no model step answered", "passed": passed,
+                             "last_status": last[0] if last else None}}
+        self._send(503, json.dumps(payload).encode(), "application/json")
+
+    def _relay(self, status: int, whole: bytes, stream: bool, step: str) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", "text/event-stream" if stream else "application/json")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("X-Ymir-Chain-Step", step)
+        if stream:
+            self.send_header("Transfer-Encoding", "chunked")
+            self.send_header("Connection", "close")
+        else:
+            self.send_header("Content-Length", str(len(whole)))
+        self.end_headers()
+        try:
+            if stream:
+                if whole:
+                    self.wfile.write(f"{len(whole):x}\r\n".encode() + whole + b"\r\n")
+                self.wfile.write(b"0\r\n\r\n")
+            else:
+                self.wfile.write(whole)
+            self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def _proxy(self, body: bytes, stream: bool) -> None:
         req = urllib.request.Request(
@@ -590,9 +854,11 @@ def main() -> int:
     ap.add_argument("--env", default=os.environ.get("ENV_FILE",
                     str(__import__("pathlib").Path(__file__).resolve().parents[1] / ".env")))
     ap.add_argument("--provider", default=None,
-                    help="opencode-go | local-rail | lmstudio | openai-compatible")
+                    help="chain | opencode-go | local-rail | openrouter | llamacpp | openai-compatible")
     ap.add_argument("--bind", default=os.environ.get("YMIR_MODEL_BIND", "127.0.0.1"),
                     help="listen address (default 127.0.0.1, or YMIR_MODEL_BIND)")
+    ap.add_argument("--chain", action="store_true",
+                    help="print the chain's steps and their health (probed now), without serving")
     ap.add_argument("--providers", action="store_true",
                     help="print the provider names this bridge can serve, one per line")
     ap.add_argument("--resolve-provider", dest="resolve_provider", action="store_true",
@@ -603,9 +869,26 @@ def main() -> int:
     if args.providers:
         print("\n".join(PROVIDERS))
         return 0
+    if args.chain:
+        env = load_env(args.env)
+        path = chain_path(env)
+        if not path:
+            print("chain: none — no model-chain.json in the home's settings (YMIR_MODEL_CHAIN unset)")
+            return 1
+        CHAIN[:] = load_chain(env, path)
+        print(f"chain[{len(CHAIN)}]{{step,provider,model,base_url,key,healthy,why}}:")
+        for st in CHAIN:
+            ok, why = step_healthy(st)
+            print('  "%s","%s","%s","%s","%s",%s,"%s"' % (st["name"], st["provider"], st["model"], st["base"],
+                  "present" if st["key"] else st["key_where"], "true" if ok else "false", why))
+        return 0
     if getattr(args, "resolve_provider", False):
         env = load_env(args.env)
         name, why = choose_provider(env, args.provider)
+        if name == "chain":
+            print('provider[4]{provider,why,base_url,key}:')
+            print('  "chain","%s","%s","per step"' % (why, chain_path(env)))
+            return 0
         spec = PROVIDERS.get(name, {})
         base = resolve_base_url(env, spec) if spec else ""
         _key, where = resolve_key(env, spec) if spec else ("", "no key")
@@ -618,6 +901,27 @@ def main() -> int:
     BIND = args.bind
     env = load_env(args.env)
     PROVIDER = resolve_provider(env, args.provider)
+    if PROVIDER == "chain":
+        path = chain_path(env)
+        if not path:
+            print("[bridge] ERROR: provider 'chain' named, but the home carries no model-chain.json "
+                  "(set YMIR_MODEL_CHAIN or write <home>/config/model-chain.json)", file=sys.stderr)
+            return 1
+        CHAIN[:] = load_chain(env, path)
+        if not CHAIN:
+            print(f"[bridge] ERROR: the chain {path} has no steps", file=sys.stderr)
+            return 1
+        for st in CHAIN:
+            print(f"[chain] step {st['name']}: {st['provider']} model={st['model']} -> {st['base'] or '-'} "
+                  f"({'key present' if st['key'] else st['key_where']}){' PROBLEM: ' + st['problem'] if st['problem'] else ''}",
+                  flush=True)
+        print(f"[bridge] provider 'chain' on {BIND}:{args.port}/v1 ({len(CHAIN)} steps, from {path})", flush=True)
+        srv = ThreadingHTTPServer((BIND, args.port), Handler)
+        try:
+            srv.serve_forever()
+        except KeyboardInterrupt:
+            print("\n[bridge] stopped", flush=True)
+        return 0
     spec = PROVIDERS[PROVIDER]
     BASE_URL = resolve_base_url(env, spec)
     KEY, KEY_SOURCE = resolve_key(env, spec)

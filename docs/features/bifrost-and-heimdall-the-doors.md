@@ -24,13 +24,24 @@ Two doors between realms:
 bin/bridge/bifrost-bridge.sh            # raise the model bridge (keeps the endpoint alive)
 ```
 
-Provider is the operator's choice (`YMIR_MODEL_PROVIDER`): `opencode-go` (needs a key),
-`local-rail` (the local llama.cpp rail on `:8080`), `lmstudio` (only when it is **named**),
-or `openai-compatible`. With nothing named the bridge decides by what is actually here:
-`opencode-go` when a key is readable — through the env file, the vault
-(`bin/vault/hodd.sh emit secrets/platform.env`) or pi's `auth.json` — and otherwise the local
-rail. `lmstudio` is never chosen for you: it was the old fallback, and a door the operator
-retired answered every chat with a bare 500. Ask what it would serve, and why:
+Provider is the operator's choice (`YMIR_MODEL_PROVIDER`): `chain`, `opencode-go` (needs a key),
+`local-rail` (the local llama.cpp rail on `:8080`), `openrouter` (needs a key), or
+`openai-compatible`. With nothing named the bridge decides by what is actually here: the **chain**
+when the home carries `config/model-chain.json`; else `opencode-go` when a key is readable — through
+the env file, the vault (`bin/vault/hodd.sh emit secrets/platform.env`) or pi's `auth.json` — and
+otherwise the local rail. Only llama.cpp is a local road: LM Studio and ollama are not providers.
+
+**The chain** is the fallback for every hosted service, in one place. Its steps (a hosted model,
+then the fleet's llama.cpp rails by their tailnet names from the fleet registry, then a second
+hosted model) live in the home. A step that is down, times out, rate-limits or refuses is passed
+over, and every reply names the step that answered. The full page is
+[Who calls a model](../reference/ai-callers.md).
+
+```bash
+bin/bridge/bifrost-bridge.sh --chain        # each step, its address, and its health now
+```
+
+Ask what it would serve, and why:
 
 ```bash
 bin/bridge/bifrost-bridge.sh --resolve      # which provider, why, and where the key is
@@ -65,6 +76,7 @@ One key published to your GitHub opens every warded computer; the ward refreshes
 | What you see | What to do |
 |---|---|
 | A session 401s / the model never answers | `bin/bridge/bifrost-bridge.sh` — the bridge is down. |
+| Calls answer 503 `no model step answered` | `bin/bridge/bifrost-bridge.sh --chain` names each step and why it is down. |
 | SSH stopped working on a seat | `bin/host/heimdall-ensure.sh status`; the key may be unpinned or GitHub unreachable. |
 | The gateway does not answer | It is not raised — raise the set (`scripts/start.sh`). |
 
@@ -73,3 +85,5 @@ One key published to your GitHub opens every warded computer; the ward refreshes
 - **2026-11-14** — the provider fallback and the tunnel rule corrected (plan 275 items 22 and 30): `lmstudio` is
   served only when it is named, the key is read through the vault, and a tunnel may not point at a hall.
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-21** — the chain: one door carries the fallback for every hosted service (a hosted model, the
+  fleet's llama.cpp rails, a second hosted model); LM Studio is no longer a provider.

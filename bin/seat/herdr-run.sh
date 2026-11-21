@@ -200,7 +200,7 @@ seat_guard() {  # <name>; non-zero if the seat would share the primary's lock
 # let three agents infer against one rail at once. Non-zero = at capacity.
 local_model_guard() {  # <model-string>
   case "${1:-}" in
-    *llama*|*lmstudio*)
+    *llama*)
       [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ] || return 0
       "$SCRIPT_DIR/../model/local-model-lock.sh" check >/dev/null 2>&1
       ;;
@@ -465,7 +465,7 @@ $_coretext"
           # An explicit --kind always wins (plan 262): the caller named the harness.
           if [ -z "$KIND_EXPLICIT" ]; then
             case "${md:-}:${pv:-}:${h:-}" in
-              *llama*|*lmstudio*|*ollama*) KIND=pi ;;
+              *llama*) KIND=pi ;;
               "")                          KIND=pi ;;   # nothing resolved: stay local
               *)                           KIND=opencode ;;
             esac

@@ -79,7 +79,7 @@ done
 # whose model is local must not start when the host is already at capacity. This
 # is the law `bin/model/local-model-lock.sh` exists for and that no seat road called.
 case "$MODEL" in
-  llama-swap/*|llamacpp-whynot/*|llama.cpp/*|llama-cpp/*|lmstudio/*)
+  llama-swap/*|llamacpp-whynot/*|llama.cpp/*|llama-cpp/*)
     if [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ]; then
       if ! "$SCRIPT_DIR/../model/local-model-lock.sh" check >/dev/null 2>&1; then
         "$SCRIPT_DIR/../model/local-model-lock.sh" check >&2

@@ -4,12 +4,19 @@
 # this keeps that endpoint alive so a session never 401s.
 #
 # The provider is the operator's choice (YMIR_MODEL_PROVIDER):
+#   chain              every step of <home>/config/model-chain.json, in order, with fallback
 #   opencode-go        OpenCode Zen Go gateway — needs a key (vault, env file, or pi's auth.json)
 #   local-rail         the local llama.cpp rail on :8080 — the keyless second road
-#   lmstudio           LM Studio on localhost — served ONLY when it is named
+#   openrouter         the OpenRouter gateway — needs a key
 #   openai-compatible  any OpenAI-compatible server — optional key
 #
-# THE FALLBACK IS NEVER LM STUDIO (plan 275 item 22, measured 2026-11-14): with no
+# THE CHAIN (2026-11-21): when the home carries a chain file, the door serves it — one place
+# holds the fallback for every hosted service (a hosted model first, then the fleet's llama.cpp
+# rails by their tailnet names from the fleet registry, then a second hosted model).
+# `--chain` prints the steps and their health. Only llama.cpp is a local road: LM Studio and
+# ollama are not providers of this door.
+#
+# THE FALLBACK WAS NEVER TO BE LM STUDIO (plan 275 item 22, measured 2026-11-14): with no
 # OPENCODE_GO_API_KEY in the env file this door used to choose `lmstudio` — a provider the
 # Allfather retired on 2026-10-24 ("no lm studio we not using that") — so bifrost answered
 # every chat with `curl: (7) Failed to connect to 127.0.0.1:1234` behind a bare 500. The
@@ -18,7 +25,7 @@
 # The decision itself lives in model-bridge.py (`--resolve-provider`), so this shell holds
 # no second opinion about it.
 #
-# Usage: bin/bridge/bifrost-bridge.sh [--start|--stop|--status|--ensure|--providers|--resolve] [--port N] [--provider NAME]
+# Usage: bin/bridge/bifrost-bridge.sh [--start|--stop|--status|--ensure|--providers|--resolve|--chain] [--port N] [--provider NAME]
 #        bin/bridge/bifrost-bridge.sh --foreground  # stay in the foreground (a systemd unit
 #                                            # supervises this process directly — no self-daemon)
 #        bin/bridge/bifrost-bridge.sh --version
@@ -60,6 +67,9 @@ hoard_settings_dir YMIR_SETTINGS_DIR
 hoard_local_env YMIR_ENV_FILE
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
+# The bridge reads the chain from the settings shelf and a step's host from the fleet
+# registry on the data shelf, so both are handed down — never guessed in Python.
+export YMIR_SETTINGS_DIR YMIR_DATA_DIR
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -81,12 +91,13 @@ while [ $# -gt 0 ]; do
     --ensure) ACTION=ensure; shift ;;
     --providers) ACTION=providers; shift ;;
     --resolve) ACTION=resolve; shift ;;
+    --chain) ACTION=chain; shift ;;
     --stop|stop) ACTION=stop; shift ;;
     --status|status) ACTION=status; shift ;;
     --foreground) FOREGROUND=1; shift ;;
     --port) PORT=${2-}; shift 2 ;;
     --provider) PROVIDER=${2-}; shift 2 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/bridge/bifrost-bridge.sh [--start|--stop|--status|--ensure|--providers|--resolve|--port|--provider|--foreground]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/bridge/bifrost-bridge.sh [--start|--stop|--status|--ensure|--providers|--resolve|--chain|--port|--provider|--foreground]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -188,13 +199,15 @@ if [ "$ACTION" = start ] || [ "$ACTION" = ensure ] || [ "$ACTION" = resolve ]; t
     printf 'error: no provider to serve — no key for opencode-go, and the local rail does not answer\n' >&2
     printf 'why:   %s\n' "${RESOLVED_WHY:-the bridge could not be asked}" >&2
     printf 'help:  raise the rail on :8080, put OPENCODE_GO_API_KEY in the vault (bin/vault/hodd.sh emit secrets/platform.env),\n' >&2
-    printf '       or name one: --provider opencode-go|local-rail|lmstudio|openai-compatible\n' >&2
-    printf 'note:  lmstudio is served only when it is NAMED; it is not a fallback (plan 275 item 22)\n' >&2
+    printf '       write <home>/config/model-chain.json, or name one: --provider chain|opencode-go|local-rail|openrouter|openai-compatible\n' >&2
     exit 1
   fi
 fi
 
 case "$ACTION" in
+  chain)
+    # The steps and their health, probed now — the same reading the door serves by.
+    exec python3 "$BRIDGE" --chain --env "$ENV_FILE" ;;
   providers)
     # What this bridge can carry — the list a caller with no door for its provider
     # reads to refuse in words instead of guessing a URL.
@@ -269,7 +282,7 @@ else
   case "$PROVIDER" in
     opencode-go) printf 'help: put OPENCODE_GO_API_KEY in the vault (bin/vault/hodd.sh emit secrets/platform.env) or in pi auth.json, or run with --provider local-rail\n' >&2 ;;
     local-rail)  printf 'help: is the rail serving on :8080? Or set YMIR_RAIL_BASE_URL / YMIR_MODEL_PROVIDER\n' >&2 ;;
-    lmstudio)    printf 'help: lmstudio is NAMED, never chosen — is LM Studio serving on 127.0.0.1:1234?\n' >&2 ;;
+    chain)       printf 'help: bin/bridge/bifrost-bridge.sh --chain shows each step and why it is down\n' >&2 ;;
     *)           printf 'help: check YMIR_MODEL_BASE_URL and the provider in %s\n' "${ENV_FILE#"$ROOT"/}" >&2 ;;
   esac
   exit 1
