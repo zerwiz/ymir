@@ -36,8 +36,10 @@ printf 'housewatch{surface,state,note}:\n'
 
 say() {  # <surface> <severity> <message>
   [ "$DRY" = 1 ] && { printf '  "%s","would-say %s","%s"\n' "$1" "$2" "$3"; return; }
+  # The key is the surface and nothing else (2026-11-21): the hotline holds it to one line an hour and
+  # counts the repeats. An hour stamp in the key is a number that changes, and a key that changes is no key.
   bash "$DOOR" --source ward --severity "$2" --message "$3" \
-    --key "housewatch:$1:$(date +%Y%m%d%H)" >/dev/null 2>&1 || true
+    --key "housewatch:$1" >/dev/null 2>&1 || true
 }
 
 # ── the rail: does it answer its own catalogue? ────────────────────────────────
