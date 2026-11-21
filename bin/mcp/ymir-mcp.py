@@ -504,6 +504,35 @@ def gna_watch_arm() -> str:
 
 
 @mcp.tool()
+def ymir_team_run(action: str = "run", task: str = "", id: str = "", on: str = "auto", team: str = "",
+                  project: str = "", runtime: str = "", chain: str = "", model: str = "",
+                  phone: bool = True, lines: int = 25) -> str:
+    """Run the smithy for a bigger task, on a chosen machine, and follow it. action=run starts a run from
+    `task` (on = a machine name or auto for the least loaded; runtime = herdr: each agent seated in a visible
+    pane, or internal: headless in the engine; blank takes the machine's configured default) and answers with
+    the run id, machine, runtime, state and link. status | tail | stop take the run `id`; where lists the
+    machines. phone=true answers in six plain lines."""
+    door = [str(ROOT / "bin" / "forge" / "team-run.sh")]
+    if action == "where":
+        return _run(["bash", *door, "where"], 120)
+    if action == "run":
+        argv = ["bash", *door, "run", "--task", task, "--on", on or "auto"]
+        for flag, value in (("--team", team), ("--project", project), ("--runtime", runtime),
+                            ("--chain", chain), ("--model", model)):
+            if value:
+                argv += [flag, value]
+        return _run(argv + (["--phone"] if phone else []), 300)
+    if action in ("status", "tail", "stop"):
+        if not id:
+            return f"{action} needs the run id"
+        argv = ["bash", *door, action, id] + (["--on", on] if on and on != "auto" else [])
+        if action == "tail":
+            argv += ["-n", str(lines)]
+        return _run(argv + (["--phone"] if phone else []), 180)
+    return "action must be run | status | tail | stop | where"
+
+
+@mcp.tool()
 def ymir_telegram(action: str = "list", machine: str = "", text: str = "") -> str:
     """Telegram across the fleet: list the machines (bot id · chat · token ref), check a machine's bot,
     or relay a line from THIS machine into another's chat (a Rune is carved)."""

@@ -1,0 +1,23 @@
+# config/machines/<host>/smidja.yaml — how the smithy runs on THIS machine (read by bin/forge/team-run.sh).
+# Copy to $YMIR_HOME/config/machines/<host>/smidja.yaml, one file per machine that may run it.
+# A machine with this file takes part in `--on auto`; this machine always does.
+
+# Where the smithy's agents work, unless a run says otherwise.
+#   herdr    each agent is seated in a visible herdr pane on this machine; you can watch and steer it
+#   internal each agent runs headless inside the smithy's own engine (the default when this is absent)
+runtime: internal
+
+# The ssh name the door uses to reach this machine from another one (default: the machine's name).
+# ssh: host-a-t
+
+# The project a run works in, as a path on THIS machine. A run needs one.
+# project: /home/ada/work/example
+
+# The address this machine's smithy is published at, when it is. The door adds /#/sessions/<id>.
+# Without it the link is the machine's own loopback address and the answer says so.
+# link: https://smithy-host-a.example.org
+
+# Optional defaults for a run started here.
+# team: default
+# chain: plan-build-test
+# model: provider/model

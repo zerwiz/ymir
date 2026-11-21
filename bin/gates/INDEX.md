@@ -55,7 +55,7 @@ bin[189]{file,does,kind,verdict,disposition,callers,lines}:
   "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",0,88
   "features-guard.sh","features-guard.sh — every feature page is catalogued (Rule 14).","tool","wired","keep",2,73
   "fix-note.md","Fix note template","data","wired","keep",2,26
-  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",9,273
+  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",9,276
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",7,167
   "fleet-version-guard.sh","fleet-version-guard.sh — the three labels and the two trees must agree, or say so.","tool","wired","keep",1,62
   "folders.tsv","The purpose of every folder under bin/ — ONE line each, the single place it is kept.","data","wired","keep",1,40
@@ -87,7 +87,7 @@ bin[189]{file,does,kind,verdict,disposition,callers,lines}:
   "nda-guard.py","'''nda-guard — company, client and NDA-project names never reach Ymir's public repository.","tool","wired","keep",3,178
   "nda-guard.sh","nda-guard.sh — company, client and NDA-project names never reach the public repo (RULES/04, 2026-11-12).","tool","wired","keep",2,37
   "ndalib.py","'''ndalib — the NDA matcher: company, client and NDA-project names never enter the public tree.","tool","wired","keep",3,208
-  "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",0,230
+  "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",2,304
   "packaging-guard.sh","cache: tree — this ward's verdict is a pure function of the tracked tree (no $YMIR_HOME read,","tool","wired","keep",2,123
   "path-ledger-guard.sh","path-ledger-guard.sh — Rule 25: a path that MOVED may not be referenced again.","tool","tested","keep",1,126
   "path-legality-guard.sh","path-legality-guard.sh — a tracked path must be a name EVERY host can hold.","tool","wired","keep",1,126
@@ -148,7 +148,7 @@ bin[189]{file,does,kind,verdict,disposition,callers,lines}:
   "test_container_hides_the_hoard.sh","test_container_hides_the_hoard.sh — a container Ymir ships never holds the vault.","tool","wired","keep",1,126
   "test_desktop_main_guard.sh","desktop-main-guard names a launcher that points into a worktree AND names the fix door.","tool","wired","keep",0,14
   "test_finding_tally.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,29
-  "test_fixes_regate.sh","test_fixes_regate.sh — the record gate judges CONTENT, not ceremony (2026-11-16).","tool","wired","keep",1,71
+  "test_fixes_regate.sh","test_fixes_regate.sh — the record gate judges CONTENT, not ceremony (2026-11-16).","tool","wired","keep",1,86
   "test_fixes_validate.sh","test_fixes_validate.sh — plan 272 fault 10: the fix-note validator judges what a reader needs.","tool","wired","keep",0,23
   "test_fleet_roads.sh","test_fleet_roads.sh — the ssh-roads ward judges the marked block, and only the marked block.","tool","wired","keep",0,67
   "test_four_shelves.sh","test_four_shelves.sh — the readers work with the ONE-CYCLE LINKS REMOVED (plan 331.6, 331.8).","tool","wired","keep",0,91
