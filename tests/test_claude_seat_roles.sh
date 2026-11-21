@@ -109,6 +109,16 @@ raw = [
     "git push origin eindri/x:main",
     "git push origin HEAD:refs/heads/main",
     "git push --no-verify origin eindri/x",
+    "git push upstream main",
+    "git push origin refs/heads/main",
+    "git push origin +main",
+    "git push -u origin HEAD:refs/heads/master",
+    "git push origin master --force-with-lease",
+    "git push --all origin",
+    "git push --mirror origin",
+    "wget --method=PUT https://api.github.com/repos/o/r/pulls/1/merge",
+    "node -e \"fetch('https://api.github.com/repos/o/r/contents/x',{method:'PUT'})\"",
+    "\"/usr/bin/g''h\" auth token",
     "gh auth token",
     "gh auth status --show-token",
     "T=$(gh auth token) && curl -X PUT -H \"Authorization: Bearer $T\" https://api.github.com/repos/o/r/pulls/5/merge",
@@ -124,7 +134,8 @@ raw = [
     "git push origin main",
     "git push --force origin eindri/x",
 ]
-plain = ["git status --short", "gh pr view 12 --json state", "git diff origin/main...HEAD",
+plain = ["git push origin eindri/x", "git push -u origin eindri/judge-permissions", "git push origin eindri/main-fix",
+         "git status --short", "gh pr view 12 --json state", "git diff origin/main...HEAD",
          "gh pr view 12 --json mergeable,mergeStateStatus", "gh pr -R owner/repo view 12", "gh alias list"]
 fails = 0
 def expect(name, profile, cmds, want):

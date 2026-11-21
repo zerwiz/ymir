@@ -104,7 +104,8 @@ The third review (`89f1b6677`) confirmed every earlier item and named three road
 - **C. The real gh by an absolute path with its name quoted** (`…/g''h pr merge 5`) matched no `*gh*` pattern and
   never met the shim.
 
-**What this PR adds, as stopgaps.** Both profiles deny a push to main or master by any refspec, `--no-verify`,
+**What this PR adds, as stopgaps.** Both profiles deny a push to main or master by any refspec or remote
+(`HEAD:main`, `refs/heads/main`, `+main`, `upstream main`, `--all`, `--mirror`), `--no-verify`,
 `auth token`, `--show-token`, `GH_TOKEN`, `GITHUB_TOKEN`, gh's `hosts.yml`, `api.github.com`, any `…/pulls/<n>/merge`,
 and the text `pr merge` itself, which also catches road C. The shim refuses `gh auth token` and
 `gh auth status --show-token` for a smith.
@@ -126,3 +127,4 @@ api.github.com.
 - 2026-11-21 — appended the rework after the judge's first review (#870: guessed role, the shim, raw merge forms).
 - 2026-11-21 — appended the second rework (the judge's re-review: the upstream guess, `gh pr -R … merge`, aliases and API paths).
 - 2026-11-21 — appended the third review: stopgaps for a push to main, the token leaving gh and the quoted absolute path; the fence is named as the operator's.
+- 2026-11-21 — the push stopgaps also cover another remote, a bare `refs/heads/main`, `--all` and `--mirror`; a worker's own branch push still passes.
