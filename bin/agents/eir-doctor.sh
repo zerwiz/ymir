@@ -155,7 +155,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault vaultkeys ward seats seatreap models)
+SURFACES=(floors seatpaths hooks renewal packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault vaultkeys ward seats seatreap models)
 
 # ── the register (plan 278): config/surfaces.yaml names the surfaces, their roles and their risk class ──
 # The array above is the FALLBACK, kept until every seat carries the register. Without the register every
@@ -767,6 +767,12 @@ claudehooks_detail() {
     printf 'the Claude hooks: AGENTS.md · Eindri-only · NDA-write (the global Gná arm is opt-in)'
   fi
 }
+# The nightly pair (plan 350 C; the Allfather, 2026-11-22: "all users get Gróa running on a cron job every
+# night, and Eir after"). Red when the pair is not seated, when the last night failed (a stage hung, a door
+# was missing, Gróa failed outright), or when no night has run for 36 hours. The mend re-seats the pair.
+s_renewal() { [ -x "$SCRIPT_DIR/groa-agent/renewal-check.sh" ] && "$SCRIPT_DIR/groa-agent/renewal-check.sh" >/dev/null 2>&1; }
+renewal_detail() { "$SCRIPT_DIR/groa-agent/renewal-check.sh" --detail 2>/dev/null || true; }
+f_renewal() { [ -x "$SCRIPT_DIR/groa-agent/seat.sh" ] && bash "$SCRIPT_DIR/groa-agent/seat.sh" --quiet >/dev/null 2>&1; s_renewal; }
 f_claudehooks() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1 && s_claudehooks; }
 # OpenCode launch shape (plan 262): OpenCode v2's interactive TUI takes --prompt and --auto but not --model,
 # and a release that drops either flag kills every OpenCode worker in its pane. The surface reads
@@ -1113,6 +1119,7 @@ detail() { # <name> -> the command that prints one short fact
     pidoor) printf '%s\n' pidoor_detail ;;
     pirun) printf '%s\n' pirun_detail ;;
     claudehooks) printf '%s\n' claudehooks_detail ;;
+    renewal)   printf '%s\n' renewal_detail ;;
     opencode)  printf '%s\n' "command -v opencode >/dev/null 2>&1 && $SCRIPT_DIR/../seat/opencode-launcher.sh check 2>&1 | sed -n '2p' | sed -E 's/^ *\"[a-z]+\",//; s/\"//g' || echo 'no opencode on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
     armpin)    printf '%s\n' "$SCRIPT_DIR/../seat/armpin.sh --detail 2>/dev/null | head -1 || echo 'armpin door missing'" ;;

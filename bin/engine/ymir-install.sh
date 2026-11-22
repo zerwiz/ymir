@@ -1913,6 +1913,12 @@ establish_roles
 step_garmr() {
   local door="$ROOT/bin/ward/garmr.sh"
   [ -x "$door" ] || { add garmr SKIP "bin/ward/garmr.sh is absent"; return 0; }
+  # the nightly renewal runs unattended and never asks for root (plan 350 C): the step is skipped and
+  # named without even probing sudo, so the journal carries no "a password is required" line either
+  if [ "${YMIR_NO_SUDO:-0}" = 1 ]; then
+    add garmr SKIP "needs root, and this run may not ask for it (YMIR_NO_SUDO=1) — run: bin/ward/garmr.sh install"
+    return 0
+  fi
   if sudo -n true 2>/dev/null; then
     bash "$door" install >/dev/null 2>&1 && add garmr OK "senses armed, hound and brain seated" \
       || add garmr WARN "install failed — run bin/ward/garmr.sh install by hand"
