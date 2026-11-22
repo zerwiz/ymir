@@ -43,3 +43,7 @@ Findings are ranked by saving. Anything that would trade away quality (a weaker 
 
 - `skill-find.sh` does not find the skill: run `bin/agents/skill-find.sh --check` and fix the description it names.
 - The report has many "not measured" rows: turn on usage reporting in the harness, or point him at a provider log.
+
+## CHANGE LOG
+
+- 2026-11-22 — written with Andhrímnir, the token economist.
