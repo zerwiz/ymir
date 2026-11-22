@@ -145,6 +145,7 @@ export default function elder(pi: ExtensionAPI) {
         title: { type: "string" },
         realm: { type: "string", description: "e.g. whynotproductions" },
         project: { type: "string", description: "e.g. ymir" },
+        priority: { type: "string", description: "urgent | high | medium | low | none (default none)" },
       },
       required: ["slug", "title"],
     },
@@ -164,7 +165,8 @@ export default function elder(pi: ExtensionAPI) {
       // `ls`), writes the header with its Status, adds the index row, and puts the plan's card on the board.
       try {
         const out = run("bash", [`${ROOT_BIN}/bin/records/plan.sh`, "new", String(args.slug),
-          "--title", String(args.title), "--realm", realm, "--project", project], HOME);
+          "--title", String(args.title), "--realm", realm, "--project", project,
+          ...(args.priority ? ["--priority", String(args.priority)] : [])], HOME);
         return piOut(out.trim() + "\n  next: write the plan, then ymir_push that path and the README by name.");
       } catch (e: any) {
         return piOut("failed: " + String(e?.message ?? e).split("\n")[0]);

@@ -257,7 +257,7 @@ case "${1:-}" in
     grep -hE '^- \*\*[0-9]+\*\*' "$LEDGER/README.md" 2>/dev/null | sed -E 's/^- \*\*([0-9]+)\*\* [—-] \[(.*)\]\(.*/  #\1 \2/' | tail -20 ;;
   new)
     slug="${2:-}"; shift 2 2>/dev/null || true
-    title=""; from_meeting=""
+    title=""; from_meeting=""; priority="none"
     while [ $# -gt 0 ]; do
       case "$1" in
         --title) title="${2-}"; shift 2 ;;
@@ -267,10 +267,12 @@ case "${1:-}" in
         --scope) SCOPE="${2-}"; shift 2 ;;
         --owner) OWNER="${2-}"; shift 2 ;;
         --from-meeting) from_meeting="${2-}"; shift 2 ;;
+        --priority) priority="${2-none}"; shift 2 ;;
         *) shift ;;
       esac
     done
     [ -n "$slug" ] && [ -n "$title" ] || { printf 'plan: new needs <slug> and --title\n' >&2; exit 2; }
+    case "$priority" in urgent|high|medium|low|none) ;; *) printf 'plan: --priority is urgent|high|medium|low|none\n' >&2; exit 2 ;; esac
     [ "$SCOPE" = project ] && OWNER="${OWNER:-$PROJECT}"
     set_ledger_for_scope "$SCOPE" "${OWNER:-}" || exit 2
     refuse_stale_ledger || exit 1
@@ -282,9 +284,9 @@ case "${1:-}" in
       # A plan is measurable from the hour it is born (plan 298 §2.1): the header carries its state,
       # so no list has to be typed from memory later. `Status:` is the field the older readers
       # (plan-state.sh, plan-board.sh, the Nornir observer) already understand.
-      printf 'Status: open\n'
+      printf 'Status: open\nPriority: %s\n' "$priority"
       [ -n "$from_meeting" ] && printf 'from_meeting: %s\n' "$from_meeting"
-      printf '\n**Opened %s.**\n' "$(date +%F)"
+      printf '\n**Opened %s.**\n' "$(bash "$ROOT/bin/time/sol.sh" iso --plain 2>/dev/null | cut -c1-10)"
     } > "$f"
     printf '| %s | [%s](%s) | open |\n' "$n" "$title" "$(basename "$f")" >> "$LEDGER/README.md"
     printf 'created %s\n  shelf: %s (%s)\n' "$f" "$LEDGER" "$SCOPE"
