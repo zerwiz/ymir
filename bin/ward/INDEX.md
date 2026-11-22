@@ -21,8 +21,8 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[34]{file,does,kind,verdict,disposition,callers,lines}:
-  "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",1,232
+bin[35]{file,does,kind,verdict,disposition,callers,lines}:
+  "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",1,250
   "browserkill-install.sh","browserkill-install.sh — seat the kill tracer and its GPU note (plan 152 / 271).","tool","wired","keep",0,43
   "browserkill-note.sh","browserkill-note.sh — at every browser/Discord death, write down the GPU's side of it (plan 271 piece 5).","tool","wired","keep",2,33
   "browserkill.bt","/* plan 242 + 0002 phase 1 (2026-11-11): NAME THE SENDER.","data","wired","keep",4,75
@@ -49,7 +49,8 @@ bin[34]{file,does,kind,verdict,disposition,callers,lines}:
   "test_restart_storm.sh","test_restart_storm.sh — the storm ward's proof, with no real fault (plan 286 P4).","tool","wired","keep",0,183
   "test_soak_sampler.sh","test_soak_sampler.sh — the leak ledger's proof, without a real leak (plan 286 P0).","tool","wired","keep",0,204
   "test_trouble.sh","test_trouble.sh — the trouble panel's proof, with no real fault (plan 339.5, 341.4).","tool","wired","keep",1,241
-  "trouble.py","'''trouble.py — the house says it is in trouble before it is asked (plan 339.5, 339.6, 341.4).","tool","wired","keep",1,758
+  "test_trouble_veil.sh","test_trouble_veil.sh — plan 350 B in the trouble panel: a Veil report with no RECEIVED past its","tool","wired","keep",1,60
+  "trouble.py","'''trouble.py — the house says it is in trouble before it is asked (plan 339.5, 339.6, 341.4).","tool","wired","keep",2,808
   "trouble.sh","trouble.sh — the trouble panel: the house says it is in trouble before it is asked (plan 339.5).","tool","wired","keep",3,40
   "verdr.sh","verdr.sh — VÖRÐR, the warden: the standing report.","tool","tested","keep",1,135
   "vidarr-agent.sh","vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast road.","tool","wired","keep",0,71
@@ -57,6 +58,6 @@ bin[34]{file,does,kind,verdict,disposition,callers,lines}:
   "ward-answer.sh","ward-answer.sh — answer a ward decision.","tool","wired","keep",0,82
   "ward-ask.sh","ward-ask.sh — Vörðr reports, then ASKS.","tool","wired","keep",1,82
 
-**Tally.** verdict: wired=27, tested=7
+**Tally.** verdict: wired=28, tested=7
 
-**Tally.** disposition: keep=33, migrate → src/ymir_runtime/hermes/common.py=1
+**Tally.** disposition: keep=34, migrate → src/ymir_runtime/hermes/common.py=1

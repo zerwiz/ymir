@@ -24,13 +24,13 @@ folder rewrites one file instead of colliding on every branch.
 bin[35]{file,does,kind,verdict,disposition,callers,lines}:
   "ear.sh","ear.sh — turn a recording into words, with whichever engine this machine has.","tool","wired","keep",1,57
   "echo-cancel.sh","echo-cancel.sh — Ymir's own microphone without the speakers in it (plan 275 S22).","tool","wired","keep",0,76
-  "head-proxy.py","'''head-proxy.py — a loopback OpenAI-compatible door in front of an online head.","tool","wired","keep",1,173
+  "head-proxy.py","'''head-proxy.py — a loopback OpenAI-compatible door in front of an online head.","tool","wired","keep",1,245
   "house.css","/* house.css — Rödd's face, in the Allfather's hall.","data","wired","keep",1,54
   "kokoro-lib.sh","kokoro-lib.sh — where the Kokoro speech engine listens: ONE value, read by the unit and every client","lib","wired","keep",3,79
   "kokoro_url.py","'''kokoro_url.py — the Python face of bin/voice/kokoro-lib.sh (plan 326.0, Rule 07).","tool","wired","keep",0,55
   "mic-check.sh","mic-check.sh — what the microphone gives the machine, measured, never guessed (plan 326.6).","tool","wired","keep",1,98
   "model-sync.sh","model-sync.sh — take the voice models over the LOCAL NETWORK, never from the internet.","tool","wired","keep",0,99
-  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","tested","keep",18,676
+  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","tested","keep",22,676
   "rodd-head.py","'''rodd-head.py — whose mind answers in Rödd's window, and where that key lives.","tool","tested","keep",3,234
   "rodd-helm.sh","rodd-helm.sh — Nanna's duty loop: she holds the helm and carries its five duties.","tool","wired","keep",2,227
   "rodd-room.sh","rodd-room.sh — the ARM HOLDER's half of Rödd's room: the one writer of <state>/rodd/room.jsonl.","tool","wired","keep",1,43
