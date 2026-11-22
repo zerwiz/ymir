@@ -37,3 +37,7 @@ bin/agents/veil.sh received <id> --by "<who you are>"
 Answer every report: `bin/agents/veil.sh received <id>`, then `accepted <id>` or
 `rework <id> "<why>"`. See what is waiting with `bin/agents/veil.sh pending`. A report with no
 answer is typed into your pane after 2 minutes, and turns red in the trouble panel after 10.
+
+## CHANGE LOG
+
+- **2026-11-22** — written with the Veil (plan 350 B): the arm contract for any agent, Hermes included.
