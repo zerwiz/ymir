@@ -50,3 +50,7 @@ Measured on 2026-11-22: `groa-agent.timer` fired every night on the three machin
 - The hand run of `groa-agent.service` showed one more thing. Gróa's update re-seats her units from the
   **pinned** release, so until a release carries this change, each nightly run puts back the old unit, with no
   chain. The chain holds from the first release that carries it.
+
+## CHANGE LOG
+
+- 2026-11-21 — review-mend: added missing heading for #887
