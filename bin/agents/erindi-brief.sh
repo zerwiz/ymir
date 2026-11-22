@@ -237,7 +237,7 @@ Report status by appending one line:
    terminal act ONE command — it writes the status line, files the report shelf the
    handoff failsafe sweeps (bin/agents/eindri-handoff.sh), and appends the DURABLE wake
    ($WAKE_QUEUE) so Brokk is woken even with no arm and no sweep running:
-      \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "<what shipped and where: PR, path, proof>"\`
+      \`bin/agents/eindri-acclaim.sh $ID --terminal done --evidence "<the command that proves it; one per claim>" --line "<what shipped and where: PR, path, proof>"\`
    Use \`--terminal failed\` or \`--terminal needs-decision\` as the state; a
    needs-decision files the question shelf ($DONE_STATE/eindri-questions/$ID.md) instead.
    Never defer the wake: a report that is not in the queue is a report Brokk may
@@ -358,7 +358,7 @@ $INBOX_SECTION
 - \`grep -E '^(done|recommend|conclusion|findings):' $REPORT_FILE\` finds the stand-alone conclusion — what you did, what you found, the evidence (commands, output, file:line), and what you recommend.
    (A prose judgment "reads well" cannot be a command — read it yourself and say so in the report.)
 $WELL_STEP
-- Run the terminal act — one command; it files your report shelf and appends the durable wake: \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "{one-line conclusion}"\`.
+- Run the terminal act — one command; it files your report shelf and appends the durable wake: \`bin/agents/eindri-acclaim.sh $ID --terminal done --evidence "<the command that proves it; one per claim>" --line "{one-line conclusion}"\`.
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
 - Stop.
 EOF
@@ -383,7 +383,7 @@ $EXEC_STEP
    (A prose PR description that "reads well" cannot be a command — read it yourself and say so.)
 $WELL_STEP
 - Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
-     \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "opened PR <url>"\`
+     \`bin/agents/eindri-acclaim.sh $ID --terminal done --evidence "<the command that proves it; one per claim>" --line "opened PR <url>"\`
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue; Brokk is woken with no arm and no sweep).
 - Stop. Brokk routes the PR to the Glitnir human gate; you never merge.
 EOF
@@ -402,7 +402,7 @@ $EXEC_STEP
 - \`git status --porcelain\` prints nothing (everything committed; git status is clean).
 - Remember your work in the well: \`bash bin/records/mimir.sh observe "<what you built, the lesson, what is left>" --source eindri --task $ID --tags eindri,done\`.
 - Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
-     \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "committed on eindri/$ID (not pushed): <what, proof>"\`
+     \`bin/agents/eindri-acclaim.sh $ID --terminal done --evidence "<the command that proves it; one per claim>" --line "committed on eindri/$ID (not pushed): <what, proof>"\`
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
 - Stop. You never push and never open a PR; the helm merges the batch and ships it once.
 EOF
@@ -418,7 +418,7 @@ $EXEC_STEP
 - \`git status --porcelain\` lists only the scratch files you intend to leave; record the list.
 $WELL_STEP
 - Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
-     \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "ready in branch eindri/$ID"\`
+     \`bin/agents/eindri-acclaim.sh $ID --terminal done --evidence "<the command that proves it; one per claim>" --line "ready in branch eindri/$ID"\`
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
 - Stop. Brokk merges into local \`main\` after the Allfather approves.
 EOF
@@ -434,7 +434,7 @@ $EXEC_STEP
 - The \`no-mistakes\` pipeline run prints its PR URL and a status; record both.
 $WELL_STEP
 - Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
-     \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "<PR url> (pipeline <status>)"\`
+     \`bin/agents/eindri-acclaim.sh $ID --terminal done --evidence "<the command that proves it; one per claim>" --line "<PR url> (pipeline <status>)"\`
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
 - Stop. Brokk routes the PR to the Glitnir human gate; you never merge.
 EOF

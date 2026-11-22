@@ -51,12 +51,12 @@ chk "and no placeholder file is written" "no" "$([ -e "$r/.pi/mcp-adapter.json" 
 # Run a COPY of the act in a bare tree: no well, no voice, nothing of the real house is touched.
 st="$work/state"; mkdir -p "$st" "$work/ac/bin/agents" "$work/ac/bin/vault"
 cp "$repo/bin/agents/eindri-acclaim.sh" "$repo/bin/agents/eindri-wake-lib.sh" "$work/ac/bin/agents/"; cp "$repo/bin/vault/hoard-lib.sh" "$work/ac/bin/vault/"
-out="$(BROKK_STATE_OVERRIDE="$st" YMIR_AUTO_REVIEW=off bash "$work/ac/bin/agents/eindri-acclaim.sh" tst --terminal done --line "shipped x" 2>&1)"; rc=$?
+out="$(BROKK_STATE_OVERRIDE="$st" YMIR_AUTO_REVIEW=off bash "$work/ac/bin/agents/eindri-acclaim.sh" tst --terminal done --evidence true --line "shipped x" 2>&1)"; rc=$?
 chk "acclaim files the report shelf in the resolved state" "yes" "$([ -s "$st/eindri-reports/tst.md" ] && echo yes || echo no)"
 chk "acclaim queues the wake in the resolved state" "yes" "$(grep -q 'eindri tst ' "$st/.wake-queue" 2>/dev/null && echo yes || echo no)"
 chk "acclaim names the absolute shelf, not a relative one" "yes" "$(printf '%s' "$out" | grep -q "$st/eindri-reports/tst.md" && echo yes || echo no)"
 bad="$work/notadir"; : > "$bad"
-out="$(BROKK_STATE_OVERRIDE="$bad" YMIR_AUTO_REVIEW=off bash "$work/ac/bin/agents/eindri-acclaim.sh" tst2 --terminal done --line "shipped y" 2>&1)"; rc=$?
+out="$(BROKK_STATE_OVERRIDE="$bad" YMIR_AUTO_REVIEW=off bash "$work/ac/bin/agents/eindri-acclaim.sh" tst2 --terminal done --evidence true --line "shipped y" 2>&1)"; rc=$?
 chk "a report that did not land fails loudly (rc 1)" "1" "$rc"
 chk "and says why" "yes" "$(printf '%s' "$out" | grep -q 'did not land' && echo yes || echo no)"
 
@@ -123,13 +123,13 @@ chk "nothing behind, nothing moved: no record, no noise (script road)" "0" "$(ca
 mkdir -p "$st"
 printf 'mode=direct-PR\n' > "$st/ship1.meta"; printf 'mode=batch\n' > "$st/bat1.meta"
 BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" ship1 --terminal done --line "done: nothing to show" >/dev/null 2>&1; chk "a direct-PR done line with no PR is refused (rc 3)" "3" "$?"
-BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" ship1 --terminal done --line "done: opened PR https://github.com/o/r/pull/7" >/dev/null 2>&1; chk "with its PR url it passes" "0" "$?"
-BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" bat1 --terminal done --line "done: committed on the branch" >/dev/null 2>&1; chk "a batch errand needs no PR" "0" "$?"
+VEIL_PR_CHECKS=off BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" ship1 --terminal done --evidence true --line "done: opened PR https://github.com/o/r/pull/7" >/dev/null 2>&1; chk "with its PR url it passes" "0" "$?"
+BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" bat1 --terminal done --evidence true --line "done: committed on the branch" >/dev/null 2>&1; chk "a batch errand needs no PR" "0" "$?"
 
 # a scout record as eindri-dispatch.sh writes it (mode=scout) needs no PR either; review and recon likewise.
 for m in scout review recon; do
   printf 'mode=%s\n' "$m" > "$st/d$m.meta"
-  BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" "d$m" --terminal done --line "done: report filed" >/dev/null 2>&1; chk "a dispatched $m record needs no PR (rc 0)" "0" "$?"
+  BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" "d$m" --terminal done --evidence true --line "done: report filed" >/dev/null 2>&1; chk "a dispatched $m record needs no PR (rc 0)" "0" "$?"
 done
 
 echo "$ok passed, $fail failed"; [ "$fail" -eq 0 ]
