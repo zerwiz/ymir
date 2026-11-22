@@ -191,3 +191,6 @@
 # Níðhöggr on the clock: one scan of the seated agents (a loop is broken at rung 1 and told through the Veil)
 # and one pass over the errand branches. His stamp (state/nidhogg/last-run.json) older than an hour is red.
 @heart,dev @every:15 bin/time/nornir-job-nidhogg.sh
+# — THE LORE AUDIT (plan 350 A, 2026-11-22) — every system the saga tells of, measured against its door each week
+# (docs/lore-claims.tsv). A claim that was true last week and is not now goes to the arm holder through the Veil.
+@heart Mon 09:30 bin/records/lore-audit.sh watch --notify
