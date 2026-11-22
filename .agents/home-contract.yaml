@@ -204,6 +204,15 @@ contract:
     door: bin/engine/home-seed.sh
     required: false
     why: "the token ward's upstream, listen address and audience; absent, the ward is not raised (plan 192)"
+  # Topic labels and default priorities for plan cards (plan 358 Part 7, 2026-11-22): the words that infer a
+  # plan's topic labels, and a topic's default priority. Optional: without it a plan carries only the labels
+  # and priority it declares.
+  - path: config/board-topics.yaml
+    kind: seeded
+    template: .agents/config/board-topics.yaml.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the words that give plan cards their topic labels, and a topic's default priority"
   - path: config/agents.yaml
     kind: seeded
     template: .agents/config/agents.yaml.example
