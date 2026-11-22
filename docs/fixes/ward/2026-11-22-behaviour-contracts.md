@@ -35,3 +35,7 @@ were "up" and still failing:
 - `bash bin/ward/tests/test_trouble.sh` and `test_trouble_veil.sh` — still pass.
 - On the dev machine, the contracts named Gróa's failed unit twice (as the nightly contract and as a failed unit)
   and two reports past their receipt line. The well answered.
+
+## CHANGE LOG
+
+- 2026-11-22 — review-mend: added missing heading for #895
