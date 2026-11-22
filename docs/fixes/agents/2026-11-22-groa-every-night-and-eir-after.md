@@ -45,7 +45,7 @@ Measured on 2026-11-22: `groa-agent.timer` fired every night on the three machin
 - `bash bin/agents/tests/test_eir_register.sh` — 19 passed. (`test_eir_true_mends.sh` has 16 passing and the
   same 2 failing on clean `main`: its hook pushes to a temporary remote.)
 - On this machine, `systemctl --user start eir-night.service` finished in 4 min 18 s. The journal reads: *the
-  night on nidavellir (e77a6bcf03b8): owed — Gróa rc 4; Eir mended: nothing; could not mend: armpin runtimepin
+  night on <the dev machine> (<release>): owed — Gróa rc 4; Eir mended: nothing; could not mend: armpin runtimepin
   seats; …; apps updated: odrerir sessrumnir smidja bilskirnir hvergelmir rodd*.
 - The hand run of `groa-agent.service` showed one more thing. Gróa's update re-seats her units from the
   **pinned** release, so until a release carries this change, each nightly run puts back the old unit, with no
