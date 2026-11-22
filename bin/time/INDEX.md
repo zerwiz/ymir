@@ -33,7 +33,7 @@ bin[58]{file,does,kind,verdict,disposition,callers,lines}:
   "event-trigger.sh","event-trigger.sh — the one door that starts a smithy without a person typing.","tool","wired","keep",2,479
   "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",1,139
   "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",13,507
-  "nornir-fleet.py","'''nornir-fleet.py — the Nornir board for every machine, with an honest row for one that cannot be reached.","data","wired","keep",1,100
+  "nornir-fleet.py","'''nornir-fleet.py — the Nornir board for every machine, with an honest row for one that cannot be reached.","tool","wired","keep",1,100
   "nornir-job-agnostic-audit.sh","nornir-job-agnostic-audit.sh — is what we PUBLISHED still free of the words the operator refuses to publish?","tool","wired","keep",1,104
   "nornir-job-asken-handoff.sh","nornir-job-asken-handoff.sh — the rollover, on the schedule.","tool","wired","keep",0,63
   "nornir-job-bragi-scrape.sh","nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape round.","tool","wired","keep",0,154
@@ -72,7 +72,7 @@ bin[58]{file,does,kind,verdict,disposition,callers,lines}:
   "test_ack_holder.sh","test_ack_holder.sh — the arm's ack door answers its own holder and still refuses a stranger (plan 325 step 3).","tool","wired","keep",0,43
   "test_brief_watch.sh","test_brief_watch.sh — the morning brief is judged, not just run.","tool","wired","keep",0,198
   "test_event_trigger.sh","test_event_trigger.sh — a smithy may be started by a person, the clock, or an","tool","wired","keep",1,251
-  "test_nornir_mend.sh","test_nornir_mend.sh — the board dedupes a row declared twice, shows a skip as a skip, and names an unreachable machine.","data","wired","keep",0,30
+  "test_nornir_mend.sh","test_nornir_mend.sh — the board dedupes a row declared twice, shows a skip as a skip, and names an unreachable machine.","tool","wired","keep",0,30
   "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",1,501
   "test_private_scan_exit.sh","test_private_scan_exit.sh — a finding is work in the queue, not a broken job; a scan that cannot run still says so.","tool","wired","keep",1,94
   "test_saga_head.sh","test_saga_head.sh — Sága's head fits, means what it says, and forgets what is finished","tool","wired","keep",1,152
