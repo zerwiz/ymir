@@ -34,3 +34,7 @@ own change, so they are named here, not changed.
 
 - `bash bin/agents/tests/test_skill_smoke.sh` — 6 passed.
 - The gate row `skill-smoke` (`bin/gates/checks.d/0549-skill-smoke.sh`) runs it.
+
+## CHANGE LOG
+
+- 2026-11-22 — review-mend: added missing heading for #894
