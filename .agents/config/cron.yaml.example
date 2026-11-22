@@ -194,6 +194,15 @@
 # Níðhöggr on the clock: one scan of the seated agents (a loop is broken at rung 1 and told through the Veil)
 # and one pass over the errand branches. His stamp (state/nidhogg/last-run.json) older than an hour is red.
 @heart,dev @every:15 bin/time/nornir-job-nidhogg.sh
+# — THE SKILLS AND SYSTEMS STAY TRUE (plan 350 D, 2026-11-22) —
+#   06:20 daily   skill-find --check: a skill with no description, a duplicate, an unfindable skill
+#   Mon 09:40     the skill smoke: each skill's named doors and CLI verbs still exist; a gone one goes to the arm
+#                 holder through the Veil (nothing a skill names is run)
+#   Sun 09:00     Dellingr grades the knowledge shelf (read-only; an old document moves, never deleted). The plan
+#                 asks for monthly; the clock has no monthly shape, and a read-only grade weekly costs nothing.
+@heart 06:20 bin/agents/skill-find.sh --check
+@heart Mon 09:40 bin/agents/skill-smoke.sh --notify
+@heart Sun 09:00 bin/records/grade.sh hodd/docs
 # — THE LORE AUDIT (plan 350 A, 2026-11-22) — every system the saga tells of, measured against its door each week
 # (docs/lore-claims.tsv). A claim that was true last week and is not now goes to the arm holder through the Veil.
 @heart Mon 09:30 bin/records/lore-audit.sh watch --notify
