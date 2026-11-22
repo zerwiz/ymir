@@ -29,3 +29,7 @@ exact restore command. The ward repairs nothing itself, because the home is the 
 `bash bin/agents/tests/test_renewal_night.sh` — 22 passed. These include: "a tracked home folder relinked during a
 stage fails the night, named by the stage", "the verdict prints the restore, and repairs nothing itself" and "an
 untouched home passes the ward".
+
+## CHANGE LOG
+
+- 2026-11-21 — review-mend: added missing heading for #892
