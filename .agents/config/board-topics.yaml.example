@@ -1,0 +1,24 @@
+# Topic labels for plan cards: topic: words that, found in a plan's title or first section, label it.
+# Copy to $YMIR_HOME/config/board-topics.yaml and edit. Words only; no model is asked.
+# A plan's own header line `Labels: security, ui-ux` wins over this map.
+ui-ux: ui, ux, interface, screen, window, button, layout
+security: security, secret, credential, ward, auth, encrypt, vault
+memory: memory, well, recall, episode
+infra: infra, server, deploy, install, service, tunnel, port
+agents: agent, eindri, worker, arm, helm, errand
+tokens: token, cost, quota, budget
+docs: docs, document, readme, how-to
+collaboration: collaboration, collaborate, constellation, federation, federated, share
+meetings: meeting, transcript, calendar
+release: release, pin, version, changelog
+testing: test, gate, proof, selftest
+design: design, diagram, figma, brand
+voice: voice, speech, sound, microphone
+board: board, plane, card, ledger
+# Houses a word maps to (a plan that names a house is labelled with it anyway):
+# houses:
+#   askr: askr, notes app
+# Default priority per topic label (urgent|high|medium|low), used only when a plan declares no `Priority:` line.
+# A topic left out stays at none; nothing is guessed beyond this map.
+priorities:
+  security: high

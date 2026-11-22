@@ -560,8 +560,74 @@ class Sync:
         self.n = {"created": 0, "upgraded": 0, "updated": 0, "unchanged": 0, "steps": 0, "found": 0, "failed": 0}
         self.failed, self.undrawn = [], []
         self.owned = set()
+        self.topics, self.ensured = None, set()
+        self.cards, self.byrel = {}, {}  # plan number -> its card's number; plan number -> its plan
         self.heads = phase_heads((row.get("board") or {}).get("phase_heads"))
         self.labels = [LABEL] + [l for l in row.get("scope_labels") or [] if l != LABEL]
+
+    def priority_of(self, p):
+        self.topic_labels(p)
+        return plan_priority(p["abs"], plan_labels(p["abs"], p["title"], self.topics),
+                             getattr(load_topics, "priorities", {}))
+
+    def topic_labels(self, p):
+        if self.topics is None:
+            self.topics = load_topics(self.home)
+        got = [l for l in plan_labels(p["abs"], p["title"], self.topics) if l not in self.labels]
+        for l in got:
+            if l not in self.ensured:
+                self.ensured.add(l)
+                self.board.ensure_label(l, dry=self.dry)
+        return got
+
+    def relate(self, p, num, card):
+        """Parent and links from the header's declarations. A parent a person set is never replaced; a link already on
+        the card (by URL) is never added twice."""
+        r = plan_relations(p["abs"])
+        change, adds = {}, []
+        pc = self.cards.get(r["parent"]) if r["parent"] else None
+        if pc and pc != num and card.get("parent") is None:
+            change["parent"] = pc
+        rels = []
+        for kind, n in r["related"]:
+            q = self.byrel.get(n)
+            if not q or q is p:
+                continue
+            other = self.cards.get(n)
+            if other and other != num and self.board.can_relate():
+                rels.append((kind, other, n))
+            else:  # no typed relation (an older board, or the plan has no card yet): a link carries it
+                u = file_url(self.home, self.row, q["rel"])
+                if u:
+                    adds.append((u, f"{kind}: {n:03d} · {q['title']}"[:120]))
+        if rels:
+            have = {(a, str(b)) for a, b in self.board.relations(num)}
+            rels = [x for x in rels if (x[0], str(x[1])) not in have]
+        for kind, other, n in rels:
+            print(f"relate  #{num} {kind} #{other} (plan {n})")
+        for d in r["docs"]:
+            u = file_url(self.home, self.row, d)
+            if u:
+                adds.append((u, f"doc: {d}"[:120]))
+        if adds:
+            have = {l.get("url") for l in (self.board.get_card(num).get("links") or [])}
+            adds = [a for a in adds if a[0] not in have]
+        for url, title in adds:
+            print(f"link    #{num} {title}")
+        if change:
+            print(f"parent  #{num} -> #{change['parent']} (plan {r['parent']})")
+        if self.dry:
+            return
+        if change:
+            self.board.update_card(num, **change)
+        for kind, other, _n in rels:
+            self.board.add_relation(num, kind, other)
+        for url, title in adds:
+            try:
+                self.board.add_link(num, url, title)
+            except BoardRefusal as e:
+                if "already exists" not in str(e):
+                    raise
 
     def note_diagrams(self, p, out):
         for f in ((out or {}).get("diagrams") or {}).get("failed") or []:
@@ -599,8 +665,10 @@ class Sync:
             if self.dry:
                 self.n["created"] += 1
                 return
-            out = self.board.create_card(title, desc, p["group"], self.labels, fmt="markdown", source=source,
-                                         assignees=plan_assignees(self.home, self.row))
+            out = self.board.create_card(title, desc, p["group"], self.labels + self.topic_labels(p), fmt="markdown",
+                                         source=source,
+                                         assignees=plan_assignees(self.home, self.row),
+                                         start=opened_date(p["abs"]), priority=self.priority_of(p))
             self.note_diagrams(p, out)
             num = out.get("card")
             if num is None:  # an older board names no number: find the card it just made
@@ -612,6 +680,30 @@ class Sync:
             return
 
         num = card["card"]
+        fill = {}
+        if card.get("start") == "":  # empty, not unknown: a start a person set is never overwritten
+            d = opened_date(p["abs"])
+            if d:
+                fill["start"] = d
+        if card.get("priority") in ("none", ""):  # only an unset priority is filled; a person's choice stands
+            want = self.priority_of(p)
+            if want != "none":
+                fill["priority"] = want
+        if card.get("assignees") == []:
+            who = plan_assignees(self.home, self.row)
+            if who:
+                fill["assignees"] = who
+        if fill:
+            print(f"backfill #{num} {title}  { {k: v for k, v in fill.items()} }")
+        self.relate(p, num, card)
+        new = [l for l in self.topic_labels(p) if l not in (card.get("labels") or [])]
+        if new:  # add, never remove: the card's own labels are sent back with the new ones
+            fill["labels"] = list(card.get("labels") or []) + new
+            print(f"labels  #{num} {title}  + {new}")
+        if fill:
+            if not self.dry:
+                self.board.update_card(num, **fill)
+            self.n["backfilled"] = self.n.get("backfilled", 0) + 1
         if card.get("stamp") == stamp and card["title"] == title and self.steps_whole(p, phases, children):
             self.n["unchanged"] += 1
             return
@@ -685,6 +777,158 @@ class Sync:
                 self.n["steps"] += 1
 
 
+def opened_date(path):
+    """The plan's start date: `**Opened YYYY-MM-DD.**` / `Opened YYYY-MM-DD` in its first 60 lines; else the date of the
+    file's first commit in its repository (`git log --diff-filter=A`); else None. Nothing is invented."""
+    try:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for _, ln in zip(range(60), f):
+                m = re.search(r"\bOpened:?\**\s*(\d{4}-\d{2}-\d{2})", ln)
+                if m:
+                    return m.group(1)
+    except OSError:
+        return None
+    try:
+        r = subprocess.run(["git", "-C", os.path.dirname(path), "log", "--diff-filter=A", "--follow", "--format=%cs",
+                            "--", os.path.basename(path)], capture_output=True, text=True, timeout=30)
+        days = [d for d in r.stdout.split() if re.match(r"\d{4}-\d{2}-\d{2}$", d)]
+        return days[-1] if days else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+HOUSES = ("ymir-labs", "brokk-forge", "runestone-labs", "muninn-labs", "dvalin", "utgard-studios", "askr")
+
+
+def _slug(x):
+    return re.sub(r"[^a-z0-9]+", "-", x.strip().lower()).strip("-")
+
+
+def load_topics(home):
+    """The topic map: `topic: word, word` lines of `config/board-topics.yaml` in the home (else the shipped example).
+    A `houses:` section (indented `house: word, word`) maps words to a House. -> ({topic: [words]}, {house: [words]})."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    for f in (os.path.join(home or "", "config", "board-topics.yaml"),
+              os.path.join(here, "..", "..", "config", "board-topics.yaml.example")):
+        if not os.path.isfile(f):
+            continue
+        topics, houses, prios, into = {}, {}, {}, None
+        for ln in open(f, encoding="utf-8", errors="replace"):
+            ln = ln.split("#", 1)[0].rstrip()
+            if not ln.strip():
+                continue
+            m = re.match(r"(\s*)([A-Za-z0-9_-]+):\s*(.*)$", ln)
+            if not m:
+                continue
+            indent, key, val = len(m.group(1)), m.group(2), m.group(3)
+            if indent == 0 and key in ("houses", "priorities") and not val:
+                into = houses if key == "houses" else prios
+                continue
+            if indent == 0:
+                into = None
+            words = [w.strip().strip("[]'\"").lower() for w in val.split(",") if w.strip().strip("[]'\"")]
+            if into is prios and indent:
+                prios[key] = (words or [""])[0]
+                continue
+            (into if into is not None and indent else topics)[key] = words
+        load_topics.priorities = prios
+        return topics, houses
+    load_topics.priorities = {}
+    return {}, {}
+
+
+def plan_labels(path, title, topics_houses):
+    """Topic labels of a plan. Declared (`Labels: a, b` in the header, later `Labels:` lines add) win; else inferred
+    from the title and first section by the word map (words only, no model). Houses it names, or the map gives, are added."""
+    topics, houses = topics_houses
+    try:
+        lines = open(path, encoding="utf-8", errors="replace").read().splitlines()
+    except OSError:
+        lines = []
+    declared = []
+    for ln in lines:
+        m = re.match(r"\s*\**Labels:?\**:?\s*(.+)$", ln, re.I)
+        if m:
+            declared += [_slug(x.strip("* ")) for x in m.group(1).split(",") if _slug(x.strip("* "))]
+    head = []
+    for ln in lines[:80]:
+        if head and ln.startswith("## ") and len(head) > 3:
+            break
+        head.append(ln)
+    text = (title + "\n" + "\n".join(head)).lower()
+    out = list(dict.fromkeys(declared))
+    if not out:
+        for topic, words in topics.items():
+            if any(re.search(r"(?<![a-z0-9])" + re.escape(w) + r"(?:s|es|ed|ing)?(?![a-z0-9])", text) for w in words):
+                out.append(topic)
+    for h in HOUSES:
+        if h in text or h.replace("-", " ") in text:
+            out.append(h)
+    for h, words in houses.items():
+        if any(re.search(r"(?<![a-z0-9])" + re.escape(w) + r"(?:s|es|ed|ing)?(?![a-z0-9])", text) for w in words):
+            out.append(_slug(h))
+    return list(dict.fromkeys(out))
+
+
+def plan_relations(path):
+    """What a plan's header declares about other plans and documents (words only, nothing inferred from mentions):
+    -> {"parent": N|None, "related": [(kind, N)], "docs": [path]}. One parent, and only when declared:
+    `Parent: plan N` or `extends plan N` in the first 25 lines. Related: the plans on a `Stands on` line, plus
+    `supersedes plan N`, `superseded by plan N`, `renumbered from N` (all `duplicate`), and a declared `Blocked by: plan N`
+    (`blocked_by`); the Stands-on plans are `relates_to`. Docs: paths under hodd/docs/ or docs/."""
+    try:
+        text = open(path, encoding="utf-8", errors="replace").read()
+    except OSError:
+        return {"parent": None, "related": [], "docs": []}
+    lines = text.splitlines()
+    top = lines[:40]
+    parent = None
+    for ln in lines[:25]:
+        m = re.match(r"\s*\**Parent:?\**:?\s*(?:plan\s+)?0*(\d+)", ln, re.I) or re.search(r"\bextends\s+plan\s+0*(\d+)", ln, re.I)
+        if m:
+            parent = int(m.group(1))
+            break
+    related = []
+    for ln in top:
+        if re.match(r"\s*\**Stands on", ln, re.I):
+            body = re.sub(r"\d{4}-\d{2}-\d{2}", "", ln.split(":", 1)[-1] if ":" in ln else ln)
+            related += [("relates_to", int(n)) for n in re.findall(r"(?<![\w.-])0*(\d{1,4})(?![\w.-])", body)]
+        for kind, rx in (("duplicate", r"\bsupersedes\s+plan\s+0*(\d+)"), ("duplicate", r"\bsuperseded\s+by\s+plan\s+0*(\d+)"),
+                         ("duplicate", r"\brenumbered\s+from\s+(?:plan\s+)?0*(\d+)"),
+                         ("blocked_by", r"^\s*\**Blocked\s+by:?\**:?\s*(?:plan\s+)?0*(\d+)")):
+            related += [(kind, int(n)) for n in re.findall(rx, ln, re.I)]
+    seen, rel = set(), []
+    for k, n in related:
+        if (k, n) not in seen and n != parent:
+            seen.add((k, n))
+            rel.append((k, n))
+    docs = list(dict.fromkeys(re.findall(r"(?<![\w/.-])((?:hodd/docs|docs)/[\w./-]+\.md)", text)))[:20]
+    return {"parent": parent, "related": rel, "docs": docs}
+
+
+PRIORITIES = ("urgent", "high", "medium", "low", "none")
+
+
+def plan_priority(path, labels, priorities):
+    """A plan's priority: the last `Priority:` line (a plan is append-only, so a later line wins), else the default the
+    home maps to the first of its topic labels that has one, else `none`. Nothing is guessed beyond that."""
+    try:
+        text = open(path, encoding="utf-8", errors="replace").read()
+    except OSError:
+        text = ""
+    got = None
+    for ln in text.splitlines():
+        m = re.match(r"\s*\**Priority:?\**:?\s*\**(\w+)", ln, re.I)
+        if m and m.group(1).lower() in PRIORITIES:
+            got = m.group(1).lower()
+    if got:
+        return got
+    for l in labels:
+        if priorities.get(l) in PRIORITIES:
+            return priorities[l]
+    return "none"
+
+
 def plan_assignees(home, row):
     """Who a new plan card is assigned to: the row's `board.assignee` (a name, an email, or a list), else the operator
     named in the home (`hodd/identity/operator.yaml` email). Nothing is invented: with neither, the card is unassigned."""
@@ -715,6 +959,10 @@ def highest_on_board(home, row):
     return best
 
 
+def plans_by_num_all(by_num):
+    return [ps[0] for ps in by_num.values() if ps]
+
+
 def run_project(home, row, args, only=None):
     place, board = build_board(home, row)
     ledger_rel, ledger_abs = ledger_dir(home, row)
@@ -738,15 +986,19 @@ def run_project(home, row, args, only=None):
                       "and a second pass would create them again. Nothing was written; run with --dry-run, or bring "
                       "the board's door up to the contract")
     by_num, kids = {}, {}
+    plan_card = {c["card"] for c in every if LABEL in c["labels"] and TITLE_RE.match(c["title"])}
     for c in every:
-        if c.get("parent") is not None:
-            kids.setdefault(c["parent"], []).append(c)
         m = TITLE_RE.match(c["title"])
-        if m and LABEL in c["labels"] and c.get("parent") is None:
+        is_plan = bool(m and LABEL in c["labels"] and (c.get("parent") is None or c.get("parent") in plan_card))
+        if c.get("parent") is not None and not (is_plan and c.get("parent") in plan_card):
+            kids.setdefault(c["parent"], []).append(c)  # a plan card under a plan card is a child plan, not a step
+        if is_plan:
             by_num.setdefault(int(m.group(1)), []).append(c)
 
     s = Sync(home, row, place, board, args.dry_run)
     s.owned = owned
+    s.byrel = {p["num"]: p for p in plans_by_num_all(plans_by_num)}
+    s.cards = {n: cs[0]["card"] for n, cs in by_num.items() if cs}
     for p in plans:
         cands, want = by_num.get(p["num"], []), card_title(p)
         card = next((c for c in cands if c["title"] == want), None)
@@ -762,7 +1014,7 @@ def run_project(home, row, args, only=None):
     mode = "dry-run " if args.dry_run else ""
     n = s.n
     print(f"plan-sync {mode}{place}: plans={len(plans)} created={n['created']} upgraded={n['upgraded']} "
-          f"updated={n['updated']} unchanged={n['unchanged']} steps={n['steps']} found={n['found']} failed={n['failed']}")
+          f"updated={n['updated']} backfilled={n.get('backfilled', 0)} unchanged={n['unchanged']} steps={n['steps']} found={n['found']} failed={n['failed']}")
     if only is None and not args.dry_run:
         after = [c for c in board.list_all() if TITLE_RE.match(c["title"]) and LABEL in c["labels"]
                  and c.get("parent") is None and in_scope(c, row, owned)]

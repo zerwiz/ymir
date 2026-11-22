@@ -185,3 +185,14 @@ as it does for a 429. A state the place truly lacks is still refused by name.
 | **Closed by appending** | a plan is append-only, so it is closed by appending a line `**Status:** done …` (or any status word). The last such line after the header wins, and the card moves to that state on the next sync |
 | **An appended section moves the card** | `ymir_note` brings the plan's card up to date after the append, as `bin/records/note.sh` does |
 | **From any harness** | the MCP door `ymir_board_sync` (project, plan, file, dry_run, highest) runs the sync |
+
+## What a plan card carries besides its text
+
+- **Start date**: the plan's `Opened` date, else the date of its first commit. Filled only when empty.
+- **Owner**: the operator (or `board.assignee`). Filled only when the card has no assignee.
+- **Labels**: `Labels: a, b` in the header; else words from the title and first section matched against `config/board-topics.yaml` in your home (copy `config/board-topics.yaml.example`). Labels are added, never removed.
+- **Priority**: `Priority: urgent|high|medium|low|none`; a later line wins. A `priorities:` section in `board-topics.yaml` can give a topic a default. Filled only while the card's priority is none.
+- **Parent**: `Parent: plan N` in the header. One parent, only when declared.
+- **Relations**: `Stands on` plans relate (`relates_to`), `supersedes` / `renumbered from` mark a `duplicate`, `Blocked by: plan N` marks `blocked_by`. Documents under `docs/` or `hodd/docs/` are attached as links.
+
+Run `plan-sync.sh --project <name> --dry-run` to list every change before it is made.
