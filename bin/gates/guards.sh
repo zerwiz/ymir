@@ -52,7 +52,7 @@ ROOT="$(_root)"
 cd "$ROOT" || exit 2
 
 # ONE list. A new tree ward appears here or it does not run anywhere.
-WARDS=(runtime-guard.sh unit-writer-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-guard.sh app-functional-guard.sh rules-number-guard.sh inventory-guard.sh registers-guard.sh fleet-version-guard.sh subsystem-docs-guard.sh path-ledger-guard.sh path-legality-guard.sh packaging-guard.sh public-data-guard.sh cron-guard.sh features-guard.sh weave-guard.sh vault-guard.sh confidential-guard.sh dead-code-guard.sh docs-claims-guard.sh home-contract-guard.sh language-guard.sh pkill-guard.sh blocking-door-guard.sh skills-share-guard.sh rules-compliance-guard.sh pr-ship-guard.sh model-rows-guard.sh areas-guard.sh desktop-main-guard.sh hypr-door-guard.sh house-colour-guard.sh pr-identity-guard.sh nda-guard.sh hearth-guard.sh bin/gates/agnostic-audit.sh board-engine-guard.sh)
+WARDS=(runtime-guard.sh unit-writer-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-guard.sh app-functional-guard.sh rules-number-guard.sh inventory-guard.sh registers-guard.sh fleet-version-guard.sh subsystem-docs-guard.sh path-ledger-guard.sh path-legality-guard.sh packaging-guard.sh public-data-guard.sh cron-guard.sh features-guard.sh weave-guard.sh vault-guard.sh confidential-guard.sh dead-code-guard.sh docs-claims-guard.sh home-contract-guard.sh language-guard.sh pkill-guard.sh blocking-door-guard.sh skills-share-guard.sh rules-compliance-guard.sh pr-ship-guard.sh model-rows-guard.sh areas-guard.sh desktop-main-guard.sh hypr-door-guard.sh house-colour-guard.sh pr-identity-guard.sh nda-guard.sh hearth-guard.sh bin/gates/agnostic-audit.sh board-engine-guard.sh mcp-parity-guard.sh)
 #
 # agnostic-audit (2026-11-14, plan 287 §6, RULES/04 and RULES/25): the repository is 100 % agnostic —
 # the operator's people, clients, companies, mail domains, host names, user names and tailnet never
@@ -67,6 +67,8 @@ WARDS=(runtime-guard.sh unit-writer-guard.sh runtime-pinned-guard.sh defaults-gu
 # board-engine-guard (2026-11-20, plan 335, the split): Ymir keeps the board contract and Gimlé keeps Plane.
 # A file the push ADDS may not name Plane's API, the old bin/gimle/ tree or a Gimlé host (the list is read
 # from the home, so the ward is never cached). Existing files keep their record.
+#
+# mcp-parity-guard (2026-11-22, plan 358): every door in bin/mcp/doors.yaml has its MCP tool, or CI fails.
 #
 # nda-guard (2026-11-12, RULES/04): company, client and NDA-project names never enter the public tree. The
 # names are read from $YMIR_HOME at run time, so the ward is never cached and says UNARMED, aloud, where no

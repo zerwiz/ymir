@@ -59,9 +59,11 @@ t "hermes-telegram: no token writes nothing"      bash -c 'mkdir -p '"$TMPD"'/hh
 t "ymir-mcp: selftest"                          bash -c 'python3 '"$ROOT"'/bin/mcp/ymir-mcp.py --selftest | grep -q doors'
 # every door built for plan 350/335 is reachable from every harness through the MCP (2026-11-22, his word:
 # "the MCPs must have all tools we're making")
-for d in ymir_veil ymir_board_sync ymir_publish gna_fleet_tell; do
+for d in ymir_veil ymir_board_sync ymir_publish gna_fleet_tell ymir_figure ymir_research; do
   t "ymir-mcp: carries $d"                     bash -c 'python3 '"$ROOT"'/bin/mcp/ymir-mcp.py --selftest | grep -q "'"$d"'"'
 done
+t "ymir-mcp: serves the figures as prompts and resources" bash -c 'python3 '"$ROOT"'/bin/mcp/ymir-mcp.py --selftest | grep -Eq "prompts: [1-9][0-9]* resources: [1-9]"'
+t "mcp-parity: every registered door has its tool" bash "$ROOT/bin/gates/guards/mcp-parity-guard.sh"
 t "seat-surface: check passes"                  bash -c 'bash '"$ROOT"'/bin/seat/seat-surface.sh --check >/dev/null'
 # 2026-11-04: four Pi workers were born dead because the seat settings and project discovery loaded two
 # extension trees in a worktree. The launch must name ONE tree (defined AND used) — the invariant, not a wish.

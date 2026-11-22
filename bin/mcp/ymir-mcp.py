@@ -801,6 +801,63 @@ def excalidraw_app(action: str = "status") -> str:
     return f"{action}.sh launched (detached). Check with action=status in a few seconds."
 
 
+# --- the figures, served (plan 358, 2026-11-22): prompts, resources, one kit tool, Huginn's road -------------------
+import figures as _fig  # noqa: E402  (next to this file; the logic lives there so a test can call it)
+
+
+def _tool_names() -> list[str]:
+    try:
+        return [t.name for t in mcp._tool_manager.list_tools()]
+    except Exception:
+        return []
+
+
+def _recall_for(task: str) -> str:
+    return _run(["bash", str(ROOT / "bin" / "records" / "mimir.sh"), "recall", task[:300]], 60)[:2500]
+
+
+@mcp.tool()
+def ymir_figure(name: str, task: str = "", project: str = "") -> str:
+    """A figure's KIT for a task (never copied into a project): its prompt, the skills to read (Ymir's frame skills and
+    the project's OWN skills, chosen for the task's words and paths), the tools it may use, the project's RULES and
+    OUTCOMES.md, and the well's top episodes. `name` is a figure (forseti, sindri, kvasir, huginn, mimir, ...);
+    `project` is a path, else the repository the session was opened in."""
+    return _fig.render_kit(_fig.kit(ROOT, name, task, project, _tool_names(), _recall_for))
+
+
+@mcp.tool()
+def ymir_research(question: str, project: str = "", plan: str = "") -> str:
+    """Huginn's road from every harness: Firecrawl first (search, then the best page as markdown, main content
+    only), the finding KEPT in the library with its source and practice (`plan` names the plan that uses it), and a
+    short answer back. A question nothing answers is kept as a negative result."""
+    return _fig.research(ROOT, question, project, plan)
+
+
+def _register_figures() -> None:
+    from mcp.server.fastmcp.prompts import Prompt
+    from mcp.server.fastmcp.resources import FunctionResource
+    for card in _fig.figure_cards(ROOT).values():
+        mcp.add_prompt(Prompt.from_function(lambda c=card: _fig.figure_prompt(c), name=card["name"],
+                                            description=(card["description"] or card["name"])[:300]))
+    seen = set()
+    for scope, base in (("frame", ROOT), ("project", _fig.project_root())):
+        for sk in _fig.skills_in(base, scope) if base else []:
+            uri = f"ymir-skill://{scope}/{sk['name']}"
+            if uri in seen:
+                continue
+            seen.add(uri)
+            mcp.add_resource(FunctionResource(
+                uri=uri, name=f"{scope}: {sk['name']}", description=sk["description"][:240], mime_type="text/markdown",
+                fn=lambda sc=scope, n=sk["name"]: _fig.read_skill(ROOT, sc, n)))
+
+
+try:
+    _register_figures()
+except Exception as _exc:  # a figure that cannot be served must never stop the doors
+    import sys as _s
+    print(f"ymir-mcp: figures not served ({_exc})", file=_s.stderr)
+
+
 if __name__ == "__main__":
     import sys as _sys
     if "--selftest" in _sys.argv:
@@ -811,6 +868,11 @@ if __name__ == "__main__":
         except Exception:
             names = [n for n in dir() if n.startswith("ymir_") or n == "todo"]
         print("doors:", len(names), ", ".join(sorted(names)))
+        try:
+            import asyncio
+            print("prompts:", len(asyncio.run(mcp.list_prompts())), "resources:", len(asyncio.run(mcp.list_resources())))
+        except Exception as exc:
+            print("prompts: 0 resources: 0", f"({exc})")
         print(_run(["bash", str(ROOT / "bin" / "vault" / "hodd.sh"), "path"]))
         raise SystemExit(0)
     mcp.run()
