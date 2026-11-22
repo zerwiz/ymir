@@ -42,7 +42,7 @@ bin/records/well-write.sh flush                         # retry them now
 
 ## Limits
 
-- Consolidating episodes into conclusions is Honcho's work (plan 260), and the deeper well on heimdall's memory
+- Consolidating episodes into conclusions is Honcho's work (plan 260), and the deeper well on the dev machine's memory
   waits for the operator's answers (plan 350 E, step 2).
 - The operator's own rules are written by the arm holder, as before (`--store semantic`).
 
