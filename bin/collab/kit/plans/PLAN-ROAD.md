@@ -24,3 +24,7 @@ Copy `plans/board.yaml.example` into the project's registry row and pick an adap
 
 Then run `bin/boards/plan-sync.sh` (the pinned runtime carries it). Relations become typed links where the tool has
 no relation type.
+
+## CHANGE LOG
+
+- 2026-11-22 — review-mend: added missing heading for #908
