@@ -11,7 +11,7 @@ dispatches for that work. A skill owned by `brokk` means the primary keeps it in
 hand — a dedicated seat is added when the work earns one.
 
 ```
-skills[29]{skill,does,owner}:
+skills[34]{skill,does,owner}:
   "galdr-ymirsystem","agent-CLI ergonomics — the master builder/maintainer of the runtime","galdr"
   "tyr-check","the judge — galdr principles + runtime gates","tyr"
   "rules-check-drift","rules-file drift — keeps AGENTS.md true after code changes","tyr"
@@ -45,6 +45,7 @@ skills[29]{skill,does,owner}:
   "snotra-meeting-outcomes","meeting record — transcript to minutes, decision log, owned actions, per-person briefs, Trello payloads","snotra"
   "vingolf","the assembly hall — who collaborates with the house, the six rungs, the baton shelf, the letter, the ship door","ursula"
   "maestro-video","the video forge — Maestro over REST: t2v, i2v, music, voice, and the provision road for a seat","volundr"
+  "veil-arm","the arm contract — report with an id, RECEIVED/ACCEPTED/REWORK back, steer any agent (Hermes too)","brokk"
 ```
 
 The control-plane UI guide is not a standalone skill: **hlidskjalf-ui** and its

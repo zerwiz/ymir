@@ -184,3 +184,10 @@
 @heart Mon 08:40 bin/time/nornir-job-week-tunnels.sh
 @heart Mon 08:50 bin/time/nornir-job-week-mail.sh
 @heart Mon 09:00 bin/time/nornir-job-week-pin.sh
+# — THE VEIL (plan 350 B, 2026-11-22) — every report and finding carries an id the arm holder answers RECEIVED.
+# The sweep resends an unanswered one into the holder's pane after 2 minutes and marks it red after 10 (the
+# trouble panel's `receipts` row shows the count). Every machine that seats an arm holder runs it.
+@heart,dev @every:2 bin/agents/veil.sh sweep
+# Níðhöggr on the clock: one scan of the seated agents (a loop is broken at rung 1 and told through the Veil)
+# and one pass over the errand branches. His stamp (state/nidhogg/last-run.json) older than an hour is red.
+@heart,dev @every:15 bin/time/nornir-job-nidhogg.sh

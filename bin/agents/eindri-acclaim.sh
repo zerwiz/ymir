@@ -17,6 +17,16 @@
 #   bin/agents/eindri-acclaim.sh <agent> --terminal done --line "<one-line report>"
 #
 # Usage: bin/agents/eindri-acclaim.sh <agent> [<worktree-root>] [--terminal done|failed|needs-decision] [--line "<text>"]
+#          [--evidence "<command>"]...
+#
+# THE VEIL (plan 350 B1): evidence or no "done". A done act carries one --evidence per claim: the
+# command that proves it. The act RUNS each one in the errand's repo and files the command, its exit
+# and its output under `## Evidence`. No evidence, an evidence command that fails, or a pull request
+# whose checks are red at its head, and the terminal state is `unproven`, never `done` — the review
+# is not seated and the arm holder is told. Checks still running are named as pending (the Veil's
+# sweep reads them again). VEIL_EVIDENCE=off is the loud override; VEIL_EVIDENCE_TIMEOUT (900 s)
+# bounds each command. Every report carries a Veil id (bin/agents/veil.sh) the holder answers with
+# RECEIVED. Exit 5 when the act ended unproven.
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
@@ -42,8 +52,11 @@ AGENT=""
 WORKTREE=""
 TERMINAL=""
 LINE=""
+EVIDENCE=()
 while [ $# -gt 0 ]; do
   case "$1" in
+    --evidence) [ -n "${2-}" ] || { printf 'error: --evidence needs a command\n' >&2; exit 2; }; EVIDENCE+=("$2"); shift 2 ;;
+    --evidence=*) EVIDENCE+=("${1#--evidence=}"); shift ;;
     --terminal) TERMINAL="${2-}"; shift 2 ;;
     --terminal=*) TERMINAL=${1#--terminal=}; shift ;;
     --line) LINE="${2-}"; shift 2 ;;
@@ -71,13 +84,57 @@ mkdir -p "$STATE/eindri-reports" "$STATE/eindri-questions" "$STATE/eindri-done"
 
 # write_record <shelf> — append the `## Record` block, measured from the errand's own repo.
 # The repo is the worktree argument, else the meta's worktree, else the directory the act runs in.
-write_record() {
-  local shelf=$1 repo="" wt branch head base ahead files st where tip
+find_repo() {  # prints the errand's repo, or nothing
+  local wt r
   for wt in "$WORKTREE" "$(sed -n 's/^worktree=//p' "$STATE/$AGENT.meta" "$ROOT/state/$AGENT.meta" 2>/dev/null | head -1)" "$PWD"; do
     [ -n "$wt" ] && [ -d "$wt" ] || continue
-    repo="$(git -C "$wt" rev-parse --show-toplevel 2>/dev/null)" && [ -n "$repo" ] && break
-    repo=""
+    r="$(git -C "$wt" rev-parse --show-toplevel 2>/dev/null)" && [ -n "$r" ] && { printf '%s' "$r"; return 0; }
   done
+  return 0
+}
+
+# weigh_evidence <shelf> — run each --evidence in the repo, file it, and set UNPROVEN_WHY when the
+# claim is not borne out. A PR named in the line is read at its head (`gh pr checks`).
+UNPROVEN_WHY=""
+weigh_evidence() {
+  local shelf=$1 repo cmd out rc n=0 pr limit="${VEIL_EVIDENCE_TIMEOUT:-900}"
+  repo="$(find_repo)"; [ -n "$repo" ] || repo="$PWD"
+  printf '\n## Evidence\n' >>"$shelf"
+  if [ "${#EVIDENCE[@]}" -eq 0 ]; then
+    printf '\nnone given — a done act names the command that proves each claim (--evidence "<command>")\n' >>"$shelf"
+    UNPROVEN_WHY="no evidence given"
+  fi
+  for cmd in "${EVIDENCE[@]}"; do
+    n=$((n + 1))
+    out="$(cd "$repo" && timeout "$limit" bash -c "$cmd" </dev/null 2>&1)"; rc=$?
+    printf '\n%d. `%s` — exit %s\n\n```\n%s\n```\n' "$n" "$cmd" "$rc" "$(printf '%s\n' "$out" | tail -n 30)" >>"$shelf"
+    [ "$rc" = 0 ] || UNPROVEN_WHY="${UNPROVEN_WHY:+$UNPROVEN_WHY; }evidence $n exited $rc ($cmd)"
+  done
+  pr="$(printf '%s' "$LINE" | grep -oE 'https://github\.com/[^[:space:]]+/pull/[0-9]+' | head -1)"
+  [ "${VEIL_PR_CHECKS:-on}" = off ] && pr=""
+  if [ -n "$pr" ]; then
+    if command -v gh >/dev/null 2>&1; then
+      out="$(timeout 60 gh pr checks "$pr" 2>&1)"; rc=$?
+      case "$rc" in
+        0) printf '\nPR checks at the head of %s: green\n' "$pr" >>"$shelf" ;;
+        8) printf '\nPR checks at the head of %s: pending — the Veil sweep reads them again\n' "$pr" >>"$shelf" ;;
+        *) if printf '%s\n' "$out" | grep -qP '\tfail\t'; then
+             printf '\nPR checks at the head of %s: RED (exit %s)\n\n```\n%s\n```\n' "$pr" "$rc" "$(printf '%s\n' "$out" | grep -P '\tfail\t' | head -10)" >>"$shelf"
+             UNPROVEN_WHY="${UNPROVEN_WHY:+$UNPROVEN_WHY; }PR checks are red at the head"
+           else
+             printf '\nPR checks at the head of %s: unread (%s)\n' "$pr" "$(printf '%s' "$out" | grep -m1 . | cut -c1-120)" >>"$shelf"
+           fi ;;
+      esac
+    else
+      printf '\nPR checks: unread (no gh on this machine)\n' >>"$shelf"
+    fi
+  fi
+  return 0
+}
+
+write_record() {
+  local shelf=$1 repo branch head base ahead files st where tip
+  repo="$(find_repo)"
   if [ -z "$repo" ]; then
     printf '\n## Record\n\ncommit: none — nothing committed (no git repository found for %s)\n' "$AGENT" >>"$shelf"
     return 0
@@ -143,6 +200,22 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
     bash "$ROOT/bin/gates/guards/maker-guard.sh" text "the $TERMINAL line" "$_lf" || { rm -f "$_lf"; exit 3; }
     rm -f "$_lf"
   fi
+  # THE VEIL (plan 350 B1): weigh the evidence before a word of `done` is written anywhere.
+  _evf=""
+  if [ "$TERMINAL" = "done" ]; then
+    _evf="$(mktemp)"
+    if [ "${VEIL_EVIDENCE:-on}" = off ]; then
+      printf '\n## Evidence\n\nVEIL_EVIDENCE=off — the evidence gate was overridden, loudly\n' >"$_evf"
+      printf 'WARNING: VEIL_EVIDENCE=off — %s acclaims done without its evidence weighed\n' "$AGENT" >&2
+    else
+      weigh_evidence "$_evf"
+      if [ -n "$UNPROVEN_WHY" ]; then
+        TERMINAL=unproven
+        printf 'unproven: %s — %s\nhelp: run the act again with one --evidence "<command>" per claim, each one green\n' "$AGENT" "$UNPROVEN_WHY" >&2
+        LINE="$LINE [unproven: $UNPROVEN_WHY]"
+      fi
+    fi
+  fi
   status_file="$STATE/$AGENT.status"
   last="$(tail -n1 "$status_file" 2>/dev/null || true)"
   # The status line keeps `<state>: ` first (readers parse it) and carries the Sol stamp right after it, so the line
@@ -154,6 +227,8 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
     needs-decision) shelf="$STATE/eindri-questions/$AGENT.md" ;;
     *)              shelf="$STATE/eindri-reports/$AGENT.md" ;;
   esac
+  # a done that follows an unproven replaces the unproven shelf: the proof is the news now
+  if [ "$TERMINAL" = done ] && grep -q '\[unproven: ' "$shelf" 2>/dev/null; then : >"$shelf"; fi
   [ -s "$shelf" ] || printf '%s\n' "$(sol_stamped "$LINE")" >"$shelf" 2>/dev/null
   # A shelf the act claims to have filed must be THERE: say so loudly, never claim it silently.
   [ -s "$shelf" ] || { printf 'error: the report did not land — %s is missing or empty (state dir %s)\nhelp: check that the state dir is writable; the wake was NOT queued\n' "$shelf" "$STATE" >&2; exit 1; }
@@ -161,7 +236,11 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
   # git status, and where the commit is. The act writes it from git itself, so no worker can
   # forget it and no worker can word it; the arm (src/ymir_runtime/watch.py, verify_record)
   # checks the claim on the machine it names, and a claim git does not bear out is false-done.
-  if [ "$TERMINAL" = "done" ] && ! grep -q '^## Record' "$shelf" 2>/dev/null; then
+  if [ -n "$_evf" ]; then
+    grep -q '^## Evidence' "$shelf" 2>/dev/null || cat "$_evf" >>"$shelf"
+    rm -f "$_evf"
+  fi
+  if { [ "$TERMINAL" = "done" ] || [ "$TERMINAL" = "unproven" ]; } && ! grep -q '^## Record' "$shelf" 2>/dev/null; then
     write_record "$shelf"
   fi
 fi
@@ -173,7 +252,7 @@ fi
 #     written from --line (or the status line) so no finished errand is missing from the
 #     well. A failed errand is remembered with its why. The well is a record, not a gate: a
 #     well that does not answer never holds back the wake.
-MIMIR="$SCRIPT_DIR/../records/mimir.sh"
+MIMIR="${YMIR_ACCLAIM_WELL:-$SCRIPT_DIR/../records/mimir.sh}"   # a test points this away from the real well
 well_remember_finish() {  # <terminal> <line> <writer>
   local term=$1 text=$2 writer=$3 since n
   [ -x "$MIMIR" ] && [ -n "$text" ] || return 0
@@ -191,7 +270,7 @@ well_remember_finish() {  # <terminal> <line> <writer>
     || printf 'warning: the well did not take the minimal episode for %s — the wake stands\n' "$AGENT" >&2
 }
 case "$TERMINAL" in
-  done|failed)
+  done|failed|unproven)
     _wl="$LINE"; [ -n "$_wl" ] || _wl="$(tail -n1 "$STATE/$AGENT.status" 2>/dev/null | sed 's/^[a-z-]*: //')"
     well_remember_finish "$TERMINAL" "$_wl" eindri-acclaim
     unset _wl ;;
@@ -217,7 +296,7 @@ elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
   if grep -q ' — finished without a terminal word' "$STATE/eindri-reports/$AGENT.md" 2>/dev/null; then
     last="$(tail -n1 "$STATE/$AGENT.status" 2>/dev/null || true)"
     case "$last" in
-      done:*|failed:*)
+      done:*|failed:*|unproven:*)
         printf '%s\n' "$last" >"$STATE/eindri-reports/$AGENT.md"
         detail="report healed from the terminal status line, replacing the sweep's snapshot ($STATE/eindri-reports/$AGENT.md)"
         corrected=1 ;;
@@ -227,6 +306,7 @@ elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
   else
     detail="report filed at $STATE/eindri-reports/$AGENT.md"
   fi
+  [ "$TERMINAL" = unproven ] && { kind="UNPROVEN"; detail="UNPROVEN ($UNPROVEN_WHY) — $detail"; }
 else
   # No shelf. A terminal status line IS a report (the worker wrote one shelf and
   # died before the other): heal the report shelf from it, so the two roads read
@@ -254,12 +334,27 @@ fi
 #    the same road: whoever arrives first writes the wake, the other stands down.
 wake_kind=report
 [ "$kind" = "QUESTION" ] && wake_kind=question
+[ "$kind" = "UNPROVEN" ] && wake_kind=unproven
 [ "$corrected" = 1 ] && wake_kind=corrected
+# THE ARM CONTRACT (plan 350 B): the report carries a Veil id the holder answers with RECEIVED. The wake
+# below IS the delivery (--queued), so the id is recorded without a second queue line; the Veil's sweep
+# resends it into the holder's pane when no receipt comes, and a red follows past ten minutes.
+VEIL_ID=""
+if [ -x "$SCRIPT_DIR/veil.sh" ] && [ "${VEIL_ARM:-on}" != off ]; then
+  _vk=report; [ "$kind" = UNPROVEN ] && _vk=finding
+  _reply=""; _pane="$(sed -n 's/^window=//p' "$STATE/$AGENT.meta" 2>/dev/null | head -1)"; [ -n "$_pane" ] && _reply="herdr:$_pane"
+  VEIL_ID="$(BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/veil.sh" send --queued --from "agent $AGENT" --kind "$_vk" ${_reply:+--reply-to "$_reply"} "$kind: ${LINE:-$detail}" 2>/dev/null \
+    | sed -n '2s/^  "\([^"]*\)".*/\1/p')"
+  [ -n "$VEIL_ID" ] && detail="$detail [veil $VEIL_ID — answer: bin/agents/veil.sh received $VEIL_ID]"
+  unset _vk _reply _pane
+fi
 if eindri_is_delivered "$AGENT" "$wake_kind"; then
   detail="$detail (already delivered — no duplicate wake)"
 else
   if [ "$kind" = "QUESTION" ]; then
     eindri_queue_wake "eindri $AGENT QUESTION: $STATE/eindri-questions/$AGENT.md — answer with bin/agents/eindri-send.sh $AGENT \"…\"" ask
+  elif [ "$kind" = "UNPROVEN" ]; then
+    eindri_queue_wake "eindri $AGENT UNPROVEN: $detail" report
   elif [ "$corrected" = 1 ]; then
     eindri_queue_wake "eindri $AGENT CORRECTED: the sweep's snapshot was a guess — $detail" report
   else
@@ -270,8 +365,15 @@ else
     printf 'error: the wake did not land — no line for %s in %s\nhelp: check that the state dir is writable\n' "$AGENT" "$STATE/.wake-queue" >&2
     exit 1
   fi
-  eindri_mark_delivered "$AGENT" "$wake_kind"
-  if [ -x "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" ]; then
+  if [ "$wake_kind" = unproven ]; then
+    # an unproven report is not the errand's end: only its own kind is marked, so the proof that
+    # follows is delivered as news (eindri-done/ would mute every later kind)
+    mkdir -p "$STATE/eindri-delivered" 2>/dev/null
+    printf '%s %s delivered unproven\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$AGENT" >"$STATE/eindri-delivered/$AGENT.unproven"
+  else
+    eindri_mark_delivered "$AGENT" "$wake_kind"
+  fi
+  if [ "${YMIR_NO_INJECT:-0}" != 1 ] && [ -x "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" ]; then
     if [ "$kind" = "QUESTION" ]; then
       "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" alarm "Eindri $AGENT asks — answer it" >/dev/null 2>&1 || true
     else
@@ -353,5 +455,7 @@ else
   _injected="failed — no eindri-notify.sh beside this door"
 fi
 
-printf 'eindri-acclaim[4]{agent,kind,detail,pane}:
-  "%s","%s","%s","%s"\n' "$AGENT" "$kind" "$detail" "$_injected"
+printf 'eindri-acclaim[5]{agent,kind,detail,pane,veil}:
+  "%s","%s","%s","%s","%s"\n' "$AGENT" "$kind" "$detail" "$_injected" "${VEIL_ID:--}"
+[ "$TERMINAL" = unproven ] && exit 5
+exit 0

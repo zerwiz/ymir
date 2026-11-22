@@ -1001,3 +1001,19 @@ material, and `bin/gates/guards/retired-path-guard.sh` refuses a new file that t
 At the Allfather's word, the way the helm spoke to the fleet became one tool. Every message from one agent to another, on any machine, goes through `bin/fleet/fleet-tell.sh` (the Pi and MCP tool `gna_fleet_tell`). Its targets are a machine (its arm holder), an errand, `machine:errand`, a pane, or `machine:pane`, and `--all` for every arm holder.
 
 It also carries the steer verbs: `--steer` to steer a worker, `--answer` to answer its question, `--stop` to ask it to stop at a safe point. The `steer` action of `ymir_errand` calls this door too. It signs each line, uses the target machine's own `bin/agents/tell.sh` over ssh, falls back to typing into the agent's herdr pane, and reports one row per target. Do not ssh or type into a pane by hand for this. The page is `docs/features/fleet-tell.md`.
+
+## 2026-11-22 — the Veil: evidence or no done, and the arm says RECEIVED (plan 350 B)
+
+At the Allfather's word: *"An arm holder must always reassure that he will get the work done — received — so he can
+know what's going on and if it was a correct build."*
+
+- **A done needs evidence.** A worker's terminal act carries one `--evidence "<command>"` per claim. With none, a
+  failing one, or red PR checks, the errand ends `unproven`, is not reviewed, and the holder is told.
+- **The holder answers every report.** Each report and Veil finding carries an id. Answer it with
+  `bin/agents/veil.sh received <id>` within 2 minutes, then `accepted <id>` or `rework <id> "<why>"`.
+  `bin/agents/veil.sh pending` lists what is waiting. An unanswered report is typed into your pane after 2 minutes
+  and turns the trouble panel's `receipts` row red after 10.
+- **Steer with an id.** `bin/agents/veil.sh steer --to <pane|errand|hermes:<session>> "<line>"`; the agent answers
+  `received <id>`.
+
+The how-to is `docs/features/the-veil.md`.

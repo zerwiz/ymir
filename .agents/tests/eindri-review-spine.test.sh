@@ -39,7 +39,7 @@ chmod +x "$TMP/bin/herdr"
 mkdir -p "$TMP/home/hodd/data" "$TMP/home/state"
 export PATH="$TMP/bin:$PATH" YMIR_NO_INJECT=1 YMIR_HOME="$TMP/home"
 unset YMIR_HOARD_LIB_LOADED
-RUN=(env "BROKK_STATE_OVERRIDE=$PROJ/state" YMIR_REVIEW_HARNESS=pi YMIR_REVIEW_MODEL=litmus/judge "BROKK_DATA_OVERRIDE=$TMP/home/hodd/data" "YMIR_HOME=$TMP/home" YMIR_NO_INJECT=1 "PATH=$PATH")
+RUN=(env "BROKK_STATE_OVERRIDE=$PROJ/state" YMIR_REVIEW_HARNESS=pi YMIR_REVIEW_MODEL=litmus/judge "BROKK_DATA_OVERRIDE=$TMP/home/hodd/data" "YMIR_HOME=$TMP/home" YMIR_NO_INJECT=1 VEIL_PR_CHECKS=off "PATH=$PATH")
 
 # 1. the sync contract: bash -n clean
 bash -n "$SPAWN" 2>/dev/null && ok "eindri-review-spawn.sh is syntactically clean" || bad "bash -n eindri-review-spawn.sh"
@@ -80,7 +80,7 @@ out="$("${RUN[@]}" YMIR_REVIEW_DRY=1 "$SPAWN" litmus-scout)"
 printf '%s' "$out" | grep -q 'kind=scout' && ok "a scout is not reviewed" || bad "scout: $out"
 
 # 7. the acclaim done path reaches the spawn (end to end, no live seat)
-out="$("${RUN[@]}" YMIR_REVIEW_DRY=1 "$ACCLAIM" litmus-ship --terminal done --line 'done: opened PR https://github.com/zerwiz/ymir/pull/999' 2>&1)"
+out="$("${RUN[@]}" YMIR_REVIEW_DRY=1 "$ACCLAIM" litmus-ship --terminal done --evidence true --line 'done: opened PR https://github.com/zerwiz/ymir/pull/999' 2>&1)"
 printf '%s' "$out" | grep -q 'review-spawn\[1\]' && ok "the terminal done auto-sends the judge" || bad "hook: $out"
 printf '%s' "$out" | grep -q 'litmus-ship-review' && ok "the hook names the review errand" || bad "hook id: $out"
 
