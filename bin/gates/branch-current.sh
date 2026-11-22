@@ -52,6 +52,24 @@ if [ -z "$BASE" ]; then
   exit 0
 fi
 
+# THE BASE IS FETCHED FIRST (appended 2026-11-22, the operator: "there should always be a check that we push to the
+# latest main — main moves and we push onto an old main and get conflicts"). The first version never fetched, so it
+# measured against whatever origin/main was on disk, and a main that moved an hour ago read as "current". Now a remote
+# base is fetched with a short limit (BRANCH_CURRENT_FETCH_TIMEOUT, default 15 s); offline, the ward judges the refs on
+# disk and SAYS so, never silently. BRANCH_CURRENT_NO_FETCH=1 keeps the old behaviour (a test, a sandbox).
+FETCHED="on-disk"
+case "$BASE" in
+  */*)
+    if [ "${BRANCH_CURRENT_NO_FETCH:-0}" != 1 ]; then
+      _remote="${BASE%%/*}"; _ref="${BASE#*/}"
+      if timeout "${BRANCH_CURRENT_FETCH_TIMEOUT:-15}" git fetch -q "$_remote" "$_ref" 2>/dev/null; then
+        FETCHED="fetched"
+      else
+        printf 'branch-current: could not fetch %s — judging the copy on disk, which may be old\n' "$BASE" >&2
+      fi
+    fi ;;
+esac
+
 BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || printf 'HEAD')"
 case "$BRANCH" in
   main|master|HEAD)
@@ -64,7 +82,7 @@ AHEAD="$(git rev-list --count "$BASE..HEAD" 2>/dev/null || printf '0')"
 TIP="$(git rev-parse --short "$BASE" 2>/dev/null || printf '?')"
 
 if [ "${BEHIND:-0}" -le "$MAX" ]; then
-  printf 'branch-current[1]{branch,base,behind,ahead,result}:\n  "%s","%s",%s,%s,"current"\n' "$BRANCH" "$BASE" "$BEHIND" "$AHEAD"
+  printf 'branch-current[1]{branch,base,behind,ahead,result,base_ref}:\n  "%s","%s",%s,%s,"current","%s"\n' "$BRANCH" "$BASE" "$BEHIND" "$AHEAD" "$FETCHED"
   exit 0
 fi
 
