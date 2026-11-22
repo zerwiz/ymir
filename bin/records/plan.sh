@@ -192,7 +192,21 @@ refuse_stale_ledger() {
   return 0
 }
 
-next_number() { ls "$LEDGER" 2>/dev/null | grep -oE '^[0-9]+' | sort -n | tail -1 | awk '{print ($1+1)}' ; }
+# The next number is after the highest the LEDGER has AND the highest the project's BOARD has (2026-11-22: two seats
+# each took 352 twenty minutes apart, before either had pushed). The board is the one place every seat writes to at
+# once, so it closes the window a fetch cannot. A seat with no road to the board uses the ledger alone, and says so.
+board_highest() {
+  [ "${YMIR_PLAN_BOARD_CHECK:-1}" = 1 ] || return 0
+  local who="${OWNER:-$PROJECT}"; [ -n "$who" ] || return 0
+  timeout "${YMIR_PLAN_BOARD_TIMEOUT:-45}" bash "$ROOT/bin/boards/plan-sync.sh" --project "$who" --highest 2>/dev/null | tail -1 | grep -E '^[0-9]+$' || true
+}
+next_number() {
+  local a b
+  a="$(ls "$LEDGER" 2>/dev/null | grep -oE '^[0-9]+' | sort -n | tail -1)"; a="${a:-0}"
+  b="$(board_highest)"; b="${b:-0}"
+  [ "$b" -gt "$a" ] 2>/dev/null && a="$b"
+  echo $((10#$a + 1))
+}
 
 case "${1:-}" in
   -h|--help|"") sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;

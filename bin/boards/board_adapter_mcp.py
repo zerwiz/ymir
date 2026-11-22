@@ -251,9 +251,11 @@ class McpBoard:
     def get_card(self, card):
         return self._shape(self._call("get_card", {"place": self.place, "card": str(card)}))
 
-    def create_card(self, title, description, group, labels, parent=None, fmt=None, source=None):
+    def create_card(self, title, description, group, labels, parent=None, fmt=None, source=None, assignees=None):
         a = {"place": self.place, "title": title, "description": description, "state": self.state_name(group),
              "labels": labels}
+        if assignees and self._accepts("create_card", "assignees"):
+            a["assignees"] = list(assignees)
         if parent is not None:
             a["parent"] = str(parent)
         if fmt and self._accepts("create_card", "description_format"):
