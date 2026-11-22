@@ -41,6 +41,14 @@ out="$("${A[@]}" t1 --terminal done --evidence "true" --line "fixed the door, pr
 grep -q '\[unproven' "$st/eindri-reports/t1.md" && bad "the old unproven shelf survived" || ok "the proven shelf replaces the unproven one"
 [ "$(grep -c 'eindri t1 ' "$st/.wake-queue")" -ge 2 ] && ok "the proof wakes the helm again" || bad "no second wake"
 
+# the sweep filed a guess first; the worker's done replaces the guess and KEEPS its evidence and record
+cp "$st/t1.meta" "$st/t5.meta"
+printf '# t5 — finished without a terminal word\n\nthe pane went quiet\n' >"$st/eindri-reports/t5.md"
+out="$("${A[@]}" t5 --terminal done --evidence "echo 7 passed" --line "built five" 2>&1)"; rc=$?
+grep -q 'finished without a terminal word' "$st/eindri-reports/t5.md" && bad "the sweep's guess survived" || ok "the sweep's guess is replaced by the worker's word"
+grep -q '^## Evidence' "$st/eindri-reports/t5.md" && grep -q '7 passed' "$st/eindri-reports/t5.md" && grep -q '^## Record' "$st/eindri-reports/t5.md" \
+  && ok "the evidence and the record survive the heal" || bad "heal lost the proof: $(cat "$st/eindri-reports/t5.md")"
+
 out="$(VEIL_EVIDENCE=off "${A[@]}" t9 --terminal done --line "overridden" 2>&1)"; rc=$?
 [ "$rc" = 0 ] && printf '%s' "$out" | grep -q 'VEIL_EVIDENCE=off' && ok "the override is loud" || bad "override: rc=$rc $out"
 echo "test_acclaim_evidence: $pass passed, $fail failed"
