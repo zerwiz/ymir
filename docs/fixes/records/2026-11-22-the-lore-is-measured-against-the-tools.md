@@ -24,3 +24,7 @@ could answer it.
 
 - `bash bin/records/tests/test_lore_audit.sh` — 11 passed.
 - The gate row `lore-audit` (`bin/gates/checks.d/0548-lore-audit.sh`) runs it.
+
+## CHANGE LOG
+
+- 2026-11-22 — review-mend: added missing heading for #893
