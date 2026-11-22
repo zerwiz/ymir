@@ -11,10 +11,25 @@
 
 > **One operator. One repo. A whole business, run by a Norse-named agent fleet.**
 
+<p align="center">
+  <a href="https://ymir.zerwiz.org"><strong>ymir.zerwiz.org</strong></a> ·
+  <a href="https://ymir.zerwiz.org/saga/">the Saga of Ymir, read aloud</a> ·
+  <a href="https://www.npmjs.com/package/@zerwiz/ymir">npm</a><br>
+  <a href="https://www.npmjs.com/package/@zerwiz/ymir"><img alt="npm downloads" src="https://img.shields.io/npm/dy/@zerwiz/ymir?label=downloads%20%C2%B7%20past%20year&color=c9973f"></a>
+  <a href="https://www.npmjs.com/package/@zerwiz/ymir"><img alt="npm version" src="https://img.shields.io/npm/v/@zerwiz/ymir?color=c9973f"></a>
+  <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-c9973f"></a>
+</p>
+
+```bash
+npx @zerwiz/ymir          # try it, nothing installed
+npm install -g @zerwiz/ymir   # or keep it: then run `ymir`
+```
+
 ![Ymir — the single-tenant agent OS](assets/ymir-banner-brown.jpg)
 
-Ymir is a lean, single-operator agentic OS. You are the **Allfather**; **Brokk** is
-your primary agent; **Eindri** are the isolated workers it dispatches. Everything —
+Ymir is a lean, single-operator agentic OS. You are the **Allfather**; your primary agent
+works in the role of **Brokk**, the counsellor (each machine names its own agent); **Eindri** are the isolated
+workers it dispatches. Everything —
 development, marketing, business strategy, life — runs from one repository, with an
 audit ledger, a memory well, one tenant and its workspaces, and a control plane you actually look at.
 
