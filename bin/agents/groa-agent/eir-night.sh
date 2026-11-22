@@ -52,9 +52,37 @@ stage() {  # <name> <seconds> <command…> → its output on stdout; records a h
   out="$(timeout --kill-after=10 "$limit" "$@" </dev/null 2>&1)"; rc=$?
   log "stage $name: rc $rc"
   if [ "$rc" = 124 ] || [ "$rc" = 137 ]; then printf '%s (over %ss)\n' "$name" "$limit" >>"$HUNG_FILE"; fi
+  home_ward "$name"
   printf '%s\n' "$out"
   return "$rc"
 }
+
+# THE HOME WARD (Hávi, at the Allfather's word, 2026-11-22: "the night run must refuse to delete or relink a
+# tracked home directory"). On 2026-11-22 at 05:41 the home's config/ became a link to a path that does not exist,
+# and the house could not read its schedule. Every folder the home's git tracks at its top level must still be a
+# real folder after Gróa's leg and after every stage; one that became a link or vanished FAILS the night, named with
+# the stage that was running, and the fix is printed — never repaired silently, because the home is the operator's.
+WARD_FILE="$DIR/.ward.$$"; : >"$WARD_FILE"
+HOME_TREE="${EIR_NIGHT_HOME:-${YMIR_HOME:-}}"
+if [ -z "$HOME_TREE" ] && [ -r "$REPO/bin/vault/hoard-lib.sh" ]; then
+  # shellcheck disable=SC1091
+  (. "$REPO/bin/vault/hoard-lib.sh" && ymir_home_root _h && printf '%s' "$_h") >"$DIR/.home.$$" 2>/dev/null
+  HOME_TREE="$(cat "$DIR/.home.$$" 2>/dev/null)"; rm -f "$DIR/.home.$$"
+fi
+TRACKED_DIRS=""
+[ -n "$HOME_TREE" ] && TRACKED_DIRS="$(git -C "$HOME_TREE" ls-tree -d --name-only HEAD 2>/dev/null | tr '\n' ' ')"
+home_ward() {  # <after-which-stage>
+  local d
+  for d in $TRACKED_DIRS; do
+    if [ -L "$HOME_TREE/$d" ]; then
+      printf 'the home'"'"'s tracked folder %s/ became a link (-> %s) during %s — restore: rm %s && git -C %s checkout -- %s\n' \
+        "$d" "$(readlink "$HOME_TREE/$d")" "$1" "$HOME_TREE/$d" "$HOME_TREE" "$d" >>"$WARD_FILE"
+    elif [ ! -d "$HOME_TREE/$d" ]; then
+      printf 'the home'"'"'s tracked folder %s/ vanished during %s — restore: git -C %s checkout -- %s\n' "$d" "$1" "$HOME_TREE" "$d" >>"$WARD_FILE"
+    fi
+  done
+}
+home_ward "groa (before Eir's night)"
 
 # 1 · Gróa's own word: the last finished tick in her log
 groa_line="$(grep -E 'tick finished \(rc [0-9]+\)' "$GLOG" 2>/dev/null | tail -1)"
@@ -106,6 +134,9 @@ elif [ -x "$APPS" ] && [ "${EIR_NIGHT_APPS_UPDATE:-on}" != off ]; then
 fi
 
 # 4 · the verdict
+home_ward "the end of the night"
+_w="$(awk '!seen[$0]++' "$WARD_FILE" 2>/dev/null | head -3 | paste -sd';' - | sed 's/;/; /g')"; rm -f "$WARD_FILE"
+[ -n "$_w" ] && failed="${failed:+$failed; }$_w"
 _h="$(paste -sd, "$HUNG_FILE" 2>/dev/null | sed 's/,/, /g')"; rm -f "$HUNG_FILE"
 [ -n "$_h" ] && hung="${hung:+$hung, }$_h"
 result=green
