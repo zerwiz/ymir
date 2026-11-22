@@ -1475,9 +1475,101 @@ still carry the old name on purpose, because a caller or a file on disk depends 
 | `role: "kaia"` in a chat row | the stored role of every message already written; the chat displays it as Völundr |
 | `ENGRAM_AGENT_ID` default `kaia` | the agent name every episode in the well already carries |
 
+## XXXVI. The Halls That Came After — what was built and never told (2026-11-22)
+
+At the Allfather's word: *"we have missed updating the lore on a lot of features we added to Ymir, and a lot of them
+are never told anywhere on the homepage."* A measured pass on 2026-11-22 compared the contract's lore table and the 204
+feature pages with this document and the homepage. Eleven figures had a working feature and a how-to page but no entry
+here; two entries had fallen behind what is now true. They are carved below in the same form as section XXXV — the myth,
+then the job — with the how-to page each one is learned from. The homepage carries the same lines.
+
+### Óðrerir — the hall board (built)
+
+*The vessel that holds the mead of poetry, brewed from Kvasir's blood.*
+
+The hall board: the fleet's live board, rewritten every night from what the house actually measured. Learn it in [`docs/features/the-halls-and-their-buttons.md`](features/the-halls-and-their-buttons.md).
+
+### Valaskjálf — the wall of plans and trouble (built)
+
+*Odin's hall, roofed with silver, where Hlidskjalf stands.*
+
+The plans and the trouble on one wall: what every project owes, and the nine things that fail silently, red the moment one breaks. Learn it in [`docs/features/the-trouble-panel.md`](features/the-trouble-panel.md).
+
+### Skírnir — the assistant who goes in his lord's place (built)
+
+*Freyr's messenger, who went in his lord's place and spoke his words — and left the sword behind.*
+
+The Allfather's assistant: answers people while he is away, takes a message, and says honestly when it does not know. It is not the counsellor and cannot act as him. Learn it in [`docs/features/skirnir-the-assistant.md`](features/skirnir-the-assistant.md).
+
+### Hófvarpnir — the one door that tells you (built)
+
+*Gná's horse, the hoof-thrower, that runs over air and sea.*
+
+The one door that tells you what happened: every system that has something to say sends by the same mount, so no event reaches nobody. Learn it in [`docs/features/the-hotline.md`](features/the-hotline.md).
+
+### Víðarr — the defender (built)
+
+*The silent god who avenges Odin at the world's end.*
+
+The defender: closes a door an intruder opened, stops a unit, quarantines a file — and keeps the evidence and the report. Learn it in [`docs/features/the-defender.md`](features/the-defender.md).
+
+### Hnoss — the design smithy (built)
+
+*Freyja's daughter, whose name means treasure.*
+
+The design smithy: prototypes, landing pages, dashboards, decks, images and motion — real files, made on your own machine with your own model. Learn it in [`docs/features/design-with-hnoss.md`](features/design-with-hnoss.md).
+
+### Lögrétta — the council of models (built)
+
+*The law council at the Althing, where the law was set.*
+
+The council of models: several models answer one question, each reads the others and may change its mind, and an arbiter merges them — keeping the disagreements visible. Learn it in [`docs/features/the-council-of-models.md`](features/the-council-of-models.md).
+
+### Þráðr — a real shell in the high seat (built)
+
+*The thread.*
+
+A real shell in the high seat: a live terminal inside Hlidskjalf, your own login shell, where every tool behaves as it does in a terminal window. Learn it in [`docs/features/the-thread.md`](features/the-thread.md).
+
+### Smíðr — the workbench for a guest hand (built)
+
+*The smith.*
+
+The workbench: what a hand from another house is taught before its first branch, and the two guards that catch what a review used to catch too late. Learn it in [`docs/features/the-workbench-for-a-guest-hand.md`](features/the-workbench-for-a-guest-hand.md).
+
+### Hvergelmir — every app in its own home (built)
+
+*The roaring spring in Niflheim, from which every river flows.*
+
+Every app in its own home: each installs from its own repository, updates and rolls back on its own, and never lives inside Ymir's tree again. Learn it in [`docs/features/apps-install-and-update.md`](features/apps-install-and-update.md).
+
+### Hœnir — the seats and their names (built)
+
+*The silent god of counsel, who gave mankind its mind.*
+
+Every machine names its own counsellor. A seat holds the arm — the one live session that may act with the operator's authority — and a task for a machine goes to its one holder. Learn it in [`docs/features/ratatoskr-arm.md`](features/ratatoskr-arm.md).
+
+### Gimlé — now built: one sign-in, every tool (update)
+
+Section XXXV recorded Gimlé as a product and the lesson of Rule 21. It is now the house's built collaboration suite:
+The collaboration suite: one Google sign-in opens the board, the documents and the whiteboard; one access list says who belongs where; one MCP door lets every agent work in them as the person who asks. Ymir itself stays engine-agnostic and talks to any board through the board contract
+([`docs/features/the-board-contract.md`](features/the-board-contract.md)); Gimlé is one engine that keeps it.
+
+### The decision models — Julia and Kev, now answering (update)
+
+Section XXXV left the naming question for Jev open: an adopted engine keeps its own name. The capability now runs:
+The decision models: small judges that answer yes or no with a number, not a paragraph — Julia routes, Kev judges, and the vault asks them before it trusts an answer. The engines keep their names; the capability is Ymir asking a question that wants a verdict, not a paragraph.
+
+### What this section owes the homepage
+
+Every figure here, and every built figure of section XXXV, has a line on the homepage from the same words — so a reader
+of the site and a reader of this document meet the same house.
+
+
 ## CHANGE LOG
 
 - **2026-11-14** — Kaia renamed to **Völundr, the master of the smiths**, at the Allfather's word; the document's
   live prose renamed, the change and the kept identifiers recorded above (RULES/06).
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- 2026-11-22 — XXXVI: the halls that came after — eleven figures carved, Gimlé and the decision models brought up to date.
