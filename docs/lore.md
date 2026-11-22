@@ -1566,6 +1566,24 @@ Every figure here, and every built figure of section XXXV, has a line on the hom
 of the site and a reader of this document meet the same house.
 
 
+
+### Móðguðr — the bridge-keeper (built)
+
+*She stands on the Gjöll bridge and asks every passer-by to name himself and answer for it.*
+
+The council's chair and its toughest audit. When a seat says something is done, safe, tested or ready, she asks for the
+command that shows it, runs it herself where she may, and refuses rather than believes where she may not. Her card is
+`.agents/agents/modgud-auditor.md`.
+
+### Andhrímnir — the cook who feeds the hall from one boar (built)
+
+*Every night he boils Sæhrímnir, and every dawn the boar is whole again, so the whole hall eats from one beast.*
+
+The house's token economist. He finds where an agent house spends tokens it did not need to — what is loaded, repeated
+or re-read for nothing — measures each spend and ranks the savings by size, and never cuts what the work needs. His card
+is `.agents/agents/andhrimnir-tokens.md`; his skill is `andhrimnir-tokens`; the how-to is
+[`docs/features/token-audits.md`](features/token-audits.md).
+
 ## CHANGE LOG
 
 - **2026-11-14** — Kaia renamed to **Völundr, the master of the smiths**, at the Allfather's word; the document's
@@ -1573,3 +1591,4 @@ of the site and a reader of this document meet the same house.
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - 2026-11-22 — XXXVI: the halls that came after — eleven figures carved, Gimlé and the decision models brought up to date.
+- 2026-11-22 — Móðguðr and Andhrímnir carved: the two built figures the lore had not yet named.
