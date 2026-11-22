@@ -362,7 +362,8 @@ def todo(action: str = "list", content: str = "", index: int = -1) -> str:
 
 @mcp.tool()
 def ymir_plan(slug: str = "", title: str = "", action: str = "new", realm: str = "", project: str = "",
-              scope: str = "project", owner: str = "", new_shelf: bool = False) -> str:
+              scope: str = "project", owner: str = "", new_shelf: bool = False,
+              priority: str = "") -> str:
     """The plan ledger: a plan is filed on the shelf of whoever owns the work.
 
     action: new (slug+title) · list · next · shelves (every realm and project, and whether it has a shelf).
@@ -376,6 +377,8 @@ def ymir_plan(slug: str = "", title: str = "", action: str = "new", realm: str =
         argv += [slug, "--title", title]
         if new_shelf:
             argv += ["--new-shelf"]
+        if priority:
+            argv += ["--priority", priority]  # urgent | high | medium | low | none
     if action != "shelves":
         argv += ["--scope", scope or "project"]
         for flag, val in (("--realm", realm), ("--project", project), ("--owner", owner)):
