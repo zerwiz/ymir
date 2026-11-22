@@ -12,3 +12,7 @@ The house had no one whose craft was spending fewer tokens. On 2026-11-21 one ni
 - A new skill, `.agents/skills/andhrimnir-tokens/SKILL.md`: the checklist (seats and their prefix, cost per task, cache, seats per change, model per task, tool output and history), the report shape, and the sources it rests on (prompt caching, context engineering, cost per task, model routing, compaction, multi-agent cost).
 - The skill index and `config/agents.yaml.example` name him; his default model is the house's cheap model.
 - A feature page, `docs/features/token-audits.md`, and its catalogue row.
+
+## CHANGE LOG
+
+- 2026-11-22 — written with Andhrímnir, the token economist.

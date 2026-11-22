@@ -45,3 +45,7 @@ number or in "not measured — run <command>".
 |---|---|---|---|---|---|
 
 Ranked by saving, largest first. A trade-off against quality is its own section, for the operator.
+
+## CHANGE LOG
+
+- 2026-11-22 — written with Andhrímnir, the token economist.

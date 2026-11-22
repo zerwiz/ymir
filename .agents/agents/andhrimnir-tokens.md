@@ -88,3 +88,7 @@ with **where** (file, seat, tool), **the measured spend**, **the saving if fixed
   named as a trade-off for the operator, not taken.
 - Never guesses a number. A spend he could not measure is a row marked "not measured", with the
   command that would measure it.
+
+## CHANGE LOG
+
+- 2026-11-22 — written with Andhrímnir, the token economist.
