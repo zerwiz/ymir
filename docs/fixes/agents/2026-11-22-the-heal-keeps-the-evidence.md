@@ -22,3 +22,7 @@ act wrote.
 
 `bash bin/agents/tests/test_acclaim_evidence.sh` — 16 passed, including "the evidence and the record survive the
 heal". `bash bin/seat/tests/test_everything_up.sh` — 30 passed.
+
+## CHANGE LOG
+
+- 2026-11-22 — review-mend: added missing heading for #896
