@@ -83,5 +83,11 @@ hid="$(printf '%s\n' "$out" | sed -n '2s/^  "\([^"]*\)".*/\1/p')"
 VEIL_HERMES_CLI="$T/doors/hermes" "$V" received "$hid" --by helm >/dev/null 2>&1
 grep -q -- "--resume s123 -z .*RECEIVED $hid" "$T/hermes.log" && ok "Hermes hears RECEIVED in its own session" || bad "hermes receipt: $(cat "$T/hermes.log")"
 rm -f "$T/reply.refuse"
+
+# a worker seat's private state is not where the arm reads: the ledger follows the helm's state
+mkdir -p "$T/seat" "$T/helm"
+( unset VEIL_STATE
+  BROKK_STATE_OVERRIDE="$T/seat" BROKK_MACHINE_STATE_DIR="$T/seat" YMIR_STATE_DIR="$T/helm" "$V" send --queued --from "agent s" "seat" >/dev/null 2>&1 )
+[ -s "$T/helm/veil/ledger.jsonl" ] && [ ! -e "$T/seat/veil" ] && ok "a seat's private state is skipped: the ledger is the arm's" || bad "ledger landed in the seat"
 echo "test_veil: $pass passed, $fail failed"
 [ "$fail" = 0 ]

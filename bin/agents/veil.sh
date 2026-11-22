@@ -46,7 +46,12 @@ case "${1:-}" in
   --self-test|self-test) exec bash "$ROOT/bin/agents/tests/test_veil.sh" ;;
 esac
 if [ -z "${VEIL_STATE:-}" ]; then
-  _st="${BROKK_STATE_OVERRIDE:-${YMIR_STATE_DIR:-}}"
+  # The ledger lives with the ARM, never in a worker's private seat state: a seat's override that is only
+  # its machine-state dir is ignored (the same rule as eindri_helm_state), or the holder could never find
+  # the id it is asked to answer (measured on the first live send, 2026-11-22).
+  _ov="${BROKK_STATE_OVERRIDE:-}"
+  [ -n "$_ov" ] && [ "$_ov" = "${BROKK_MACHINE_STATE_DIR:-}" ] && _ov=""
+  _st="${BROKK_HELM_STATE:-${_ov:-${YMIR_STATE_DIR:-}}}"
   if [ -z "$_st" ]; then
     # shellcheck disable=SC1091
     . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null && hoard_state_dir _st 2>/dev/null

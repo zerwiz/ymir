@@ -34,7 +34,7 @@ host="$(hostname -s 2>/dev/null || uname -n)"
 tell_once() {  # <key> <text>
   local key=$1 text=$2
   grep -qxF -- "$key" "$TOLD" && return 0
-  if [ -x "$VEIL" ] && BROKK_STATE_OVERRIDE="$STATE" "$VEIL" send --from "script Níðhöggr ($host)" --kind finding "$text" >/dev/null 2>&1; then
+  if [ -x "$VEIL" ] && "$VEIL" send --from "script Níðhöggr ($host)" --kind finding "$text" >/dev/null 2>&1; then
     printf '%s\n' "$key" >>"$TOLD"
   else
     printf 'nidhogg-job: the finding could not be told now (it is tried again next run): %s\n' "$text" >&2
