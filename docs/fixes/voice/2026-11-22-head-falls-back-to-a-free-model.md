@@ -10,3 +10,7 @@ The operator, when Nanna went silent on a call: *"use a free model as fallback i
 Read from the environment or the operator's own Rödd settings (`hodd/secrets/rodd.env`); nothing is configured by default. Each fallback that answers is said on stderr, never a key.
 
 Proved on a throwaway port: a request for the exhausted model answered 429 upstream and came back from the free model (`head-proxy: the head failed (429); answered by the fallback … beam-free`).
+
+## CHANGE LOG
+
+- 2026-11-22 — review-mend: added missing heading for #900
