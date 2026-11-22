@@ -32,3 +32,7 @@
 - **Relations.** `Parent: plan N` or `extends plan N` in the first 25 lines sets the card's parent (one, declared only, never replaced). Stands-on plans become `relates_to`, `supersedes` / `superseded by` / `renumbered from` become `duplicate`, `Blocked by: plan N` becomes `blocked_by`, through the contract verb `relate` (`add_relation`; `list_relations` is read first, nothing is removed). On a board without the verb a link carries the relation. Documents named under `hodd/docs/` or `docs/` are attached as links, once each by URL.
 - **Priority.** `Priority: urgent|high|medium|low|none` in the header, the last line wins. `plan.sh new` writes `Priority: none` and takes `--priority`; `ymir_plan` (pi and MCP) pass `priority` through. Without a declaration the home's `priorities:` section of `board-topics.yaml` may map a topic to a default; else `none`. Set on create, and later only when the card's priority is none.
 - **Proof.** `test_plan_owner.py` also covers: the date parse, the first-commit fallback, a set start never overwritten, declared labels winning, inference from words, a person's label kept, a declared parent set and a mention never a parent, no duplicate links or relations on a second sync, a person's parent and priority kept. The dry run (`plan-sync.sh --project ymir --dry-run`) lists each `backfill`, `labels`, `parent`, `relate` and `link` it would make: 301 cards to backfill, 231 label additions, 3 parents, 24 relations, 249 links.
+
+## CHANGE LOG
+
+- 2026-11-22 — review-mend: added missing heading for #908
