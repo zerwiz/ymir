@@ -500,6 +500,14 @@ print_head() {
   printf 'arm: %s\n' "$(head_arm)"
   section "NEEDS THE ALLFATHER"
   head_needs
+  # plan 350 E: the well is read at every session start, unasked — the day's topic, then this
+  # machine's and this project's open work (bin/records/well-brief.sh --head; never more than 7 lines)
+  section "THE WELL (drink before you act)"
+  if [ -x "$SCRIPT_DIR/../records/well-brief.sh" ]; then
+    timeout 20 "$SCRIPT_DIR/../records/well-brief.sh" --head 2>/dev/null | head -7 || printf 'the well did not answer\n'
+  else
+    printf 'bin/records/well-brief.sh absent — the well was not asked\n'
+  fi
   section "LIVE ERRANDS"
   saga_head_errand_block "$STATE" 6 3
   section "LANDING"

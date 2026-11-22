@@ -1054,13 +1054,18 @@ fi
 # Recall what the well remembers about this task and hand it to the worker with
 # the brief. A dry well never blocks; recall is a boost.
 CTX="$DATA/$ID/context.md"
-TITLE=$(grep -m1 -E '^#|title' "$BRIEF" 2>/dev/null | sed 's/^#* *//' || true)
-"$SCRIPT_DIR/../records/mimir.sh" recall "${TITLE:-$ID}" --k 4 >"$CTX" 2>/dev/null || : >"$CTX"
+# plan 350 E: the ONE recall door (bin/records/well-brief.sh), asked of the brief's own work — the old
+# road asked for the first heading, which is the bearings' heading on every brief, so every errand
+# recalled the same thing. A brief that already carries the section is not given a second one.
+if grep -qF '<!-- well-recall:v1 -->' "$BRIEF" 2>/dev/null; then
+  : >"$CTX"
+else
+  timeout 20 "$SCRIPT_DIR/../records/well-brief.sh" "$(cat "$BRIEF" 2>/dev/null)" >"$CTX" 2>/dev/null || : >"$CTX"
+fi
 PROMPT="$DATA/$ID/prompt.md"
 {
   cat "$BRIEF"
-  printf '\n\n---\n\n## Recalled context (the well — Mimirsbrunn)\n\n'
-  cat "$CTX"
+  if [ -s "$CTX" ]; then printf '\n\n---\n\n'; cat "$CTX"; fi
   # THE FIXED CORE (plan 275 §04:15–04:25): Ymir is public, the home is private, the pin,
   # herdr and the stamped send door, the Gná arm, the finding tools, the desk guard, the
   # laws. ONE copy — bin/time/saga-head-core.md — the same file the session head prints and

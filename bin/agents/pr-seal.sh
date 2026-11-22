@@ -323,6 +323,9 @@ seal() {
   merge_commit="$(cd "$ROOT" && gh pr view "$n" --json mergeCommit -q '.mergeCommit.oid' 2>/dev/null | tr -d '[:space:]')"
   [ -n "$merge_commit" ] || merge_commit=unknown
   carve_runes "$n" "$head" "$sha" "$merge_commit" || printf 'warn: PR #%s merged, but the Runes entry could not be carved — record it by hand\n' "$n" >&2
+  # the well remembers what landed, and each fix note's cause and fix (plan 350 E); a well that does
+  # not answer queues the write, and never holds the seal
+  [ -x "$ROOT/bin/records/well-write.sh" ] && (cd "$ROOT" && timeout 120 bash bin/records/well-write.sh merged "$n" >/dev/null 2>&1) || true
   printf 'sealed[1]{pr,head,merge_commit}:\n  "#%s","%s","%s"\n' "$n" "$head" "$merge_commit"
   printf '%s\n' "$merge_commit"
   return 0
@@ -465,6 +468,7 @@ PY
   else
     printf 'warn: PR #%s merged, but the ledger door %s is missing — record it by hand\n' "$n" "$RUNES" >&2
   fi
+  [ -x "$ROOT/bin/records/well-write.sh" ] && timeout 120 bash "$ROOT/bin/records/well-write.sh" merged "$n" --repo "$repo" >/dev/null 2>&1 || true
   printf 'sealed[1]{pr,repo,head,method,merge_commit}:\n  "#%s","%s","%s","%s","%s"\n' "$n" "$repo" "${sha:0:12}" "${flag#--}" "$merge_commit"
   return 0
 }

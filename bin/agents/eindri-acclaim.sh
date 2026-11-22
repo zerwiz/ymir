@@ -265,9 +265,16 @@ well_remember_finish() {  # <terminal> <line> <writer>
   fi
   printf 'WARNING: the errand %s finished (%s) and left NO episode in the well — writing a minimal one from its line. A worker remembers what it did itself: bin/records/mimir.sh observe "…" --source eindri --task %s --tags eindri,%s\n' \
     "$AGENT" "$term" "$AGENT" "$term" >&2
-  timeout 15 "$MIMIR" observe "eindri $AGENT $term: $text (written by $writer: the worker left no episode of its own)" \
-    --source "$writer" --task "$AGENT" --tags "eindri,$term,unremembered" --shape behaviour --force >/dev/null 2>&1 \
-    || printf 'warning: the well did not take the minimal episode for %s — the wake stands\n' "$AGENT" >&2
+  # through the queueing door (plan 350 E): a well that does not answer now is retried, never dropped
+  if [ -x "$SCRIPT_DIR/../records/well-write.sh" ] && [ -z "${YMIR_ACCLAIM_WELL:-}" ]; then
+    timeout 45 bash "$SCRIPT_DIR/../records/well-write.sh" observe "eindri $AGENT $term: $text (written by $writer: the worker left no episode of its own)" \
+      --source "$writer" --task "$AGENT" --tags "eindri,$term,unremembered" --shape behaviour --key "acclaim:$AGENT:$term" >/dev/null 2>&1 \
+      || printf 'warning: the well did not take the minimal episode for %s — the wake stands\n' "$AGENT" >&2
+  else
+    timeout 15 "$MIMIR" observe "eindri $AGENT $term: $text (written by $writer: the worker left no episode of its own)" \
+      --source "$writer" --task "$AGENT" --tags "eindri,$term,unremembered" --shape behaviour --force >/dev/null 2>&1 \
+      || printf 'warning: the well did not take the minimal episode for %s — the wake stands\n' "$AGENT" >&2
+  fi
 }
 case "$TERMINAL" in
   done|failed|unproven)

@@ -273,6 +273,13 @@ act() {  # <review-id>
     return 0
   fi
 
+  # the well remembers the verdict and its items (plan 350 E): the next coder on this work is warned
+  if [ "$DRY" != 1 ] && [ -x "$ROOT/bin/records/well-write.sh" ] && [ "$result" != UNKNOWN ]; then
+    timeout 60 bash "$ROOT/bin/records/well-write.sh" observe \
+      "Judge verdict on $repo#$n at ${head:0:12}: $result${count:+ ($count)}${items:+ — $items}" \
+      --store episodic --tags "verdict,review,$(printf '%s' "$result" | tr 'A-Z' 'a-z')" --source judge --task "${task:-$rid}" \
+      --key "verdict:$rid:$head" >/dev/null 2>&1 || true
+  fi
   case "$result" in
     APPROVE)
       # an approval must NAME the head it judged: a report with no `judged-head:` line cannot prove
