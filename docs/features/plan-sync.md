@@ -174,3 +174,25 @@ board:
 The board door can also answer "no such place" for a place it lists in the same answer, or "no such state" for a state
 the place has already listed, when its own lookup is rate-limited. The adapter now waits and asks again in those cases,
 as it does for a 429. A state the place truly lacks is still refused by name.
+
+## Every plan tool feeds the board, on its owner, with no number taken twice (2026-11-22)
+
+| What | How |
+|---|---|
+| **One road for a new plan** | `ymir_plan` in pi, `ymir_plan` in the MCP and `bin/records/plan.sh new` are the same road: the plan file, its header with `Status: open`, the index row, and its card on the board |
+| **No number taken twice** | the next number is after the highest in the ledger **and** the highest on the project's board (`plan-sync.sh --project <id> --highest`). The board is the one place every machine writes at once, so two machines that have not pulled each other's commits still take different numbers. A machine with no road to the board uses the ledger alone (`YMIR_PLAN_BOARD_CHECK=0` turns the board check off) |
+| **On its owner** | a new plan card is assigned to the row's `board.assignee` (a name, an email, or a list), else to the operator in `hodd/identity/operator.yaml`. With neither, the card is unassigned; no one is invented |
+| **Closed by appending** | a plan is append-only, so it is closed by appending a line `**Status:** done …` (or any status word). The last such line after the header wins, and the card moves to that state on the next sync |
+| **An appended section moves the card** | `ymir_note` brings the plan's card up to date after the append, as `bin/records/note.sh` does |
+| **From any harness** | the MCP door `ymir_board_sync` (project, plan, file, dry_run, highest) runs the sync |
+
+## What a plan card carries besides its text
+
+- **Start date**: the plan's `Opened` date, else the date of its first commit. Filled only when empty.
+- **Owner**: the operator (or `board.assignee`). Filled only when the card has no assignee.
+- **Labels**: `Labels: a, b` in the header; else words from the title and first section matched against `config/board-topics.yaml` in your home (copy `config/board-topics.yaml.example`). Labels are added, never removed.
+- **Priority**: `Priority: urgent|high|medium|low|none`; a later line wins. A `priorities:` section in `board-topics.yaml` can give a topic a default. Filled only while the card's priority is none.
+- **Parent**: `Parent: plan N` in the header. One parent, only when declared.
+- **Relations**: `Stands on` plans relate (`relates_to`), `supersedes` / `renumbered from` mark a `duplicate`, `Blocked by: plan N` marks `blocked_by`. Documents under `docs/` or `hodd/docs/` are attached as links.
+
+Run `plan-sync.sh --project <name> --dry-run` to list every change before it is made.
