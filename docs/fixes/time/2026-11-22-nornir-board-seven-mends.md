@@ -16,3 +16,7 @@ The fleet's scheduled-jobs board showed seven failing items. Six were real fault
 > The operator must fill in: the two machines that have no user or address (named in the home ledger `state/eir/ledger.jsonl`); and say whether `whynot` and `aegir` are off. A host row may carry `"offline": true`. The second copy of the weekly rows in the home `cron.yaml` can be deleted.
 
 Test: `bin/time/tests/test_nornir_mend.sh`.
+
+## CHANGE LOG
+
+- 2026-11-22 — review-mend: added missing heading for #907
