@@ -192,7 +192,21 @@ refuse_stale_ledger() {
   return 0
 }
 
-next_number() { ls "$LEDGER" 2>/dev/null | grep -oE '^[0-9]+' | sort -n | tail -1 | awk '{print ($1+1)}' ; }
+# The next number is after the highest the LEDGER has AND the highest the project's BOARD has (2026-11-22: two seats
+# each took 352 twenty minutes apart, before either had pushed). The board is the one place every seat writes to at
+# once, so it closes the window a fetch cannot. A seat with no road to the board uses the ledger alone, and says so.
+board_highest() {
+  [ "${YMIR_PLAN_BOARD_CHECK:-1}" = 1 ] || return 0
+  local who="${OWNER:-$PROJECT}"; [ -n "$who" ] || return 0
+  timeout "${YMIR_PLAN_BOARD_TIMEOUT:-45}" bash "$ROOT/bin/boards/plan-sync.sh" --project "$who" --highest 2>/dev/null | tail -1 | grep -E '^[0-9]+$' || true
+}
+next_number() {
+  local a b
+  a="$(ls "$LEDGER" 2>/dev/null | grep -oE '^[0-9]+' | sort -n | tail -1)"; a="${a:-0}"
+  b="$(board_highest)"; b="${b:-0}"
+  [ "$b" -gt "$a" ] 2>/dev/null && a="$b"
+  echo $((10#$a + 1))
+}
 
 case "${1:-}" in
   -h|--help|"") sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -243,7 +257,7 @@ case "${1:-}" in
     grep -hE '^- \*\*[0-9]+\*\*' "$LEDGER/README.md" 2>/dev/null | sed -E 's/^- \*\*([0-9]+)\*\* [—-] \[(.*)\]\(.*/  #\1 \2/' | tail -20 ;;
   new)
     slug="${2:-}"; shift 2 2>/dev/null || true
-    title=""; from_meeting=""
+    title=""; from_meeting=""; priority="none"
     while [ $# -gt 0 ]; do
       case "$1" in
         --title) title="${2-}"; shift 2 ;;
@@ -253,10 +267,12 @@ case "${1:-}" in
         --scope) SCOPE="${2-}"; shift 2 ;;
         --owner) OWNER="${2-}"; shift 2 ;;
         --from-meeting) from_meeting="${2-}"; shift 2 ;;
+        --priority) priority="${2-none}"; shift 2 ;;
         *) shift ;;
       esac
     done
     [ -n "$slug" ] && [ -n "$title" ] || { printf 'plan: new needs <slug> and --title\n' >&2; exit 2; }
+    case "$priority" in urgent|high|medium|low|none) ;; *) printf 'plan: --priority is urgent|high|medium|low|none\n' >&2; exit 2 ;; esac
     [ "$SCOPE" = project ] && OWNER="${OWNER:-$PROJECT}"
     set_ledger_for_scope "$SCOPE" "${OWNER:-}" || exit 2
     refuse_stale_ledger || exit 1
@@ -268,9 +284,9 @@ case "${1:-}" in
       # A plan is measurable from the hour it is born (plan 298 §2.1): the header carries its state,
       # so no list has to be typed from memory later. `Status:` is the field the older readers
       # (plan-state.sh, plan-board.sh, the Nornir observer) already understand.
-      printf 'Status: open\n'
+      printf 'Status: open\nPriority: %s\n' "$priority"
       [ -n "$from_meeting" ] && printf 'from_meeting: %s\n' "$from_meeting"
-      printf '\n**Opened %s.**\n' "$(date +%F)"
+      printf '\n**Opened %s.**\n' "$(bash "$ROOT/bin/time/sol.sh" iso --plain 2>/dev/null | cut -c1-10)"
     } > "$f"
     printf '| %s | [%s](%s) | open |\n' "$n" "$title" "$(basename "$f")" >> "$LEDGER/README.md"
     printf 'created %s\n  shelf: %s (%s)\n' "$f" "$LEDGER" "$SCOPE"

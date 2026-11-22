@@ -362,7 +362,8 @@ def todo(action: str = "list", content: str = "", index: int = -1) -> str:
 
 @mcp.tool()
 def ymir_plan(slug: str = "", title: str = "", action: str = "new", realm: str = "", project: str = "",
-              scope: str = "project", owner: str = "", new_shelf: bool = False) -> str:
+              scope: str = "project", owner: str = "", new_shelf: bool = False,
+              priority: str = "") -> str:
     """The plan ledger: a plan is filed on the shelf of whoever owns the work.
 
     action: new (slug+title) · list · next · shelves (every realm and project, and whether it has a shelf).
@@ -376,6 +377,8 @@ def ymir_plan(slug: str = "", title: str = "", action: str = "new", realm: str =
         argv += [slug, "--title", title]
         if new_shelf:
             argv += ["--new-shelf"]
+        if priority:
+            argv += ["--priority", priority]  # urgent | high | medium | low | none
     if action != "shelves":
         argv += ["--scope", scope or "project"]
         for flag, val in (("--realm", realm), ("--project", project), ("--owner", owner)):
@@ -446,6 +449,70 @@ def gna_fleet_tell(to: str = "", line: str = "", verb: str = "tell", all: bool =
         argv += ["--from", sender]
     argv += ["--", line]
     return _run(argv, 300)
+
+
+@mcp.tool()
+def ymir_veil(action: str = "pending", id: str = "", text: str = "", to: str = "", by: str = "",
+              kind: str = "report", sender: str = "") -> str:
+    """The Veil's road to the arm (plan 350 B): every report carries an id and the arm holder answers it.
+    action: send (text; kind report|finding|steer; sender) · steer (to, text) · received | accepted | rework
+    (id; text is the note, required for rework) · status (id) · pending (every item not yet RECEIVED, with
+    its age). A report left unanswered is resent into the holder's pane, then turns the trouble panel red."""
+    door = str(ROOT / "bin" / "agents" / "veil.sh")
+    if action == "send":
+        if not text.strip():
+            return "ymir_veil send needs `text`."
+        argv = ["bash", door, "send", "--kind", kind] + (["--from", sender] if sender else []) + [text]
+    elif action == "steer":
+        if not to.strip() or not text.strip():
+            return "ymir_veil steer needs `to` (an agent: a pane, an errand, hermes:<session>) and `text`."
+        argv = ["bash", door, "steer", "--to", to] + (["--from", sender] if sender else []) + [text]
+    elif action in ("received", "accepted", "rework"):
+        if not id.strip():
+            return f"ymir_veil {action} needs the item's `id`."
+        if action == "rework" and not text.strip():
+            return "ymir_veil rework needs `text`: why the build goes back."
+        argv = ["bash", door, action, id] + (["--by", by] if by else []) + ([text] if text else [])
+    elif action == "status":
+        if not id.strip():
+            return "ymir_veil status needs `id`."
+        argv = ["bash", door, "status", id]
+    elif action == "pending":
+        argv = ["bash", door, "pending"]
+    else:
+        return "ymir_veil: action is send | steer | received | accepted | rework | status | pending."
+    return _run(argv, 300)
+
+
+@mcp.tool()
+def ymir_board_sync(project: str = "", plan: int = 0, file: str = "", dry_run: bool = False,
+                    highest: bool = False) -> str:
+    """Mirror a project's plan ledger onto its board (Plane through Gimlé, or the adapter the project's
+    registry row names): one card per plan, its state from the plan's Status (an appended Status closes it),
+    assigned to the plan's owner. `highest` prints the highest plan number already on the board. Name a
+    `project` (registry id) or a plan `file`; `plan` limits it to one number."""
+    door = str(ROOT / "bin" / "boards" / "plan-sync.sh")
+    if not project and not file:
+        return "ymir_board_sync needs `project` (a registry id, e.g. ymir) or `file` (a plan file)."
+    argv = ["bash", door] + (["--project", project] if project else ["--file", file])
+    if highest:
+        argv.append("--highest")
+    if plan:
+        argv += ["--plan", str(plan)]
+    if dry_run:
+        argv.append("--dry-run")
+    return _run(argv, 600)
+
+
+@mcp.tool()
+def ymir_publish(action: str = "check") -> str:
+    """Put an app on a public name ONLY behind the hall's login (Gjallarhorn's publish door, from this
+    machine's publish.yaml in the home). action: check (refuses an app with no gate or nobody named) ·
+    plan (what would be written) · rules (the hall's per-app rules) · status (each name, from outside) ·
+    apply (raises the edge, proves an unsigned visitor is challenged, then the tunnel and DNS)."""
+    if action not in ("check", "plan", "rules", "status", "apply"):
+        return "ymir_publish: action is check | plan | rules | status | apply."
+    return _run(["bash", str(ROOT / "bin" / "forge" / "gjallarhorn-publish.sh"), action], 600)
 
 
 @mcp.tool()
@@ -734,6 +801,63 @@ def excalidraw_app(action: str = "status") -> str:
     return f"{action}.sh launched (detached). Check with action=status in a few seconds."
 
 
+# --- the figures, served (plan 358, 2026-11-22): prompts, resources, one kit tool, Huginn's road -------------------
+import figures as _fig  # noqa: E402  (next to this file; the logic lives there so a test can call it)
+
+
+def _tool_names() -> list[str]:
+    try:
+        return [t.name for t in mcp._tool_manager.list_tools()]
+    except Exception:
+        return []
+
+
+def _recall_for(task: str) -> str:
+    return _run(["bash", str(ROOT / "bin" / "records" / "mimir.sh"), "recall", task[:300]], 60)[:2500]
+
+
+@mcp.tool()
+def ymir_figure(name: str, task: str = "", project: str = "") -> str:
+    """A figure's KIT for a task (never copied into a project): its prompt, the skills to read (Ymir's frame skills and
+    the project's OWN skills, chosen for the task's words and paths), the tools it may use, the project's RULES and
+    OUTCOMES.md, and the well's top episodes. `name` is a figure (forseti, sindri, kvasir, huginn, mimir, ...);
+    `project` is a path, else the repository the session was opened in."""
+    return _fig.render_kit(_fig.kit(ROOT, name, task, project, _tool_names(), _recall_for))
+
+
+@mcp.tool()
+def ymir_research(question: str, project: str = "", plan: str = "") -> str:
+    """Huginn's road from every harness: Firecrawl first (search, then the best page as markdown, main content
+    only), the finding KEPT in the library with its source and practice (`plan` names the plan that uses it), and a
+    short answer back. A question nothing answers is kept as a negative result."""
+    return _fig.research(ROOT, question, project, plan)
+
+
+def _register_figures() -> None:
+    from mcp.server.fastmcp.prompts import Prompt
+    from mcp.server.fastmcp.resources import FunctionResource
+    for card in _fig.figure_cards(ROOT).values():
+        mcp.add_prompt(Prompt.from_function(lambda c=card: _fig.figure_prompt(c), name=card["name"],
+                                            description=(card["description"] or card["name"])[:300]))
+    seen = set()
+    for scope, base in (("frame", ROOT), ("project", _fig.project_root())):
+        for sk in _fig.skills_in(base, scope) if base else []:
+            uri = f"ymir-skill://{scope}/{sk['name']}"
+            if uri in seen:
+                continue
+            seen.add(uri)
+            mcp.add_resource(FunctionResource(
+                uri=uri, name=f"{scope}: {sk['name']}", description=sk["description"][:240], mime_type="text/markdown",
+                fn=lambda sc=scope, n=sk["name"]: _fig.read_skill(ROOT, sc, n)))
+
+
+try:
+    _register_figures()
+except Exception as _exc:  # a figure that cannot be served must never stop the doors
+    import sys as _s
+    print(f"ymir-mcp: figures not served ({_exc})", file=_s.stderr)
+
+
 if __name__ == "__main__":
     import sys as _sys
     if "--selftest" in _sys.argv:
@@ -744,6 +868,11 @@ if __name__ == "__main__":
         except Exception:
             names = [n for n in dir() if n.startswith("ymir_") or n == "todo"]
         print("doors:", len(names), ", ".join(sorted(names)))
+        try:
+            import asyncio
+            print("prompts:", len(asyncio.run(mcp.list_prompts())), "resources:", len(asyncio.run(mcp.list_resources())))
+        except Exception as exc:
+            print("prompts: 0 resources: 0", f"({exc})")
         print(_run(["bash", str(ROOT / "bin" / "vault" / "hodd.sh"), "path"]))
         raise SystemExit(0)
     mcp.run()
