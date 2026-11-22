@@ -80,7 +80,20 @@ machine: the commit must exist there, be on the named branch, and be on origin w
 A question you file in `eindri-questions/<id>.md` wakes the helm after 15 minutes and reaches the
 operator after an hour. Ask it plainly in the first line; that line is what they read.
 
+## Evidence or no done
+
+Each claim in a done act carries the command that proves it: `--evidence "<command>"`, once per
+claim. The act runs each one in your repo and files the command, its exit and its output. With
+no evidence, a command that fails, or a pull request whose checks are red, the act ends
+**`unproven`** (exit 5). The review is not seated, and the arm holder is told. Run the act again
+with green evidence and it becomes `done`.
+
+Every report carries a Veil id. The arm holder answers it with `bin/agents/veil.sh received <id>`,
+and later `accepted` or `rework`. With no answer in 2 minutes, the report is typed into the
+holder's pane. After 10 minutes, it is a red alarm.
+
 ## CHANGE LOG
 
 - **2026-11-14** — written: the shipped, agnostic core every errand's brief carries, and the home's overlay is printed after it (plan 291 part 2). This document carries its history from here; its earlier history is its git log. Everything above the CHANGE LOG is printed into a brief; nothing below it is.
 - **2026-11-20** — appended: *Your report counts only with its record* — the four facts a done report carries, the record the terminal act writes, the arm's check, and the question clock (plan 339.2 and 339.3).
+- **2026-11-22** — appended: *Evidence or no done*, the Veil (plan 350 B): `--evidence` per claim, the `unproven` state, and the Veil id the arm holder answers.

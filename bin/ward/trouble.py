@@ -17,7 +17,11 @@ One reading per machine, of the nine things that failed silently on 2026-11-20 �
     hyprland   Hyprland reports config errors (plan 341.4: `hypr.sh config check` where it exists)
     tells      a tell in the arm's queue unanswered for more than TROUBLE_TELL_S (3600) seconds
     loops      the same commit subject more than twice on one branch in an hour — Níðhöggr's
-               `commits` verb judges it, and the panel only carries his verdict
+               `commits` verb judges it, and the panel only carries his verdict; and Níðhöggr's own
+               clock (plan 350 B4): his last run (<state>/nidhogg/last-run.json) older than
+               TROUBLE_NIDHOGG_S (3600) seconds is red, because a loop-breaker that stopped is silent
+    receipts   a Veil report the arm holder has not answered RECEIVED within TROUBLE_RECEIPT_S (600)
+               seconds (plan 350 B, the arm contract: bin/agents/veil.sh pending), with the count
 
 Verbs (bin/ward/trouble.sh is the door; it resolves the home and passes it in):
 
@@ -46,7 +50,7 @@ import time
 from pathlib import Path
 
 GIB = 1024 ** 3
-SIGNALS = ("disk", "guardian", "pin", "unpushed", "questions", "errands", "hyprland", "tells", "loops")
+SIGNALS = ("disk", "guardian", "pin", "unpushed", "questions", "errands", "hyprland", "tells", "loops", "receipts")
 ENDED = ("done:", "resolved:", "failed:")
 IDLE = {"idle", "done", "waiting", "unknown"}
 
@@ -487,7 +491,52 @@ def sig_tells(c: Ctx) -> dict:
                count=len(old))
 
 
+def _nidhogg_clock(c: Ctx) -> dict | None:
+    """Níðhöggr's own clock: red when his last run is older than the line; None when he runs nowhere here."""
+    stamp = c.state / "nidhogg" / "last-run.json"
+    if not stamp.exists():
+        return None
+    line = env_int("TROUBLE_NIDHOGG_S", 3600)
+    try:
+        ts = int(json.loads(stamp.read_text()).get("ts", 0))
+    except (OSError, ValueError):
+        ts = 0
+    if c.now - ts > line:
+        return row("loops", "RED", f"Níðhöggr has not run for {int((c.now - ts) // 60)} min (his line is {line // 60} min)"
+                   " — his clock stopped; run bin/time/nornir-job-nidhogg.sh", count=1)
+    return None
+
+
+def sig_receipts(c: Ctx) -> dict:
+    ledger = Path(os.environ.get("TROUBLE_VEIL_LEDGER", "") or c.state / "veil" / "ledger.jsonl")
+    if not ledger.exists():
+        return row("receipts", "ok", "no Veil report on this machine yet")
+    line = env_int("TROUBLE_RECEIPT_S", 600)
+    sent: dict[str, dict] = {}
+    answered: set[str] = set()
+    for raw in ledger.read_text(errors="replace").splitlines():
+        try:
+            ev = json.loads(raw)
+        except ValueError:
+            continue
+        if ev.get("event") == "sent" and ev.get("kind") != "steer":
+            sent[ev.get("id", "")] = ev
+        elif ev.get("event") in ("received", "accepted", "rework"):
+            answered.add(ev.get("id", ""))
+    old = sorted((c.now - int(ev.get("ts", c.now)), ev.get("from", "?")) for i, ev in sent.items()
+                 if i not in answered and c.now - int(ev.get("ts", c.now)) > line)
+    if not old:
+        return row("receipts", "ok", f"every Veil report was RECEIVED within {line // 60} min")
+    old.reverse()
+    senders = ", ".join(sorted({s for _, s in old})[:4])
+    return row("receipts", "RED", f"{len(old)} report(s) with no RECEIVED from the arm holder, the oldest "
+               f"{int(old[0][0] // 60)} min (from {senders}) — bin/agents/veil.sh pending", count=len(old))
+
+
 def sig_loops(c: Ctx) -> dict:
+    clock = _nidhogg_clock(c)
+    if clock:
+        return clock
     door = Path(c.root) / "bin/gates/nidhogg.sh"
     if not door.exists():
         return row("loops", "SKIP", "Níðhöggr is not in this tree")
@@ -513,7 +562,7 @@ def sig_loops(c: Ctx) -> dict:
 
 PROBES = {"disk": sig_disk, "guardian": sig_guardian, "pin": sig_pin, "unpushed": sig_unpushed,
           "questions": sig_questions, "errands": sig_errands, "hyprland": sig_hyprland, "tells": sig_tells,
-          "loops": sig_loops}
+          "loops": sig_loops, "receipts": sig_receipts}
 
 
 def reading(c: Ctx, only: list[str]) -> dict:
@@ -537,6 +586,7 @@ BUTTONS = {
     "errands": ["🔎 Show the troubled errands|On {host}, run bin/ward/trouble.sh read --only errands and show each errand's last status line and pane"],
     "hyprland": ["🪟 Show the Hyprland error|On {host}, run hyprctl configerrors and name the file and line that broke"],
     "tells": ["📨 Drain the arm's tells|On {host}, have the arm holder drain its wake queue (saga-session-start.sh --section wake) and answer the oldest tells"],
+    "receipts": ["📬 Answer the waiting reports|On {host}, run bin/agents/veil.sh pending and answer each with bin/agents/veil.sh received <id>"],
     "loops": ["🐍 Show the looping branch|On {host}, run bin/gates/nidhogg.sh commits and show which writer repeats the commit, then stop that writer"],
 }
 
