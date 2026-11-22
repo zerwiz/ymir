@@ -65,6 +65,16 @@ export function MobileNav() {
             <div className="m-sheet-grip" onPointerDown={gripDown} role="separator" aria-label="Swipe down to close" />
             <div className="m-sheet-head">All gates</div>
             <div className="m-grid">
+              <a
+                href="https://ymir.zerwiz.org/saga/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="m-cell"
+                onClick={() => setMore(false)}
+              >
+                <span className="m-glyph" aria-hidden="true">ᛊ</span>
+                <span>saga</span>
+              </a>
               {rest.map((g) => (
                 <button
                   key={g.id}

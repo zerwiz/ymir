@@ -64,6 +64,18 @@ export function AccountMenu() {
             </div>
           </div>
 
+          <div className="account-links" style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0' }}>
+            <a
+              href="https://ymir.zerwiz.org/saga/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="account-link"
+              style={{ fontSize: 12, color: 'var(--ymir-bronze)', textDecoration: 'none' }}
+            >
+              ᛊ The saga — the lore and the long telling
+            </a>
+          </div>
+
           <div className="account-foot">
             <span className="mono dim" style={{ fontSize: 10 }}>
               this machine · no login

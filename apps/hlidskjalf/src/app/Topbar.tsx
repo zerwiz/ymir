@@ -52,6 +52,17 @@ export function Topbar() {
 
       <Ward />
 
+      <a
+        className="icon-btn"
+        href="https://ymir.zerwiz.org/saga/"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="The saga — the lore and the long telling"
+        aria-label="Open the saga"
+      >
+        ᛊ
+      </a>
+
       <AccentPicker />
 
       <button

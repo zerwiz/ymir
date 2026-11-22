@@ -64,6 +64,16 @@ export function Rail() {
       </nav>
 
       <div className="rail-foot">
+        <a
+          href="https://ymir.zerwiz.org/saga/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rail-saga-link"
+          style={{ display: 'block', textAlign: 'center', marginBottom: 8, fontSize: 11, color: 'var(--ymir-bronze)', textDecoration: 'none' }}
+          title="The saga — the lore and the long telling"
+        >
+          ᛊ saga
+        </a>
         <div className="rail-node">
           <span className="live-dot" aria-hidden="true" />
           <span>Valhalla</span>
