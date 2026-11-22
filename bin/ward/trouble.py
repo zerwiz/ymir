@@ -20,6 +20,9 @@ One reading per machine, of the nine things that failed silently on 2026-11-20 �
                `commits` verb judges it, and the panel only carries his verdict; and Níðhöggr's own
                clock (plan 350 B4): his last run (<state>/nidhogg/last-run.json) older than
                TROUBLE_NIDHOGG_S (3600) seconds is red, because a loop-breaker that stopped is silent
+    contracts  a behaviour contract red on this machine (plan 350 F): bin/ward/contracts.sh check keeps
+               <state>/contracts/<host>.json, and this row carries its reds; a reading older than
+               TROUBLE_CONTRACTS_S (3600) seconds is red too, because a stopped runner is silent
     receipts   a Veil report the arm holder has not answered RECEIVED within TROUBLE_RECEIPT_S (600)
                seconds (plan 350 B, the arm contract: bin/agents/veil.sh pending), with the count
 
@@ -50,7 +53,7 @@ import time
 from pathlib import Path
 
 GIB = 1024 ** 3
-SIGNALS = ("disk", "guardian", "pin", "unpushed", "questions", "errands", "hyprland", "tells", "loops", "receipts")
+SIGNALS = ("disk", "guardian", "pin", "unpushed", "questions", "errands", "hyprland", "tells", "loops", "receipts", "contracts")
 ENDED = ("done:", "resolved:", "failed:")
 IDLE = {"idle", "done", "waiting", "unknown"}
 
@@ -533,6 +536,25 @@ def sig_receipts(c: Ctx) -> dict:
                f"{int(old[0][0] // 60)} min (from {senders}) — bin/agents/veil.sh pending", count=len(old))
 
 
+def sig_contracts(c: Ctx) -> dict:
+    path = c.state / "contracts" / f"{c.host}.json"
+    if not path.exists():
+        return row("contracts", "SKIP", "no behaviour contracts have run here (bin/ward/contracts.sh check)")
+    try:
+        doc = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return row("contracts", "RED", "the contracts reading is unreadable", count=1)
+    line = env_int("TROUBLE_CONTRACTS_S", 3600)
+    if c.now - int(doc.get("ts", 0)) > line:
+        return row("contracts", "RED", f"the contracts have not run for {int((c.now - doc.get('ts', 0)) // 60)} min "
+                   "— bin/ward/contracts.sh check", count=1)
+    reds = [r for r in doc.get("contracts", []) if r.get("state") == "red"]
+    if not reds:
+        return row("contracts", "ok", f"{len(doc.get('contracts', []))} behaviour contract(s), none red")
+    return row("contracts", "RED", "; ".join(f"{r['contract']}: {r['line'][5:120]}" for r in reds[:3])
+               + (f" (+{len(reds) - 3} more)" if len(reds) > 3 else ""), count=len(reds))
+
+
 def sig_loops(c: Ctx) -> dict:
     clock = _nidhogg_clock(c)
     if clock:
@@ -562,7 +584,8 @@ def sig_loops(c: Ctx) -> dict:
 
 PROBES = {"disk": sig_disk, "guardian": sig_guardian, "pin": sig_pin, "unpushed": sig_unpushed,
           "questions": sig_questions, "errands": sig_errands, "hyprland": sig_hyprland, "tells": sig_tells,
-          "loops": sig_loops, "receipts": sig_receipts}
+          "loops": sig_loops, "receipts": sig_receipts,
+          "contracts": sig_contracts}
 
 
 def reading(c: Ctx, only: list[str]) -> dict:
@@ -586,6 +609,7 @@ BUTTONS = {
     "errands": ["🔎 Show the troubled errands|On {host}, run bin/ward/trouble.sh read --only errands and show each errand's last status line and pane"],
     "hyprland": ["🪟 Show the Hyprland error|On {host}, run hyprctl configerrors and name the file and line that broke"],
     "tells": ["📨 Drain the arm's tells|On {host}, have the arm holder drain its wake queue (saga-session-start.sh --section wake) and answer the oldest tells"],
+    "contracts": ["🔍 Show the broken contracts|On {host}, run bin/ward/contracts.sh run and show each red contract with its line"],
     "receipts": ["📬 Answer the waiting reports|On {host}, run bin/agents/veil.sh pending and answer each with bin/agents/veil.sh received <id>"],
     "loops": ["🐍 Show the looping branch|On {host}, run bin/gates/nidhogg.sh commits and show which writer repeats the commit, then stop that writer"],
 }
