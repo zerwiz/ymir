@@ -187,3 +187,14 @@
 # — THE LIVING WELL (plan 350 E, 2026-11-22) — a write the well did not take is queued in state/well-write/ and
 # retried here, never dropped (RULES/20). Every machine that writes the well runs it.
 @heart,dev @every:10 bin/records/well-write.sh flush
+# — THE VEIL (plan 350 B, 2026-11-22) — every report and finding carries an id the arm holder answers RECEIVED.
+# The sweep resends an unanswered one into the holder's pane after 2 minutes and marks it red after 10 (the
+# trouble panel's `receipts` row shows the count). Every machine that seats an arm holder runs it.
+@heart,dev @every:2 bin/agents/veil.sh sweep
+# Níðhöggr on the clock: one scan of the seated agents (a loop is broken at rung 1 and told through the Veil)
+# and one pass over the errand branches. His stamp (state/nidhogg/last-run.json) older than an hour is red.
+@heart,dev @every:15 bin/time/nornir-job-nidhogg.sh
+# — THE BEHAVIOUR CONTRACTS (plan 350 F, 2026-11-22) — does every system do the real thing, not merely run? One file
+# per contract in bin/ward/contracts.d/; a turn to red goes to the arm holder through the Veil, and the trouble
+# panel's `contracts` row (and its fleet view) carries every machine's reds. Every machine runs its own.
+@heart,dev @every:15 bin/ward/contracts.sh check --notify
