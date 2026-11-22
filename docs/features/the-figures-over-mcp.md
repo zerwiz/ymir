@@ -52,3 +52,7 @@ names a tool the server does not register. Add the row in the same change that b
 - `python3 bin/mcp/ymir-mcp.py --selftest` prints the doors, prompts and resources it serves.
 - `python3 bin/mcp/tests/test_figures.py` proves it from a temporary repository that has its own skill, and checks that no
   Ymir file is written into that repository.
+
+## CHANGE LOG
+
+- 2026-11-22 — opened (plan 358).
