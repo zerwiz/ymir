@@ -484,7 +484,7 @@ case "$ACTION" in
   # `status`, `charter` and `close` are local questions; the three ACTIONS THAT TOUCH THE WORLD —
   # raising a judge, asking it, and keeping it alive — pass the door gate first (plan 290).
   ensure|ask)
-    warden_require_door || exit 3
+    warden_require_door || exit "${WARDEN_RC_NOT_HERE:-78}"
     WARDEN_REPOS="$DEFAULT_REPOS"
     # shellcheck disable=SC2086
     IFS=', ' read -r -a _repos <<<"$DEFAULT_REPOS"
