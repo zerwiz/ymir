@@ -304,8 +304,14 @@ elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
     last="$(tail -n1 "$STATE/$AGENT.status" 2>/dev/null || true)"
     case "$last" in
       done:*|failed:*|unproven:*)
-        printf '%s\n' "$last" >"$STATE/eindri-reports/$AGENT.md"
-        detail="report healed from the terminal status line, replacing the sweep's snapshot ($STATE/eindri-reports/$AGENT.md)"
+        # The sweep's guess is replaced, but the Evidence and the Record this act just wrote are KEPT
+        # (measured 2026-11-22: the heal rewrote the shelf to the bare status line, and a done that had
+        # filed five green evidence commands read as a claim with no proof).
+        _kept="$(awk '/^## (Evidence|Record)$/{keep=1} keep' "$STATE/eindri-reports/$AGENT.md" 2>/dev/null)"
+        { printf '%s\n' "$last"; [ -n "$_kept" ] && printf '\n%s\n' "$_kept"; } >"$STATE/eindri-reports/$AGENT.md.tmp" \
+          && mv "$STATE/eindri-reports/$AGENT.md.tmp" "$STATE/eindri-reports/$AGENT.md"
+        unset _kept
+        detail="report healed from the terminal status line, replacing the sweep's snapshot and keeping its evidence ($STATE/eindri-reports/$AGENT.md)"
         corrected=1 ;;
       *)
         detail="report filed at $STATE/eindri-reports/$AGENT.md (the sweep's snapshot; no terminal word yet)" ;;
