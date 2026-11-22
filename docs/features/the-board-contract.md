@@ -7,7 +7,7 @@ Plane, served by the Gimlé suite, and that code lives in the Gimlé repository.
 ## What it is
 
 The contract is a small set of verbs over a card: `plans · cards · card · create · move · assign · comment ·
-link · cycle · sync-plan`. A card has a title, a state **group** (`backlog · unstarted · started · review ·
+link · relate · cycle · sync-plan`. A card has a title, a state **group** (`backlog · unstarted · started · review ·
 done · cancelled`), labels, links and a stable key. Ymir never uses one engine's state names.
 
 Each project's row in the home's registry (`hodd/identity/projects.yaml`) names its board:
@@ -23,6 +23,13 @@ board:
 
 The `mcp` adapter (`bin/boards/board_adapter_mcp.py`) reaches any board that speaks the contract over MCP.
 Gimlé's MCP is one such board, and its `board_contract` tool names the tool that answers each verb.
+
+
+**Relations (`relate`, added 2026-11-22).** A card can be related to another card by kind — `relates_to · blocking ·
+blocked_by · duplicate · start_before · start_after · finish_before · finish_after` — and its relations read back by
+kind. On the Gimlé engine the verb is the MCP tool `add_relation(place, card, relation, other)`, read with
+`list_relations(place, card)`. A plan card shows its family three ways: its **parent** (the card's `parent`), its
+**related plans** (relations), and its **documents** (links).
 
 ## What you need
 
@@ -68,3 +75,4 @@ A line that must stay can be waived with `board-engine-ok: <why>` on the same li
 ## CHANGE LOG
 
 - 2026-11-20 — first written: the board contract, the split, and the board-engine ward (plan 335).
+- 2026-11-22 — the `relate` verb: typed relations between cards (Gimlé `add_relation`, `list_relations`).
