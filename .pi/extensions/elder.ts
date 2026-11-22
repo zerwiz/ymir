@@ -124,7 +124,9 @@ export default function elder(pi: ExtensionAPI) {
         if (!check.includes(dated)) {
           return piOut(`WARNING: append to ${rel} may have failed — heading "${dated}" not found in file. Verify manually with cat.`);
         }
-        return piOut(`appended to ${rel}\n  ${dated}\n  next: ymir_push with that one path (never -A).`);
+        let card = "";
+        try { card = run("bash", [`${ROOT_BIN}/bin/boards/plan-card-after.sh`, abs], HOME).trim(); } catch { /* the card road says why, or is off */ }
+        return piOut(`appended to ${rel}\n  ${dated}${card ? "\n  " + card : ""}\n  next: ymir_push with that one path (never -A).`);
       } catch (e: any) {
         return piOut("failed: " + String(e?.message ?? e).split("\n")[0]);
       }
@@ -134,8 +136,8 @@ export default function elder(pi: ExtensionAPI) {
   pi.registerTool({
     name: "ymir_plan",
     description:
-      "Create the NEXT numbered plan in the canonical ledger, with the index row. Numbering is " +
-      "after the index's highest; numbers are never reused.",
+      "Create the NEXT numbered plan in the canonical ledger, with the index row and its card on the board. The number is " +
+      "after the highest in the ledger AND on the board (bin/records/plan.sh new); numbers are never reused.",
     parameters: {
       type: "object",
       properties: {
@@ -143,6 +145,7 @@ export default function elder(pi: ExtensionAPI) {
         title: { type: "string" },
         realm: { type: "string", description: "e.g. whynotproductions" },
         project: { type: "string", description: "e.g. ymir" },
+        priority: { type: "string", description: "urgent | high | medium | low | none (default none)" },
       },
       required: ["slug", "title"],
     },
@@ -157,16 +160,14 @@ export default function elder(pi: ExtensionAPI) {
       }
       const realm = String(args.realm || "whynotproductions");
       const project = String(args.project || "ymir");
-      const dir = `${HOME}/svartalfaheim/${realm}/projects/${project}/plans`;
+      // ONE road for a new plan (2026-11-22): bin/records/plan.sh new — it fetches first, takes the number after
+      // the ledger's AND the board's highest (two seats took 352 the same hour when this tool numbered from a local
+      // `ls`), writes the header with its Status, adds the index row, and puts the plan's card on the board.
       try {
-        const nums = run("bash", ["-c", `ls "$1" | grep -oE '^[0-9]+' | sort -n | tail -1`, "_", dir]);
-        const next = (parseInt(nums || "0", 10) || 0) + 1;
-        const nn = String(next).padStart(2, "0");
-        const file = `${dir}/${nn}-${String(args.slug)}.md`;
-        run("bash", ["-c", `printf "# Plan %s - %s\n\n**Opened %s.**\n" "$2" "$3" "$(date -u +%Y-%m-%d)" > "$1"`, "_", file, nn, String(args.title)], HOME);
-        return piOut(`created ${file}\n` +
-            `  number: ${nn} (after the index's highest)\n` +
-            `  next: add the README index row, then ymir_push that ONE path by name.`);
+        const out = run("bash", [`${ROOT_BIN}/bin/records/plan.sh`, "new", String(args.slug),
+          "--title", String(args.title), "--realm", realm, "--project", project,
+          ...(args.priority ? ["--priority", String(args.priority)] : [])], HOME);
+        return piOut(out.trim() + "\n  next: write the plan, then ymir_push that path and the README by name.");
       } catch (e: any) {
         return piOut("failed: " + String(e?.message ?? e).split("\n")[0]);
       }
