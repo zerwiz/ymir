@@ -5,6 +5,7 @@ from __future__ import annotations
 import fcntl
 import json
 import os
+import re
 import secrets
 import socket
 import subprocess
@@ -16,6 +17,7 @@ STATE = Path(os.environ["VEIL_STATE"])
 LEDGER = STATE / "ledger.jsonl"
 RECEIPT_S = int(os.environ.get("VEIL_RECEIPT_S", "120") or 120)
 RED_S = int(os.environ.get("VEIL_RED_S", "600") or 600)
+PANE_TRIES = int(os.environ.get("VEIL_PANE_TRIES", "3") or 3)
 TELL = os.environ.get("VEIL_TELL_DOOR", "")
 PANE = os.environ.get("VEIL_PANE_DOOR", "")
 REPLY = os.environ.get("VEIL_REPLY_DOOR", "")
@@ -69,6 +71,8 @@ def items() -> dict[str, dict]:
             it[kind + "_note"] = ev.get("note", "")
         elif kind in ("delivered", "resent", "alarmed", "undelivered"):
             it[kind] = ev.get("ts", 0)
+            if kind == "undelivered" and ev.get("road") == "pane":
+                it["pane_tries"] = it.get("pane_tries", 0) + 1
             it[kind + "_road"] = ev.get("road", "")
     return out
 
@@ -114,7 +118,10 @@ def to_pane(it: dict, why: str) -> tuple[bool, str]:
     if not PANE or not os.access(PANE, os.X_OK):
         return False, "no pane door"
     rc, out = run([PANE, "--from", f"veil {it['id']}", "--", line_for(it) + f" ({why})"], 90)
-    return rc == 0, (out.splitlines() or [""])[-1][:160]
+    # the pane door has said "the chat injection did not happen" with exit 0 (measured 2026-11-22):
+    # a resend counts only when it LANDED, never because a door returned
+    landed = rc == 0 and not re.search(r"did not (happen|accept)|could not inject|not injected", out)
+    return landed, (out.splitlines() or [""])[-1][:160]
 
 
 def cmd_send(args: list[str]) -> int:
@@ -291,7 +298,8 @@ def cmd_sweep(args: list[str]) -> int:
     resent, red = 0, 0
     for it in unreceived(now):
         age = now - it["sent"]
-        if age >= RECEIPT_S and not it.get("resent"):
+        # at least once: a pane resend that did not land is tried again on the next sweep, three times at most
+        if age >= RECEIPT_S and not it.get("resent") and it.get("pane_tries", 0) < PANE_TRIES:
             if dry:
                 resent += 1
             else:

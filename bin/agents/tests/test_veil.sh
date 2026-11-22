@@ -84,6 +84,20 @@ VEIL_HERMES_CLI="$T/doors/hermes" "$V" received "$hid" --by helm >/dev/null 2>&1
 grep -q -- "--resume s123 -z .*RECEIVED $hid" "$T/hermes.log" && ok "Hermes hears RECEIVED in its own session" || bad "hermes receipt: $(cat "$T/hermes.log")"
 rm -f "$T/reply.refuse"
 
+# a pane door that says the injection did not happen, with exit 0: not a resend; retried, three times at most
+cat >"$T/doors/pane-lies" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >>"$T/lies.log"
+echo "eindri-notify: herdr did not accept the turn for pane w9:p1 — the chat injection did not happen."
+exit 0
+EOF
+chmod +x "$T/doors/pane-lies"
+out="$("$V" send --from "agent q" --queued "fourth" 2>&1)"
+id4="$(printf '%s\n' "$out" | sed -n '2s/^  "\([^"]*\)".*/\1/p')"
+for _ in 1 2 3 4 5; do VEIL_PANE_DOOR="$T/doors/pane-lies" VEIL_RECEIPT_S=0 VEIL_RED_S=99999 "$V" sweep >/dev/null 2>&1; done
+"$V" status "$id4" | grep -q '"no","fourth"' && ok "a resend the pane did not take is not recorded as a resend" || bad "lied resend: $("$V" status "$id4")"
+[ "$(grep -c "$id4" "$T/lies.log")" = 3 ] && ok "a failed resend is retried, three times at most" || bad "tries: $(grep -c "$id4" "$T/lies.log")"
+
 # a worker seat's private state is not where the arm reads: the ledger follows the helm's state
 mkdir -p "$T/seat" "$T/helm"
 ( unset VEIL_STATE
