@@ -41,3 +41,7 @@
 - `bash bin/ward/tests/test_trouble.sh`, `bash bin/seat/tests/test_everything_up.sh` and
   `bash .agents/tests/eindri-review-spine.test.sh` still pass, with `--evidence` added to their done acts.
 - The gate row `veil` (`bin/gates/checks.d/0546-veil.sh`) runs the three new tests.
+
+## CHANGE LOG
+
+- 2026-11-21 — review-mend: added missing heading for #883
