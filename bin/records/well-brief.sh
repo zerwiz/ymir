@@ -2,7 +2,7 @@
 # well-brief.sh — the well is read before work, by the road (plan 350, part E).
 #
 # "Drink before you act" was a sentence in a brief; nothing made it happen, and the engine's own
-# recall called a door that does not exist (`bin/mimir.sh`), so no engine-seated brief ever carried
+# recall called the well door by its old place, before it moved to bin/records/, so no engine-seated brief ever carried
 # one. This is the ONE door both roads ask: the shell road (bin/agents/eindri-start.sh) and the
 # engine (src/ymir_runtime/seat.py) append its section to every brief, and the session digest prints
 # its short form in the head.
