@@ -155,15 +155,12 @@ def _prompt_for(
     data_dir = roots.data / seat_id
     data_dir.mkdir(parents=True, exist_ok=True)
     prompt = data_dir / "prompt.md"
+    # The well is read before work (plan 350 E) through the ONE recall door both roads ask. The old
+    # call named `bin/mimir.sh`, which does not exist, so no engine brief ever carried a recall.
     recalled = ""
-    mimir = roots.root / "bin" / "mimir.sh"
-    if mimir.is_file():
-        title = ""
-        for line in brief_text.splitlines():
-            if line.startswith("#"):
-                title = line.lstrip("# ").strip()
-                break
-        recall = runner([str(mimir), "recall", title or seat_id, "--k", "4"])
+    well = roots.root / "bin" / "records" / "well-brief.sh"
+    if well.is_file() and "<!-- well-recall:v1 -->" not in brief_text:
+        recall = runner([str(well), brief_text or seat_id])
         if proc.ok(recall):
             recalled = (recall.stdout or "").strip()
     body = brief_text.rstrip("\n") + "\n"
@@ -172,7 +169,7 @@ def _prompt_for(
     if "eindri-bearings:v1" not in body:
         body = _bearings(roots, str(errand.project_dir or roots.root), runner=runner) + "\n\n---\n\n" + body
     if recalled:
-        body += "\n\n---\n\n## Recalled context (the well — Mimirsbrunn)\n\n" + recalled + "\n"
+        body += "\n\n---\n\n" + recalled + "\n"
     prompt.write_text(body, encoding="utf-8")
     return prompt, body
 

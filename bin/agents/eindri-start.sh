@@ -196,6 +196,23 @@ if [ "$PROJECT_KIND" = other ]; then
   fi
 fi
 
+# 2d'. THE WELL IS READ BEFORE WORK (plan 350 E): the top episodes for THIS task, asked of the raw task
+#      text before the bearings are prepended, and appended after it as data. Never doubled; a well that
+#      does not answer is said in the section, never a refusal to launch.
+if [ -x "$SCRIPT_DIR/../records/well-brief.sh" ]; then
+  _wm="$("$SCRIPT_DIR/../records/well-brief.sh" --marker 2>/dev/null || true)"
+  case "$REQ" in
+    *"${_wm:-no-well-marker}"*) ;;
+    *) _well="$(timeout 20 "$SCRIPT_DIR/../records/well-brief.sh" "$REQ" 2>/dev/null || true)"
+       [ -n "$_well" ] && REQ="$REQ
+
+---
+
+$_well" ;;
+  esac
+  unset _wm _well
+fi
+
 # 2e. THE BEARINGS every brief carries (plan 291 part 2): the shipped fixed core and the home's
 #     overlay, the project's records, and the home's document map. Prepended, so it is read before
 #     the errand; skipped when the brief already carries it, so a brief is never doubled.
