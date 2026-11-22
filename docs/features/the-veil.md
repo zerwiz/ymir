@@ -96,3 +96,7 @@ that same session. When the Hermes gateway is not listening, the Veil uses the H
 - The `receipts` row is red: run `bin/agents/veil.sh pending` and answer each id.
 - The `loops` row says Níðhöggr has not run: the cron row is missing or the scheduler is stopped.
   Run `bin/time/nornir-job-nidhogg.sh` once by hand and read its output.
+
+## CHANGE LOG
+
+- **2026-11-22** — written with the Veil (plan 350 B1, B4 and the arm contract).
