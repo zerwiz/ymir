@@ -31,6 +31,23 @@ kind. On the Gimlé engine the verb is the MCP tool `add_relation(place, card, r
 `list_relations(place, card)`. A plan card shows its family three ways: its **parent** (the card's `parent`), its
 **related plans** (relations), and its **documents** (links).
 
+**Other tools (added 2026-11-22).** The registry row's `board.adapter` picks the adapter, and every one answers the same
+verbs (`bin/boards/board_adapters.py`): `file` keeps a `BOARD.md` table in the project for a project with no online
+tool, `github` uses GitHub Projects v2 through `gh`, and `trello` uses the seat's Trello grant. Where a tool has no typed
+relations, they are kept as links: a Trello attachment, a GitHub comment, a `BOARD.md` column. Example rows are in
+`plans/board.yaml.example` of the collaboration kit.
+
+```yaml
+board: {adapter: file, place: .}                                          # BOARD.md in the project
+board: {adapter: github, place: owner/repo, github: {project: 1}}         # GitHub Projects v2
+board: {adapter: trello, place: <trello board id>}                         # Trello
+```
+
+**The done date.** When a plan is closed by an appended `**Status:**` line, the card records the date that line was
+appended: a comment `closed YYYY-MM-DD`, and the board's own completed field where it has one (Trello's complete due
+date, a GitHub project `Done` date field, the `Done` column of `BOARD.md`). The date is read from the line itself, else
+from `git blame`; with neither, none is written.
+
 ## What you need
 
 - A `board:` block in the project's registry row.
