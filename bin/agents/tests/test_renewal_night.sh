@@ -69,5 +69,21 @@ out="$(EIR_SLEEP=5 EIR_NIGHT_CHECK_S=1 "${N[@]}" 2>&1)"; rc=$?
 printf '── x tick finished (rc 124) ───\n' >"$T/groa124.log"
 out="$(env EIR_NIGHT_STATE="$T/ns" EIR_NIGHT_EIR="$T/f/eir" EIR_NIGHT_GROA_LOG="$T/groa124.log" EIR_NIGHT_APPS="$T/none" EIR_NIGHT_TELL=off YMIR_REPO="$T/repo" bash "$NIGHT" 2>&1)"; rc=$?
 [ "$rc" = 1 ] && printf '%s' "$out" | grep -q 'HUNG: groa (timed out' && ok "a Gróa that timed out is named as hung" || bad "groa 124: rc=$rc $out"
+# the home ward: a tracked home folder relinked during a stage fails the night, named by its stage
+H2="$T/home2"; mkdir -p "$H2/config" "$H2/hodd"; printf 'x\n' >"$H2/config/cron.yaml"; printf 'y\n' >"$H2/hodd/a"
+git -C "$H2" init -q && git -C "$H2" add . && git -C "$H2" -c user.email=a@example.org -c user.name=ada commit -q -m home
+cat >"$T/f/eir-relink" <<EOF
+#!/usr/bin/env bash
+case "\$1" in check) [ -e "$T/relinked" ] || { rm -rf "$H2/config"; ln -s .agents/config "$H2/config"; touch "$T/relinked"; }; printf 'owed: autoboot ask\n' ;; esac
+EOF
+chmod +x "$T/f/eir-relink"
+out="$(env EIR_NIGHT_STATE="$T/ns2" EIR_NIGHT_EIR="$T/f/eir-relink" EIR_NIGHT_GROA_LOG="$T/groa.log" EIR_NIGHT_APPS="$T/none" EIR_NIGHT_TELL=off EIR_NIGHT_HOME="$H2" YMIR_REPO="$T/repo" bash "$NIGHT" 2>&1)"; rc=$?
+[ "$rc" = 1 ] && printf '%s' "$out" | grep -q "the home's tracked folder config/ became a link (-> .agents/config) during check" \
+  && ok "a tracked home folder relinked during a stage fails the night, named by the stage" || bad "ward: rc=$rc $out"
+printf '%s' "$out" | grep -q "restore: rm $H2/config && git -C $H2 checkout -- config" && ok "the verdict prints the restore, and repairs nothing itself" || bad "restore line"
+[ -L "$H2/config" ] && ok "the home is not touched by the ward (the operator restores it)" || bad "the ward changed the home"
+rm -f "$H2/config"; git -C "$H2" checkout -q -- config
+out="$(env EIR_NIGHT_STATE="$T/ns3" EIR_NIGHT_EIR="$T/f/eir" EIR_NIGHT_GROA_LOG="$T/groa.log" EIR_NIGHT_APPS="$T/none" EIR_NIGHT_TELL=off EIR_NIGHT_HOME="$H2" YMIR_REPO="$T/repo" bash "$NIGHT" 2>&1)"; rc=$?
+[ "$rc" = 0 ] && ok "an untouched home passes the ward" || bad "clean home: rc=$rc $out"
 echo "test_renewal_night: $pass passed, $fail failed"
 [ "$fail" = 0 ]
