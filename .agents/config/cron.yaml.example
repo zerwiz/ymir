@@ -187,3 +187,19 @@
 # — THE LIVING WELL (plan 350 E, 2026-11-22) — a write the well did not take is queued in state/well-write/ and
 # retried here, never dropped (RULES/20). Every machine that writes the well runs it.
 @heart,dev @every:10 bin/records/well-write.sh flush
+# — THE VEIL (plan 350 B, 2026-11-22) — every report and finding carries an id the arm holder answers RECEIVED.
+# The sweep resends an unanswered one into the holder's pane after 2 minutes and marks it red after 10 (the
+# trouble panel's `receipts` row shows the count). Every machine that seats an arm holder runs it.
+@heart,dev @every:2 bin/agents/veil.sh sweep
+# Níðhöggr on the clock: one scan of the seated agents (a loop is broken at rung 1 and told through the Veil)
+# and one pass over the errand branches. His stamp (state/nidhogg/last-run.json) older than an hour is red.
+@heart,dev @every:15 bin/time/nornir-job-nidhogg.sh
+# — THE SKILLS AND SYSTEMS STAY TRUE (plan 350 D, 2026-11-22) —
+#   06:20 daily   skill-find --check: a skill with no description, a duplicate, an unfindable skill
+#   Mon 09:40     the skill smoke: each skill's named doors and CLI verbs still exist; a gone one goes to the arm
+#                 holder through the Veil (nothing a skill names is run)
+#   Sun 09:00     Dellingr grades the knowledge shelf (read-only; an old document moves, never deleted). The plan
+#                 asks for monthly; the clock has no monthly shape, and a read-only grade weekly costs nothing.
+@heart 06:20 bin/agents/skill-find.sh --check
+@heart Mon 09:40 bin/agents/skill-smoke.sh --notify
+@heart Sun 09:00 bin/records/grade.sh hodd/docs
