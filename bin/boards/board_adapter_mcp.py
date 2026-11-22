@@ -8,6 +8,7 @@ state name (through the board's `list_states`).
 
 The contract this adapter implements (the card shape is a plain dict):
     ensure_label(name)
+    can_relate() / relations(card) -> {(relation, other)} / add_relation(card, relation, other)   # the verb `relate`
     list_cards(label) -> [{"card", "title", "group", "labels"}]        # all pages, flagged when a page was full
     list_all() -> [{"card", "title", "group", "labels", "parent", "stamp"}]   # every card, paged to the end
     find_cards(label, text) -> same, narrowed by a title fragment
@@ -212,6 +213,10 @@ class McpBoard:
         return {"card": c["card"], "title": c.get("title", ""), "group": self.group_of(c.get("state")),
                 "labels": c.get("labels") or [], "description": c.get("description"),
                 "parent": c.get("parent"), "stamp": c.get("stamp"), "links": c.get("links") or [],
+                # None means the board did not say; "" / [] mean it said "empty" (the only case a backfill may fill)
+                "start": (c.get("start") if "start" in c else c.get("start_date") if "start_date" in c else None),
+                "assignees": c.get("assignees") if "assignees" in c else None,
+                "priority": c.get("priority") if "priority" in c else None,
                 "children": [dict(ch, group=_ENGINE_GROUP.get(ch.get("state_group"), ch.get("state_group")))
                              for ch in c.get("children") or []]}
 
@@ -251,11 +256,16 @@ class McpBoard:
     def get_card(self, card):
         return self._shape(self._call("get_card", {"place": self.place, "card": str(card)}))
 
-    def create_card(self, title, description, group, labels, parent=None, fmt=None, source=None, assignees=None):
+    def create_card(self, title, description, group, labels, parent=None, fmt=None, source=None, assignees=None,
+                    start=None, priority=None):
         a = {"place": self.place, "title": title, "description": description, "state": self.state_name(group),
              "labels": labels}
         if assignees and self._accepts("create_card", "assignees"):
             a["assignees"] = list(assignees)
+        if priority and priority != "none" and self._accepts("create_card", "priority"):
+            a["priority"] = priority
+        if start and self._accepts("create_card", "start"):
+            a["start"] = start
         if parent is not None:
             a["parent"] = str(parent)
         if fmt and self._accepts("create_card", "description_format"):
@@ -275,7 +285,8 @@ class McpBoard:
                 return {"created": {"card": c["card"]}, "diagrams": None}
         return None
 
-    def update_card(self, card, title=None, description=None, group=None, fmt=None):
+    def update_card(self, card, title=None, description=None, group=None, fmt=None, start=None, assignees=None,
+                    labels=None, parent=None, priority=None):
         a = {"place": self.place, "card": str(card)}
         if title is not None:
             a["title"] = title
@@ -285,8 +296,41 @@ class McpBoard:
                 a["description_format"] = fmt
         if group is not None:
             a["state"] = self.state_name(group)
+        if start and self._accepts("update_card", "start"):
+            a["start"] = start
+        if priority and self._accepts("update_card", "priority"):
+            a["priority"] = priority
+        if parent is not None and self._accepts("update_card", "parent"):
+            a["parent"] = str(parent)
+        if labels and self._accepts("update_card", "labels"):  # the caller passes the card's labels PLUS the new: add only
+            a["labels"] = list(labels)
+        if assignees and self._accepts("update_card", "assignees"):
+            a["assignees"] = list(assignees)
         out = self._write("update_card", a)
         return {"diagrams": out.get("diagrams")}
+
+    def can_relate(self):
+        return self._accepts("add_relation", "relation")
+
+    def relations(self, card):
+        """The typed relations a card has, as {(relation, other card number as text)}. Read before any add."""
+        out = self._call("list_relations", {"place": self.place, "card": str(card)})
+        rows = out.get("relations") if isinstance(out, dict) else out
+        got = set()
+        for r in rows or []:
+            rel = r.get("relation") or r.get("type")
+            oth = r.get("other") or r.get("card") or r.get("related_card") or r.get("related")
+            if isinstance(oth, dict):
+                oth = oth.get("card") or oth.get("sequence_id") or oth.get("id")
+            if rel and oth is not None:
+                got.add((str(rel), str(oth)))
+        return got
+
+    def add_relation(self, card, relation, other):
+        """The contract verb `relate` (never a board's own name for it): relation is relates_to, blocking, blocked_by,
+        duplicate, start_before, start_after, finish_before or finish_after; both cards are in this place."""
+        return self._write("add_relation", {"place": self.place, "card": str(card), "relation": relation,
+                                            "other": str(other)})
 
     def add_link(self, card, url, title):
         return self._write("add_link", {"place": self.place, "card": str(card), "url": url, "title": title})
