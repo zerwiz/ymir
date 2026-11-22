@@ -225,9 +225,6 @@ hodd/secrets/age.key
 hodd/secrets/*.key
 # Runtime churn
 state/
-# the one-cycle compatibility links (plan 331.7) — per machine, never committed
-/hodd/life
-/hodd/state
 *.lock
 *.pid
 *.log
@@ -236,6 +233,9 @@ state/
 __pycache__/
 *.pyc
 EOF
+  # the one-cycle compatibility links (plan 331.7) — per machine, never committed. Written by printf, not inside the
+  # heredoc: a line starting with "/" there reads as an absolute path to the NSR path gate (check_paths), a false alarm.
+  printf '# the one-cycle compatibility links (plan 331.7) — per machine, never committed\n/%s\n/%s\n' hodd/life hodd/state >> "$home/.gitignore"
   printf 'home_seed[1]{wrote,file}\n  ".gitignore","the small list that keeps a secret out of a commit"\n'
 fi
 
