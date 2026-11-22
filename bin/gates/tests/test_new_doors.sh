@@ -57,6 +57,11 @@ t "telegram-machines: a missing token is named, not the registry" bash -c 'TELEG
 t "hermes-telegram: a foreign machine is refused" bash -c 'bash '"$ROOT"'/bin/seat/hermes-telegram.sh seat another-machine 2>&1 | grep -q "ear is seated ON"'
 t "hermes-telegram: no token writes nothing"      bash -c 'mkdir -p '"$TMPD"'/hh; HERMES_HOME='"$TMPD"'/hh TELEGRAM_MACHINES_REG='"$TMPD"'/machines.yaml bash '"$ROOT"'/bin/seat/hermes-telegram.sh seat "$(sed -n s/^host=//p "$HOME/.pi/agent/extensions/.ymir-seat")" 2>&1 | grep -q "no token"; [ ! -s '"$TMPD"'/hh/.env ]'
 t "ymir-mcp: selftest"                          bash -c 'python3 '"$ROOT"'/bin/mcp/ymir-mcp.py --selftest | grep -q doors'
+# every door built for plan 350/335 is reachable from every harness through the MCP (2026-11-22, his word:
+# "the MCPs must have all tools we're making")
+for d in ymir_veil ymir_board_sync ymir_publish gna_fleet_tell; do
+  t "ymir-mcp: carries $d"                     bash -c 'python3 '"$ROOT"'/bin/mcp/ymir-mcp.py --selftest | grep -q "'"$d"'"'
+done
 t "seat-surface: check passes"                  bash -c 'bash '"$ROOT"'/bin/seat/seat-surface.sh --check >/dev/null'
 # 2026-11-04: four Pi workers were born dead because the seat settings and project discovery loaded two
 # extension trees in a worktree. The launch must name ONE tree (defined AND used) — the invariant, not a wish.

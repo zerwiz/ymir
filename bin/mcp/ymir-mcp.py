@@ -449,6 +449,70 @@ def gna_fleet_tell(to: str = "", line: str = "", verb: str = "tell", all: bool =
 
 
 @mcp.tool()
+def ymir_veil(action: str = "pending", id: str = "", text: str = "", to: str = "", by: str = "",
+              kind: str = "report", sender: str = "") -> str:
+    """The Veil's road to the arm (plan 350 B): every report carries an id and the arm holder answers it.
+    action: send (text; kind report|finding|steer; sender) · steer (to, text) · received | accepted | rework
+    (id; text is the note, required for rework) · status (id) · pending (every item not yet RECEIVED, with
+    its age). A report left unanswered is resent into the holder's pane, then turns the trouble panel red."""
+    door = str(ROOT / "bin" / "agents" / "veil.sh")
+    if action == "send":
+        if not text.strip():
+            return "ymir_veil send needs `text`."
+        argv = ["bash", door, "send", "--kind", kind] + (["--from", sender] if sender else []) + [text]
+    elif action == "steer":
+        if not to.strip() or not text.strip():
+            return "ymir_veil steer needs `to` (an agent: a pane, an errand, hermes:<session>) and `text`."
+        argv = ["bash", door, "steer", "--to", to] + (["--from", sender] if sender else []) + [text]
+    elif action in ("received", "accepted", "rework"):
+        if not id.strip():
+            return f"ymir_veil {action} needs the item's `id`."
+        if action == "rework" and not text.strip():
+            return "ymir_veil rework needs `text`: why the build goes back."
+        argv = ["bash", door, action, id] + (["--by", by] if by else []) + ([text] if text else [])
+    elif action == "status":
+        if not id.strip():
+            return "ymir_veil status needs `id`."
+        argv = ["bash", door, "status", id]
+    elif action == "pending":
+        argv = ["bash", door, "pending"]
+    else:
+        return "ymir_veil: action is send | steer | received | accepted | rework | status | pending."
+    return _run(argv, 300)
+
+
+@mcp.tool()
+def ymir_board_sync(project: str = "", plan: int = 0, file: str = "", dry_run: bool = False,
+                    highest: bool = False) -> str:
+    """Mirror a project's plan ledger onto its board (Plane through Gimlé, or the adapter the project's
+    registry row names): one card per plan, its state from the plan's Status (an appended Status closes it),
+    assigned to the plan's owner. `highest` prints the highest plan number already on the board. Name a
+    `project` (registry id) or a plan `file`; `plan` limits it to one number."""
+    door = str(ROOT / "bin" / "boards" / "plan-sync.sh")
+    if not project and not file:
+        return "ymir_board_sync needs `project` (a registry id, e.g. ymir) or `file` (a plan file)."
+    argv = ["bash", door] + (["--project", project] if project else ["--file", file])
+    if highest:
+        argv.append("--highest")
+    if plan:
+        argv += ["--plan", str(plan)]
+    if dry_run:
+        argv.append("--dry-run")
+    return _run(argv, 600)
+
+
+@mcp.tool()
+def ymir_publish(action: str = "check") -> str:
+    """Put an app on a public name ONLY behind the hall's login (Gjallarhorn's publish door, from this
+    machine's publish.yaml in the home). action: check (refuses an app with no gate or nobody named) ·
+    plan (what would be written) · rules (the hall's per-app rules) · status (each name, from outside) ·
+    apply (raises the edge, proves an unsigned visitor is challenged, then the tunnel and DNS)."""
+    if action not in ("check", "plan", "rules", "status", "apply"):
+        return "ymir_publish: action is check | plan | rules | status | apply."
+    return _run(["bash", str(ROOT / "bin" / "forge" / "gjallarhorn-publish.sh"), action], 600)
+
+
+@mcp.tool()
 def ymir_place(path: str, why: str, source: str = "") -> str:
     """The ONLY sanctioned way a document enters the home: classify the destination against the
     layout law (refusing what it cannot justify) and move it there. `path` is home-relative."""

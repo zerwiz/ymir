@@ -174,3 +174,14 @@ board:
 The board door can also answer "no such place" for a place it lists in the same answer, or "no such state" for a state
 the place has already listed, when its own lookup is rate-limited. The adapter now waits and asks again in those cases,
 as it does for a 429. A state the place truly lacks is still refused by name.
+
+## Every plan tool feeds the board, on its owner, with no number taken twice (2026-11-22)
+
+| What | How |
+|---|---|
+| **One road for a new plan** | `ymir_plan` in pi, `ymir_plan` in the MCP and `bin/records/plan.sh new` are the same road: the plan file, its header with `Status: open`, the index row, and its card on the board |
+| **No number taken twice** | the next number is after the highest in the ledger **and** the highest on the project's board (`plan-sync.sh --project <id> --highest`). The board is the one place every machine writes at once, so two machines that have not pulled each other's commits still take different numbers. A machine with no road to the board uses the ledger alone (`YMIR_PLAN_BOARD_CHECK=0` turns the board check off) |
+| **On its owner** | a new plan card is assigned to the row's `board.assignee` (a name, an email, or a list), else to the operator in `hodd/identity/operator.yaml`. With neither, the card is unassigned; no one is invented |
+| **Closed by appending** | a plan is append-only, so it is closed by appending a line `**Status:** done …` (or any status word). The last such line after the header wins, and the card moves to that state on the next sync |
+| **An appended section moves the card** | `ymir_note` brings the plan's card up to date after the append, as `bin/records/note.sh` does |
+| **From any harness** | the MCP door `ymir_board_sync` (project, plan, file, dry_run, highest) runs the sync |

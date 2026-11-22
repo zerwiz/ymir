@@ -290,8 +290,23 @@ def header_status(path):
         m = re.search(r"\*\*Status:?\*\*:?\s*(.+)", ln, re.I) or re.match(r'\s*"status","([^"]+)"', ln, re.I) \
             or re.match(r"\s*status:\s*(.+)", ln, re.I)
         if m:
-            return m.group(1).strip()
-    return ""
+            return later_status(path) or m.group(1).strip()
+    return later_status(path)
+
+
+def later_status(path):
+    """A plan is append-only, so it is closed by APPENDING a status, never by rewriting its header (2026-11-22). The
+    last line that starts with `**Status:**` or `Status:` after the first 45 lines wins over the header."""
+    try:
+        lines = open(path, encoding="utf-8", errors="replace").read().splitlines()[45:]
+    except OSError:
+        return ""
+    last = ""
+    for ln in lines:
+        m = re.match(r"\s*\*\*Status:?\*\*:?\s*(.+)", ln, re.I) or re.match(r"\s*Status:\s*(.+)", ln)
+        if m:
+            last = m.group(1).strip()
+    return last
 
 
 def clean_title(text):
@@ -584,7 +599,8 @@ class Sync:
             if self.dry:
                 self.n["created"] += 1
                 return
-            out = self.board.create_card(title, desc, p["group"], self.labels, fmt="markdown", source=source)
+            out = self.board.create_card(title, desc, p["group"], self.labels, fmt="markdown", source=source,
+                                         assignees=plan_assignees(self.home, self.row))
             self.note_diagrams(p, out)
             num = out.get("card")
             if num is None:  # an older board names no number: find the card it just made
@@ -669,6 +685,36 @@ class Sync:
                 self.n["steps"] += 1
 
 
+def plan_assignees(home, row):
+    """Who a new plan card is assigned to: the row's `board.assignee` (a name, an email, or a list), else the operator
+    named in the home (`hodd/identity/operator.yaml` email). Nothing is invented: with neither, the card is unassigned."""
+    want = (row.get("board") or {}).get("assignee")
+    if want:
+        return [str(x) for x in (want if isinstance(want, list) else [want])]
+    f = os.path.join(home, "hodd", "identity", "operator.yaml")
+    try:
+        for line in open(f, encoding="utf-8"):
+            m = re.match(r"\s*email:\s*['\"]?([^'\"\s#]+)", line)
+            if m:
+                return [m.group(1)]
+    except OSError:
+        pass
+    return []
+
+
+def highest_on_board(home, row):
+    """The highest plan number among this project's plan cards on its board — the second half of allocating a number,
+    so two seats that have not yet seen each other's commits cannot both take the same one (2026-11-22: two plans 352)."""
+    place, board = build_board(home, row)
+    owned = shelf_labels(home)
+    best = 0
+    for c in board.list_all():
+        m = TITLE_RE.match(c.get("title") or "")
+        if m and c.get("parent") is None and in_scope(c, row, owned):
+            best = max(best, int(m.group(1)))
+    return best
+
+
 def run_project(home, row, args, only=None):
     place, board = build_board(home, row)
     ledger_rel, ledger_abs = ledger_dir(home, row)
@@ -739,6 +785,7 @@ def main(argv):
     ap.add_argument("--road", action="store_true", help="only say whether this seat has a road to the board, and exit")
     ap.add_argument("--dry-run", action="store_true", help="print what would change; write nothing")
     ap.add_argument("--include-old", action="store_true", help="also mirror the reference archive old-plans/")
+    ap.add_argument("--highest", action="store_true", help="print the highest plan number on the project's board, and exit")
     args = ap.parse_args(argv)
     if not args.project and not args.file:
         ap.error("name --project or --file")
@@ -756,6 +803,9 @@ def main(argv):
                 return 0
             return max(run_project(home, r, args, only) for r, only in rows.values())
         row = load_project(home, args.project)
+        if args.highest:
+            print(highest_on_board(home, row))
+            return 0
         if args.road:
             place, _b = build_board(home, row)
             print(f"plan-sync: road ok — {row['id']} → {place}")
