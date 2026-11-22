@@ -15,6 +15,15 @@ private home and is never logged; the proxy binds 127.0.0.1 only.
     GET  /v1/models             forwarded
     POST /v1/chat/completions   forwarded, streaming preserved
 
+FALLBACK (2026-11-22, the Allfather: "use a free model as fallback if models are failing"). When the head refuses a
+chat request with a quota, rate, payment or server error (402 · 403 · 429 · 5xx) or cannot be reached, the same request
+is tried, in order, on:
+    1. RODD_HEAD_FALLBACK_MODELS   the same endpoint, other models (comma-separated; e.g. a free tier), with
+                                   request fields such models refuse dropped (chat_template_kwargs, reasoning_effort)
+    2. RODD_HEAD_FALLBACK_LOCAL    an OpenAI-compatible local rail as "<base_url> <model>" (free: this machine's GPU);
+                                   its key from RODD_HEAD_FALLBACK_LOCAL_KEY, else none
+Each fallback that answers is said on stderr (never a key). Nothing is configured by default: the operator names them.
+
 `--client` names the compatibility profile:
     plain      no extra headers (the default for any OpenAI-compatible endpoint)
     opencode   x-opencode-client + x-opencode-session + a non-default User-Agent
@@ -38,6 +47,12 @@ BASE = ""
 CLIENT = "plain"
 SESSION = "rodd-" + uuid.uuid4().hex[:12]
 KEY = ""
+FALLBACK_MODELS = [m.strip() for m in os.environ.get("RODD_HEAD_FALLBACK_MODELS", "").split(",") if m.strip()]
+_loc = os.environ.get("RODD_HEAD_FALLBACK_LOCAL", "").split()
+FALLBACK_LOCAL = (_loc[0], _loc[1]) if len(_loc) >= 2 else None
+FALLBACK_LOCAL_KEY = os.environ.get("RODD_HEAD_FALLBACK_LOCAL_KEY", "")
+FAIL_CODES = {402, 403, 408, 429, 500, 502, 503, 504}
+DROP_FOR_FALLBACK = ("chat_template_kwargs", "reasoning_effort")
 
 
 def _headers() -> dict[str, str]:
@@ -54,6 +69,34 @@ def _headers() -> dict[str, str]:
 class Handler(BaseHTTPRequestHandler):
     server_version = "rodd-head-proxy/1.0"
 
+    def _try(self, url: str, body: bytes | None, method: str, headers: dict) -> tuple[int, object]:
+        """(status, response-or-error-body). A status in FAIL_CODES, or 0 for unreachable, may fall back."""
+        req = urllib.request.Request(url, data=body, headers=headers, method=method)
+        try:
+            return 200, urllib.request.urlopen(req, timeout=180)
+        except urllib.error.HTTPError as exc:
+            return exc.code, (exc.read() or b"").decode("utf-8", "replace")[:600]
+        except Exception as exc:  # noqa: BLE001
+            return 0, f"the head is unreachable: {exc}"
+
+    def _fallbacks(self, body: bytes | None):
+        """Yield (url, body, headers, label) for each configured fallback of a chat request."""
+        try:
+            doc = json.loads(body or b"{}")
+        except ValueError:
+            return
+        for k in DROP_FOR_FALLBACK:
+            doc.pop(k, None)
+        for m in FALLBACK_MODELS:
+            d = dict(doc, model=m)
+            yield BASE.rstrip("/") + "/chat/completions", json.dumps(d).encode(), _headers(), f"{urlsplit(BASE).hostname} {m}"
+        if FALLBACK_LOCAL:
+            base, m = FALLBACK_LOCAL
+            h = {"Content-Type": "application/json", "Accept": "application/json"}
+            if FALLBACK_LOCAL_KEY:
+                h["Authorization"] = f"Bearer {FALLBACK_LOCAL_KEY}"
+            yield base.rstrip("/") + "/chat/completions", json.dumps(dict(doc, model=m)).encode(), h, f"local {m}"
+
     def _forward(self, method: str, body: bytes | None) -> None:
         # the engine asks for /v1/chat/completions; the base already ends with /v1.
         # Joining blindly produced …/v1/v1/chat/completions and a 404 dressed as a refusal
@@ -67,9 +110,26 @@ class Handler(BaseHTTPRequestHandler):
             rest = path.lstrip("/").split("/", 1)
             path = "/" + (rest[1] if len(rest) > 1 else "")
         url = BASE.rstrip("/") + path
-        req = urllib.request.Request(url, data=body, headers=_headers(), method=method)
+        status, got = self._try(url, body, method, _headers())
+        if (status in FAIL_CODES or status == 0) and method == "POST" and path.endswith("/chat/completions"):
+            for furl, fbody, fh, label in self._fallbacks(body):
+                fs, fgot = self._try(furl, fbody, "POST", fh)
+                if fs == 200:
+                    print(f"head-proxy: the head failed ({status or 'unreachable'}); answered by the fallback {label}",
+                          file=sys.stderr, flush=True)
+                    status, got = fs, fgot
+                    break
+        if status != 200:
+            msg = f"the head refused ({status}): {got or 'no body'}" if status else str(got)
+            payload = json.dumps({"error": {"message": msg}}).encode()
+            self.send_response(status or 502)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
         try:
-            with urllib.request.urlopen(req, timeout=180) as r:
+            with got as r:
                 status = r.status
                 ctype = r.headers.get("Content-Type", "application/json")
                 streaming = "text/event-stream" in ctype
@@ -161,6 +221,18 @@ def main() -> int:
         KEY = mod.resolve().get("key", "")
     except Exception:
         KEY = ""
+    # the fallbacks may also be named in the operator's own Rödd settings (hodd/secrets/rodd.env), read the same way
+    global FALLBACK_MODELS, FALLBACK_LOCAL, FALLBACK_LOCAL_KEY
+    try:
+        home_env = mod._parse(mod.SECRETS)  # type: ignore[name-defined]
+    except Exception:  # noqa: BLE001
+        home_env = {}
+    if not FALLBACK_MODELS and home_env.get("RODD_HEAD_FALLBACK_MODELS"):
+        FALLBACK_MODELS = [m.strip() for m in home_env["RODD_HEAD_FALLBACK_MODELS"].split(",") if m.strip()]
+    if not FALLBACK_LOCAL and len(home_env.get("RODD_HEAD_FALLBACK_LOCAL", "").split()) >= 2:
+        FALLBACK_LOCAL = tuple(home_env["RODD_HEAD_FALLBACK_LOCAL"].split()[:2])
+    FALLBACK_LOCAL_KEY = FALLBACK_LOCAL_KEY or home_env.get("RODD_HEAD_FALLBACK_LOCAL_KEY", "")
+    print(f"fallbacks: models {FALLBACK_MODELS or 'none'} · local {FALLBACK_LOCAL[1] if FALLBACK_LOCAL else 'none'}", flush=True)
     srv = ThreadingHTTPServer((a.host, a.port), Handler)
     print(f"rodd head proxy on {a.host}:{a.port} → {urlsplit(BASE).hostname} (client {CLIENT}, key {'set' if KEY else 'none'})",
           flush=True)

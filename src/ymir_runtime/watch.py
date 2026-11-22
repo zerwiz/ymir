@@ -1675,18 +1675,22 @@ def run_daemon(
     )
 
     while True:
-        line = cycle(
-            paths,
-            env=env,
-            runner=runner,
-            mode=mode,
-            pid=mine,
-            emit=emit,
-            helm=helm,
-            stat_reader=stat_reader,
-            pin=pin,
-            pin_behind=pin_behind,
-        )
+        try:
+            line = cycle(
+                paths,
+                env=env,
+                runner=runner,
+                mode=mode,
+                pid=mine,
+                emit=emit,
+                helm=helm,
+                stat_reader=stat_reader,
+                pin=pin,
+                pin_behind=pin_behind,
+            )
+        except Exception as exc:  # noqa: BLE001 — the arm outlives any one bad cycle; it says so and keeps watching
+            say_err(f"arm cycle failed and was survived: {exc.__class__.__name__}: {str(exc)[:200]}")
+            line = ""
         if line:
             print(line)
             release_lease(paths, pid=mine)

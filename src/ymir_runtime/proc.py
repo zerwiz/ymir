@@ -38,6 +38,10 @@ def run(
             env=dict(env) if env is not None else None,
             capture_output=True,
             text=True,
+            # a child that prints a broken byte (a cut multi-byte rune) must never kill the caller: on 2026-11-22 one
+            # truncated character in a handoff sweep crashed the arm every two seconds — the arm is the house's key
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             input=input_text,
         )
