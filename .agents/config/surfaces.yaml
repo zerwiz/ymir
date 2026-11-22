@@ -22,6 +22,7 @@ surfaces:
   - { name: floors,      risk: ask,   roles: all, why: "installs packages through the platform's package manager" }
   - { name: seatpaths,   risk: safe,  roles: all, why: "writes Ymir's own marked block into the login profile" }
   - { name: hooks,       risk: safe,  roles: all, why: "re-seats Ymir's own git hooks from their installers" }
+  - { name: renewal,     risk: safe,  roles: all, why: "re-seats Ymir's own user units: Gróa's nightly timer and Eir after it; never root, never a download" }
   - { name: packaging,   risk: never, roles: all, why: "a missing installer input is a code change, not a mend" }
   - { name: herdr,       risk: ask,   roles: all, why: "installing the pane backend downloads it" }
   - { name: a2abridge,   risk: safe,  roles: all, why: "repoints the engine's own unit at the user boot target and starts it; never downloads" }

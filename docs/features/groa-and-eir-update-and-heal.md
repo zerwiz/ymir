@@ -47,6 +47,38 @@ ymir groa      # the latest, and mend forward
 ymir eir       # what stands, and mending
 ```
 
+## Every night: Gróa, then Eir
+
+Every install seats a nightly pair, and every update seats it again:
+
+- **Gróa** runs at 04:MM, a minute chosen per machine (`groa-agent.timer`).
+- **Eir** runs straight after her (`eir-night.service`), whether Gróa succeeded or failed.
+
+Eir checks every surface and mends only the ones whose risk is `safe`, then checks again. Next it renews the
+installed apps. That step is skipped while the desk is in a call or a smithy run is mid-phase. Last, it hands its
+verdict to the arm holder.
+
+Neither unit ever asks for root (`YMIR_NO_SUDO=1`): a step that needs root is skipped and named. Every stage is
+bounded, and a stage that runs out of time is named in the verdict. The last night's verdict is in
+`state/renewal/last-night.json`.
+
+| Platform | What is seated |
+|---|---|
+| Linux, and WSL with systemd | user units: the timer, Gróa's service, and Eir's service chained after it |
+| macOS | one launch agent, `org.ymir.renewal`, that runs Gróa, then Eir |
+| no user service manager | nothing; the seat says so (a clean skip) |
+
+Eir's `renewal` row is red when the pair is not seated, when the last night failed, or when no night has run for
+36 hours. Its mend re-seats the pair: `bin/agents/eir-doctor.sh fix renewal`.
+
+Run one night by hand and read its journal:
+
+```bash
+systemctl --user start groa-agent.service       # Gróa, then Eir after her
+systemctl --user start eir-night.service        # Eir's night alone
+journalctl --user -u groa-agent.service -u eir-night.service --since today
+```
+
 ## Notes and limits
 
 - **Fast‑forward only.** Gróa skips anything dirty, diverged, offline, or on a
@@ -73,3 +105,4 @@ ymir eir       # what stands, and mending
   (`bin/agents/eir-doctor.sh fix --safe`), checks again, and ends on one true line: `whole`, or each owed
   surface with its exact command (exit 4). Eir's surfaces and their risk classes are in `config/surfaces.yaml`.
   The full page: [an-update-finishes-the-installs.md](an-update-finishes-the-installs.md).
+- **2026-11-22** — appended: *Every night: Gróa, then Eir* (plan 350 C).
