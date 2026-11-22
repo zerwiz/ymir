@@ -9,3 +9,7 @@ Two fixes, either alone enough:
 - `src/ymir_runtime/watch.py`: the arm's loop survives any exception in one cycle, says so on stderr (`arm cycle failed and was survived: …`) and keeps watching.
 
 Proved: the fixed arm, run against the same home that crashed it, stayed up for its whole 30 s window and raised the waiting wakes.
+
+## CHANGE LOG
+
+- 2026-11-22 — review-mend: added missing heading for #902
