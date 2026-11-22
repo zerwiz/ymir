@@ -7,7 +7,8 @@
 #                                                                  read on that machine over its fleet road
 #   bin/ward/trouble.sh --version
 #
-# Ten signals: disk · guardian · pin · unpushed · questions · errands · hyprland · tells · loops · receipts.
+# Eleven signals: disk · guardian · pin · unpushed · questions · errands · hyprland · tells · loops · receipts ·
+# contracts.
 # What each one means, its line and the variable that moves it are in bin/ward/trouble.py's header and
 # docs/features/the-trouble-panel.md. Lines are counsel until the Allfather seals them (plan 339): set
 # them in <home>/config/trouble.env (TROUBLE_DISK_PCT=85 …), never in this file.
