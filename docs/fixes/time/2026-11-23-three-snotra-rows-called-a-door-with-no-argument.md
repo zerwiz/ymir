@@ -56,3 +56,7 @@ The two mail rows (`bin/time/nornir-job-gna-mail.sh`, `bin/time/nornir-job-snotr
 fail with `rc=3` on a seat whose warden entry reads `enabled: off`. That is a **different
 fault**: a door deliberately switched off is being reported as a failure instead of a named
 skip. It needs its own change in the warden contract, and is not touched here.
+
+## CHANGE LOG
+
+- 2026-11-23 — review-mend: added missing heading for #916
