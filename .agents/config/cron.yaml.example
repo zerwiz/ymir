@@ -79,13 +79,13 @@
 # — Snotra: meeting rhythm automation (Plan 143 phases 3-4) —
 # Friday Synch: post status updates on This Week cards after a Friday meeting.
 # Gated @dev: the board belongs to the seat that holds the place profile.
-@dev 17:00 systems/snotra/services/cron/snotra-friday-synch.sh run
+@dev 17:00 systems/snotra/services/cron/snotra-cron.sh friday-synch
 # Monthly Grooming: create the grooming card on Next Meeting Agenda every month.
-@dev 09:00 systems/snotra/services/cron/snotra-grooming.sh run
+@dev 09:00 systems/snotra/services/cron/snotra-cron.sh grooming
 # Card-movement watcher: Rule A (This Week + member → assign+notify+steps),
 # Rule B (Done + sign-off → To Sign-off), note-on-mis-move.
 # Gated @dev: the board belongs to the seat that holds the place profile.
-@dev 10:00 systems/snotra/services/cron/snotra-card-moves.sh watch
+@dev 10:00 systems/snotra/services/cron/snotra-cron.sh card-moves
 
 # — Gná: the mail desk reads, judges, and TELLS THE ARM as mail arrives (plan 193) —
 # Armed only on a seat that declares an account row in hodd/memory/mail/accounts.yaml:
