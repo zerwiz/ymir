@@ -49,6 +49,7 @@
 | blocking-door-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | board-engine-guard.sh | board-engine-guard.sh — a NEW file in Ymir may not carry one board eng | tested | keep (a human or a cron row must run it) |
 | branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
+| claim-guard.sh | claim-guard.sh — the push ward that reads the claims ledger (plan 343. | tested | keep (a human or a cron row must run it) |
 | confidential-guard.sh | confidential-guard.sh — while a confidential session is live, nothing  | tested | keep (a human or a cron row must run it) |
 | constellation-grant-guard.sh | constellation-grant-guard.sh — the road's own ward. | tested+named | keep (a human or a cron row must run it) |
 | cron-guard.sh | cron-guard.sh — the shipped tree must satisfy its own schedule. | tested | keep (a human or a cron row must run it) |

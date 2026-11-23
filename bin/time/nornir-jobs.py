@@ -89,7 +89,15 @@ def last_runs() -> dict[str, dict]:
     for ln in lines:
         m = re.match(r"^(\S+Z) cron run: (.+)$", ln)
         if m:
-            out.setdefault(m.group(2).strip(), {})["ran"] = m.group(1)
+            r = out.setdefault(m.group(2).strip(), {})
+            r["ran"] = m.group(1)
+            r.pop("skipped", None)
+            continue
+        m = re.match(r"^(\S+Z) cron SKIP not-here: (.+)$", ln)
+        if m:
+            r = out.setdefault(m.group(2).strip(), {})
+            r.pop("failed_at", None)
+            r.update({"ran": m.group(1), "skipped": True})
             continue
         m = re.match(r"^(\S+Z) cron FAIL rc=(\d+) (.+?)(?: :: (.*))?$", ln)
         if m:
@@ -112,6 +120,7 @@ def main() -> int:
     mine = set(roles_here())
     runs = last_runs()
     jobs = []
+    seen: set = set()
     try:
         text = CRON.read_text(encoding="utf-8")
     except OSError:
@@ -124,16 +133,20 @@ def main() -> int:
         if not j:
             jobs.append({"command": line, "invalid": True})
             continue
+        sig = (j["role"], tuple(j["days"]), j["at"], j["command"])
+        if sig in seen:  # the same row declared twice is one job
+            continue
+        seen.add(sig)
         r = runs.get(j["command"], {})
         failed = bool(r.get("failed_at")) and r.get("failed_at", "") >= r.get("ran", "")
         j.update({"here": (not j["role"]) or j["role"] in mine, "next": next_run(j, now),
                   "last_ran": r.get("ran", ""), "ok": None if not r else not failed,
-                  "rc": r.get("rc") if failed else 0 if r else None, "why": r.get("why", "") if failed else ""})
+                  "rc": r.get("rc") if failed else 0 if r else None, "skipped": bool(r.get("skipped")) and not failed, "why": r.get("why", "") if failed else ""})
         jobs.append(j)
     doc = {"machine": os.uname().nodename.split(".")[0], "roles": sorted(mine), "clock": clock_state(),
            "now": now.isoformat(timespec="seconds"), "jobs": jobs,
            "counts": {"jobs": len(jobs), "here": sum(1 for j in jobs if j.get("here")),
-                      "failing": sum(1 for j in jobs if j.get("ok") is False),
+                      "failing": sum(1 for j in jobs if j.get("ok") is False and not j.get("skipped")),
                       "invalid": sum(1 for j in jobs if j.get("invalid"))}}
     if "--json" in sys.argv:
         print(json.dumps(doc))
@@ -143,7 +156,7 @@ def main() -> int:
         if j.get("invalid"):
             print(f"  INVALID  {j['command']}")
             continue
-        st = "—" if j["ok"] is None else "ok" if j["ok"] else f"FAIL rc={j['rc']}"
+        st = "skip (not this machine's door)" if j.get("skipped") else "—" if j["ok"] is None else "ok" if j["ok"] else f"FAIL rc={j['rc']}"
         print(f"  {('@' + j['role']) if j['role'] else '(any)':8} {' '.join(j['days']) + ' ' if j['days'] else ''}{j['at']:10}"
               f" next {j['next'][5:16]:12} last {j['last_ran'][5:16] or '—':12} {st:10} {j['command'][:70]}")
     return 0
