@@ -126,16 +126,16 @@ Gemini, and Eindri workers alike.
 
 ## Amendment — no person or machine is built into how a system runs (2026-11-20)
 
-Appended, not rewritten; the clauses above stand. **By the CTO's word** (Craig Martin, owner of architecture, security,
-build and operations): *"I do not want our overall engineering and devops practices to be fragile. So no hardcoded
-dev names for ops"* — and *"this way we can audit deployment accountabilities."*
+Appended, not rewritten; the clauses above stand. **By the security owner's word** (the one who holds
+architecture, security, build and operations): *"I do not want our overall engineering and devops practices to
+be fragile. So no hardcoded dev names for ops"* — and *"this way we can audit deployment accountabilities."*
 
 ### D. Names are given, never built in
 
 - **No person, account or machine as a value.** A person's name, login, persona or person id, and a machine's name,
   never appear as a default, a fallback, a setting or a runnable example in code, configuration, scripts, deploy
-  kits, CI or a runbook's commands. `ATLAS_OWNER=josef` written by a deploy script, `get_env(:owner, "josef")`,
-  `${SPACE:-home:josef}`, a model prompt that says "like home:josef" — each makes the system depend on one person
+  kits, CI or a runbook's commands. `ATLAS_OWNER=<name>` written by a deploy script, `get_env(:owner, "<name>")`,
+  `${SPACE:-home:<name>}`, a model prompt that says "like home:<name>" — each makes the system depend on one person
   and one machine, and is refused.
 - **What identifies an owner is given and has no default.** It comes from the environment or a file outside git;
   when it is missing, the program refuses to start and says which setting it needs. A silent fallback to someone
