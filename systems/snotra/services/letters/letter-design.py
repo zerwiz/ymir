@@ -350,7 +350,15 @@ def render(text: str, theme: str | None = None) -> str:
                + '</td></tr>')
     fonts = ('<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Newsreader:'
              'opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">')
-    return (f'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    # the shelf's stamp (plan 322): mail-send.sh refuses a letter with no stamp, and this renderer never wrote one, so
+    # every letter in the house design was refused as "not rendered by the shelf" (found 2026-11-22). The stamp names
+    # the design and its theme, and the hash of this renderer, as letter-html.py's does for its templates.
+    try:
+        _digest = hashlib.sha256(open(__file__, "rb").read()).hexdigest()[:16]
+    except OSError:
+        _digest = "unknown"
+    stamp = f"<!-- letter: house-{meta.get('theme') or 'ymir'} · sha256:{_digest} -->"
+    return (stamp + f'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<meta name="color-scheme" content="{"dark" if t["dark"] else "light"}"><title>{E(title or kicker)}</title>{fonts}</head>'
             f'<body style="margin:0;padding:0;background:{t["page"]};">'
             f'<div style="display:none;max-height:0;overflow:hidden;opacity:0;">{E(pre)}</div>'
