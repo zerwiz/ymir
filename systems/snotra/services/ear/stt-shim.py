@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """stt-shim.py — the missing contract: OpenAI-compatible `/v1/audio/transcriptions` in front of our whisper.
 
-    python3 stt-shim.py [--host 0.0.0.0] [--port 10301] [--whisper http://127.0.0.1:10300/inference]
+    python3 stt-shim.py [--host 127.0.0.1] [--port 10301] [--whisper http://127.0.0.1:10300/inference]
 
 WHY THIS EXISTS (2026-10-23). The meeting bot transcribes against `TRANSCRIPTION_SERVICE_URL` and the
 client appends `/v1/audio/transcriptions` (the meeting stack's own config says so). Our whisper.cpp
@@ -12,7 +12,7 @@ mute. This shim is that one missing path and nothing else:
   GET  /health                    {"status": "ok"} — the stack probes it before every spawn
 
 It forwards the audio to whisper.cpp's `/inference`, returns the JSON the OpenAI contract expects, and
-keeps no copy of anything. Binds 0.0.0.0 by default so a container can reach it through the docker
+keeps no copy of anything. Binds 127.0.0.1 by default (loopback); pass --host 0.0.0.0 only when a container must reach it
 host gateway; it holds no credential and reveals nothing but the transcript it was asked for.
 """
 from __future__ import annotations
@@ -124,7 +124,7 @@ class Handler(BaseHTTPRequestHandler):
 def main() -> int:
     global WHISPER
     ap = argparse.ArgumentParser()
-    ap.add_argument("--host", default="0.0.0.0")
+    ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=10301)
     ap.add_argument("--whisper", default=WHISPER)
     a = ap.parse_args()
