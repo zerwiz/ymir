@@ -28,3 +28,7 @@ On every machine that runs Garmr:
 
 The hound runs as root, so the unit file and the restart need sudo. Eir's `housewatch` surface reports
 the watchdog's state alongside the hound's heartbeat.
+
+## CHANGE LOG
+
+- 2026-11-23 — review-mend: added missing heading for #919
