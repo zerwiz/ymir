@@ -1,0 +1,20 @@
+[Unit]
+Description=Garmr the hound — what executes, who touches the sensitive shelves, what listens and what leaves (read-only senses)
+After=network-online.target
+
+[Service]
+Type=notify
+User=root
+Group=root
+ExecStart=/usr/bin/python3 /home/heimdall/ymir-runtime/bin/ward/garmr/hound.py
+Restart=always
+RestartSec=10
+WatchdogSec=120
+NotifyAccess=main
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/log/ymir/garmr /var/log/ymir/garmr/state
+
+[Install]
+WantedBy=multi-user.target
