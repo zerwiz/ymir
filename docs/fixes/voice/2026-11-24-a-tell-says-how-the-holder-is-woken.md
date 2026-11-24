@@ -24,3 +24,7 @@ only. A Claude holder is woken by its Stop hook and a pi holder by its watcher, 
 A recorded end-to-end run on a live Hermes desktop and Hermes terminal session is owed. Whether the
 gateway's reply surfaces in the desktop chat is the open question Fulla measured; this change makes
 the door say `no` or `posted` honestly rather than guess.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #930
