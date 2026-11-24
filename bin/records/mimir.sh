@@ -65,6 +65,11 @@ PY="${MIMIR_PY:-$(command -v python3 2>/dev/null || true)}"
 # The store, resolved the way the bridge resolves it (one well, Rule 04/07).
 STORE="${ENGRAM_DB:-$YMIR_HOME/hodd/memory/kaia.engram}"
 
+# The cloth (bin/desktop/ymir-style.sh): decoration to stderr for a human, data stays on stdout.
+_cloth_u="$-"; . "$SCRIPT_DIR/../desktop/ymir-style.sh"; style_init; case "$_cloth_u" in *u*) ;; *) set +u ;; esac
+# Agents and hooks call this door all day; the title is for a person at a terminal only.
+[ "$STYLE_ON" = 1 ] && style_title "mimir" "the memory well — ${1:-help}"
+
 usage() { sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//'; }
 
 CMD="${1-}"; shift || true

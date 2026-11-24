@@ -58,6 +58,9 @@ viz_dir() {  # <result-var>
   printf -v "$result_var" '%s' ""; return 1
 }
 
+# The cloth (bin/desktop/ymir-style.sh): decoration to stderr for a human, data stays on stdout.
+_cloth_u="$-"; . "$SCRIPT_DIR/ymir-style.sh"; style_init; case "$_cloth_u" in *u*) ;; *) set +u ;; esac
+
 alive() { [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; }
 
 case "${1-}" in
@@ -66,6 +69,7 @@ case "${1-}" in
 esac
 ACTION="$1"
 
+style_title "smidja board" "the smithy's board on :${PORT} — ${ACTION}"
 VIZ=""
 if ! viz_dir VIZ; then
   printf 'error: the visualizer is not installed in this tree\n'
@@ -80,11 +84,12 @@ case "$ACTION" in
     fi
     printf 'visualizer_build[1]{step,state}:\n'
     if [ ! -d "$VIZ/node_modules" ]; then
-      if (cd "$VIZ" && bun install >/dev/null 2>&1); then printf '  "deps","installed"\n'
+      if style_step "installing the board's dependencies" -- bash -c 'cd "$1" && bun install' _ "$VIZ"; then printf '  "deps","installed"\n'
       else printf '  "deps","FAILED — (cd %s && bun install)"\n' "$VIZ" >&2; exit 1; fi
-    else printf '  "deps","present"\n'; fi
-    if (cd "$VIZ" && bun run build >/dev/null 2>&1) || (cd "$VIZ" && bunx vite build >/dev/null 2>&1); then
+    else printf '  "deps","present"\n'; style_line skip deps "already present"; fi
+    if style_step "building the board's UI" -- bash -c 'cd "$1" && { bun run build || bunx vite build; }' _ "$VIZ"; then
       printf '  "ui","%s/dist"\n' "$VIZ"
+      style_next "ymir smidja start — raise the board on :${PORT}"
     else
       printf 'error: the UI build failed\nhelp: (cd %s && bun run build)\n' "$VIZ" >&2; exit 1
     fi
@@ -116,6 +121,7 @@ case "$ACTION" in
     done
     if curl -s --max-time 2 "http://127.0.0.1:$PORT/api/health" >/dev/null 2>&1; then
       printf 'visualizer[1]{state,db,url}:\n  "up","%s","http://127.0.0.1:%s/"\n' "$SMIDJA_DB_PATH" "$PORT"
+      style_line ok board "up at http://127.0.0.1:${PORT}/"
     else
       printf 'error: the visualizer did not answer on :%s\nhelp: see %s\n' "$PORT" "$LOG_FILE" >&2; exit 1
     fi

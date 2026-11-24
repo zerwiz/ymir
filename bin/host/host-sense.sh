@@ -210,7 +210,16 @@ PY
   exit 0
 fi
 
-# human default: a small TOON block. Keys are plain; values quoted.
+# human default: a small TOON block. Keys are plain; values quoted. The cloth speaks only here, on
+# stderr and only to a human: `capability` and `--json` are for scripts and stay bare.
+_cloth_u="$-"; . "$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../desktop/ymir-style.sh"; style_init
+case "$_cloth_u" in *u*) ;; *) set +u ;; esac
+if [ -z "$CAP" ]; then
+  style_title "host sense" "what THIS machine is — it observes and changes nothing"
+  style_line ok host "${OS_NAME} · ${SESSION:-no session} · ${DESKTOP:-no desktop}"
+  style_line "$([ "$PLACEMENT" = yes ] && echo ok || echo skip)" placement "$([ "$PLACEMENT" = yes ] && echo "${COMPOSITOR} can pin windows" || echo 'not scriptable here — skipped, never faked')"
+  style_line "$([ "$OMARCHY" = yes ] && echo ok || echo skip)" omarchy "$([ "$OMARCHY" = yes ] && echo 'first-class layer applies' || echo 'absent — the portable core runs')"
+fi
 printf 'host[1]{os,id,family,session,desktop}:\n'
 printf '  "%s","%s","%s","%s","%s"\n' "$OS_NAME" "$OS_ID" "$FAMILY" "$SESSION" "$DESKTOP"
 printf 'machine[5]{platform,wsl,kernel,arch,package_manager}:\n'
