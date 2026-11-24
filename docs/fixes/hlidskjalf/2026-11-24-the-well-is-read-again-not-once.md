@@ -33,3 +33,7 @@ So the well was starting, and the label was a stale counter from the first secon
   `Well state WARM`, `Bridge LIVE` and `Episodes observed 546` on `#/well`. It was closed after the read.
 - Owed: the recovery case in the operator's own window. Open `#/well` during a gate restart and see it
   turn WARM within 30 seconds without a reload.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #933
