@@ -42,7 +42,7 @@ export function Cron() {
   const running = cron?.running ?? false;
   const roles = cron?.roles ?? [];
   const applies = jobs.filter((j) => j.applies).length;
-  const reachable = seats.filter((s) => s.reachable).length;
+  const reachable = seats.filter((s) => s.reachable && s.running).length;
 
   const sourceNote =
     cron?.source === 'home' ? 'live · $YMIR_HOME/config/cron.yaml'
@@ -118,7 +118,9 @@ export function Cron() {
         <MetricTile
           label="Servers up"
           value={`${reachable}/${seats.length}`}
-          delta={seats.length ? seats.map((s) => s.seat).join(' · ') : '—'}
+          delta={seats.length
+            ? seats.map((s) => (s.reachable && s.running ? s.seat : `${s.seat} ${s.reachable ? '(scheduler stopped)' : '(unreachable)'}`)).join(' · ')
+            : '—'}
         />
       </div>
 

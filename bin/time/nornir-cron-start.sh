@@ -248,6 +248,7 @@ scheduler='
     # that failed was described by whatever line another row wrote last, or by nothing ("no output").
     # The row now writes its own stdout and stderr to its own files; both are appended to the log, and
     # a failure is described by its OWN last stderr lines (its stdout when stderr is empty).
+    _t0=$(date +%s)
     _out="$(mktemp "${TMPDIR:-/tmp}/nornir-row.XXXXXX")"; _err="$(mktemp "${TMPDIR:-/tmp}/nornir-row.XXXXXX")"
     if [ -n "$_out" ] && [ -n "$_err" ]; then
       bash -lc "$cmd" >"$_out" 2>"$_err"
@@ -257,6 +258,7 @@ scheduler='
       bash -lc "$cmd" >>"$log" 2>&1
       _rc=$?
     fi
+    printf "%s cron done rc=%s %ss seat=%s: %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$_rc" "$(( $(date +%s) - _t0 ))" "$(hostname -s 2>/dev/null)" "$cmd" >>"$log" 2>/dev/null
     if [ "$_rc" -eq 0 ]; then rm -f "$_out" "$_err"; return 0; fi
     # A door this machine does not run (not its door) is a clean skip, never a failure (RULES/25; exit 78 = EX_CONFIG).
     if [ "$_rc" -eq "${WARDEN_RC_NOT_HERE:-78}" ]; then
