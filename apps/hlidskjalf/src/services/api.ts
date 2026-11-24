@@ -254,7 +254,7 @@ export interface CronInfo {
   jobs: CronJob[];
   last?: Record<string, string>;
 }
-export type NornirState = 'RAN' | 'ELSEWHERE' | 'DUE' | 'LATE' | 'FAILED' | 'DOWN' | 'DARK' | 'MOVED' | 'IDLE';
+export type NornirState = 'RAN' | 'ELSEWHERE' | 'DUE' | 'LATE' | 'FAILED' | 'DOWN' | 'DARK' | 'MOVED' | 'IDLE' | 'UNREAD';
 export interface NornirJob { at: string; cmd: string; gate: string; owner: string; status: NornirState; detail: string; next: string; }
 export interface NornirStatus { needs: number; counts: Record<string, number>; jobs: NornirJob[]; error?: string; }
 export interface CronSeat {
