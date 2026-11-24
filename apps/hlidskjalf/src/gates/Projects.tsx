@@ -16,8 +16,24 @@ export type Project = {
 };
 type Doc = { count: number; projects: Project[]; error?: string };
 
-const th = { textAlign: 'left' as const, borderBottom: '1px solid #333', padding: 6 };
+const th = { textAlign: 'left' as const, borderBottom: '1px solid #333', padding: 6, whiteSpace: 'nowrap' as const };
 const td = { padding: 6, verticalAlign: 'top' as const };
+const nw = { whiteSpace: 'nowrap' as const };
+const ciColor = (ci: string) => (ci === 'red' ? 'crimson' : ci === 'green' ? 'seagreen' : undefined);
+
+/** Below ~700px a table is unusable: render one card per project instead. */
+function useNarrow(px = 700) {
+  const q = `(max-width: ${px}px)`;
+  const [n, setN] = useState(() => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(q).matches : false));
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const m = window.matchMedia(q);
+    const f = () => setN(m.matches);
+    f(); m.addEventListener('change', f);
+    return () => m.removeEventListener('change', f);
+  }, [q]);
+  return n;
+}
 
 export function kitLabel(k: Kit): string {
   if (!k) return '—';
@@ -37,6 +53,7 @@ export function Projects() {
   const [red, setRed] = useState(false);
   const [stale, setStale] = useState(false);
   const [fleet, setFleet] = useState(false);
+  const narrow = useNarrow();
 
   useEffect(() => {
     let live = true;
@@ -78,9 +95,31 @@ export function Projects() {
           <code>--kit --report</code> to seat the collaboration kit so the repo reports its state here.
         </p>
       )}
+      {narrow ? (
+        <div style={{ display: 'grid', gap: 10 }}>
+          {rows.map((p) => {
+            const kit = p.where.map((w) => w.kit).find(Boolean) ?? null;
+            const stale = sum(p, (w) => w.stale_count);
+            const f = (k: string, v: React.ReactNode) => <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ opacity: 0.6 }}>{k}</span><span style={{ textAlign: 'right' }}>{v}</span></div>;
+            return (
+              <div key={p.id} style={{ border: '1px solid #333', borderRadius: 8, padding: 12, fontSize: 13, display: 'grid', gap: 4 }}>
+                <div><b>{p.name}</b> <span style={{ opacity: 0.6 }}>{p.realm}</span></div>
+                {f('seat', p.where.length ? p.where.map((w) => <span key={w.seat} style={nw}>{w.seat}{w.reachable ? '' : ' (unreachable)'} </span>) : '—')}
+                {f('worktrees', `${sum(p, (w) => w.worktree_count)}${stale > 0 ? ` · ${stale} stale` : ''}`)}
+                {f('PRs', p.pr_count)}
+                {f('CI', <span style={{ color: ciColor(p.ci) }}>{p.ci}</span>)}
+                {f('kit', kitLabel(kit))}
+                {f('sessions', p.sessions ? `${p.sessions.sessions} · ${Object.entries(p.sessions.by_tool).map(([t, n]) => `${t} ${n}`).join(', ')}` : '—')}
+                {f('health', p.health.length ? p.health.join('; ') : 'ok')}
+                {p.next.map((n) => <div key={n} style={{ overflowWrap: 'anywhere' }}><code>{n}</code></div>)}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
-          <thead><tr>{['project', 'where', 'worktrees', 'PRs', 'CI', 'kit', 'sessions', 'health'].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
+          <thead><tr>{['project', 'seat', 'trees', 'PRs', 'CI', 'kit', 'sessions', 'health'].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
           <tbody>
             {rows.map((p) => {
               const kit = p.where.map((w) => w.kit).find(Boolean) ?? null;
@@ -89,10 +128,10 @@ export function Projects() {
                 <Fragment key={p.id}>
                   <tr key={p.id} onClick={() => setOpen(isOpen ? '' : p.id)} style={{ cursor: 'pointer' }}>
                     <td style={td}><b>{p.name}</b><br /><span style={{ opacity: 0.6 }}>{p.realm}</span></td>
-                    <td style={td}>{p.where.map((w) => <div key={w.seat}>{w.seat}{w.reachable ? '' : ' (unreachable)'}</div>)}</td>
-                    <td style={td}>{sum(p, (w) => w.worktree_count)}{sum(p, (w) => w.stale_count) > 0 && ` · ${sum(p, (w) => w.stale_count)} stale`}</td>
+                    <td style={td}>{p.where.map((w) => <div key={w.seat} style={nw}>{w.seat}{w.reachable ? '' : ' (unreachable)'}</div>)}</td>
+                    <td style={{ ...td, ...nw }} title="worktrees">{sum(p, (w) => w.worktree_count)}{sum(p, (w) => w.stale_count) > 0 && ` · ${sum(p, (w) => w.stale_count)} stale`}</td>
                     <td style={td}>{p.pr_count}</td>
-                    <td style={{ ...td, color: p.ci === 'red' ? 'crimson' : p.ci === 'green' ? 'seagreen' : undefined }}>{p.ci}</td>
+                    <td style={{ ...td, ...nw, color: ciColor(p.ci) }}>{p.ci}</td>
                     <td style={td}>{kitLabel(kit)}</td>
                     <td style={td}>{p.sessions ? `${p.sessions.sessions} · ${Object.entries(p.sessions.by_tool).map(([t, n]) => `${t} ${n}`).join(', ')}` : '—'}</td>
                     <td style={td}>{p.health.length ? p.health.join('; ') : 'ok'}{p.next.map((n) => <div key={n}><code>{n}</code></div>)}</td>
@@ -121,6 +160,7 @@ export function Projects() {
           </tbody>
         </table>
       </div>
+      )}
       <details style={{ marginTop: 20 }}><summary>This checkout's worktrees</summary><Worktrees /></details>
     </div>
   );

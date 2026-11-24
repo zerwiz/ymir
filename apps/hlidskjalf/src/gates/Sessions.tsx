@@ -4,8 +4,12 @@ import { StatusChip } from '../components/Status';
 import { MetricTile } from '../components/MetricTile';
 import { VISUALIZER_URL } from '../data/metadata';
 
-function tone(status: string | null) {
-  return status === 'success' ? 'nominal' : status === 'fail' ? 'down' : 'degraded';
+// A failed run reads FAILED (plan 366's word), never DOWN: a run that failed is not a service that is down.
+function RunStatus({ status }: { status: string | null }) {
+  const [text, color] = status === 'success' ? ['SUCCESS', 'var(--ymir-ok)']
+    : status === 'fail' ? ['FAILED', 'var(--ymir-danger)']
+      : [(status ?? 'UNKNOWN').toUpperCase(), 'var(--ymir-warn)'];
+  return <span style={{ color, fontWeight: 600, whiteSpace: 'nowrap' }}>{text}</span>;
 }
 
 /** Sessions — every Smiðja factory run, from the repo's own smidja.db (W0080). */
@@ -32,8 +36,8 @@ export function Sessions() {
     <>
       <div className="stage-head">
         <div>
-          <h1 className="stage-title">Sessions · Smiðja</h1>
-          <p className="stage-deck">Factory runs · phase progress · tokens &amp; cost · smidja.db ({db})</p>
+          <h1 className="stage-title">Sessions</h1>
+          <p className="stage-deck">Every agent session on this machine, from every tool · Smíðja factory runs below (smidja.db {db})</p>
         </div>
         <div className="row">
           <button className="btn" onClick={() => void useYmir.getState().refreshSmidja()} title="Re-read smidja.db">
@@ -46,6 +50,9 @@ export function Sessions() {
         </div>
       </div>
 
+      <AllSessions />
+
+      <h2 style={{ margin: 'var(--ymir-space-4) 0 var(--ymir-space-2)', fontSize: 15 }}>Smíðja runs</h2>
       <div className="metric-grid" style={{ marginBottom: 'var(--ymir-space-4)' }}>
         <MetricTile label="Runs" value={runs} delta={`${ok} success`} />
         <MetricTile label="Failed" value={fail} tone="var(--ymir-danger)" delta="see Decisions" />
@@ -93,7 +100,7 @@ export function Sessions() {
                     <td className="mono">{r.smidja_name ?? '—'}</td>
                     <td className="muted">{r.engineer ?? '—'}</td>
                     <td>
-                      <StatusChip status={tone(r.status)} />
+                      <RunStatus status={r.status} />
                     </td>
                     <td className="num">{(r.total_tokens ?? 0).toLocaleString()}</td>
                     <td className="num">${(r.total_cost ?? 0).toFixed(3)}</td>
@@ -105,7 +112,6 @@ export function Sessions() {
           )}
         </div>
       </section>
-      <AllSessions />
     </>
   );
 }

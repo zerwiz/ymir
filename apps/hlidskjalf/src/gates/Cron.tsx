@@ -7,11 +7,11 @@ import { MetricTile } from '../components/MetricTile';
 // The house tones (Hlidskjalf tokens) and marks (the same glyphs as bin/desktop/ymir-style.sh): green is
 // RAN/ELSEWHERE/MOVED, quiet is DUE/IDLE, and only LATE, FAILED, DOWN and DARK are red.
 const NORNIR_TONE: Record<NornirState, string> = {
-  RAN: 'var(--ymir-ok)', ELSEWHERE: 'var(--ymir-ok)', MOVED: 'var(--ymir-warn)', DUE: 'var(--ymir-info)', IDLE: 'var(--ymir-muted)',
+  RAN: 'var(--ymir-ok)', ELSEWHERE: 'var(--ymir-ok)', MOVED: 'var(--ymir-warn)', DUE: 'var(--ymir-info)', IDLE: 'var(--ymir-muted)', UNREAD: 'var(--ymir-warn)',
   LATE: 'var(--ymir-danger)', FAILED: 'var(--ymir-danger)', DOWN: 'var(--ymir-danger)', DARK: 'var(--ymir-danger)',
 };
 const NORNIR_MARK: Record<NornirState, string> = {
-  RAN: '✓', ELSEWHERE: '✓', MOVED: '✓', DUE: '—', IDLE: '·', LATE: '✕', FAILED: '✕', DOWN: '✕', DARK: '✕',
+  RAN: '✓', ELSEWHERE: '✓', MOVED: '✓', DUE: '—', IDLE: '·', UNREAD: '?', LATE: '✕', FAILED: '✕', DOWN: '✕', DARK: '✕',
 };
 
 /**
@@ -151,9 +151,9 @@ export function Cron() {
             <tbody>
               {jobs.map((j) => (
                 <tr key={j.at + j.role + j.command}>
-                  <td className="mono num">{j.at}</td>
+                  <td className="mono num" style={{ whiteSpace: 'nowrap' }}>{j.at}</td>
                   <td className="mono">{j.command}</td>
-                  <td className="mono">{j.role ? `@${j.role}` : 'any'}</td>
+                  <td className="mono" style={{ whiteSpace: 'nowrap' }}>{j.role ? `@${j.role}` : 'any'}</td>
                   <td>
                     {(() => {
                       const v = verdict(j.command, j.at);
@@ -205,7 +205,7 @@ export function Cron() {
             <tbody>
               {seats.map((s) => (
                 <tr key={s.seat}>
-                  <td className="mono">{s.seat}</td>
+                  <td className="mono" style={{ whiteSpace: 'nowrap' }}>{s.seat}</td>
                   <td>
                     <StatusChip status={s.reachable ? 'nominal' : 'down'} />
                   </td>

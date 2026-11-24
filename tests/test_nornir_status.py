@@ -25,7 +25,8 @@ def main():
     os.makedirs(os.path.join(state, ".nornir-status"))
     reg = os.path.join(d, "fleet.json")
     json.dump({"hosts": {me: {"roles": ["dev"]}, "hostb": {"roles": ["heart"], "user": "u"},
-                         "hostc": {"roles": ["forge"], "dark_since": "2026-10-26"}}}, open(reg, "w"))
+                         "hostc": {"roles": ["forge"], "dark_since": "2026-10-26"},
+                         "hostd": {"roles": ["old"], "user": "u"}}}, open(reg, "w"))
     cfg = os.path.join(d, "cron.yaml")
     open(cfg, "w").write("\n".join([
         "@heart 06:00 bin/a.sh",            # ran fine on the heart            -> ELSEWHERE
@@ -35,6 +36,7 @@ def main():
         "@heart 06:10 bin/d.sh",            # morning row of the same script   -> ELSEWHERE
         "@forge 00:30 bin/e.sh",            # forge dark, heart ran it         -> MOVED
         "@forge 01:00 bin/f.sh",            # forge dark, nobody ran it        -> LATE (fallback) or DARK
+        "@old 08:00 bin/g.sh",              # a seat too old to report        -> UNREAD, not counted
         "",
     ]))
     heart = "\n".join([
@@ -44,13 +46,15 @@ def main():
         "bin/d.sh\t2026-11-24T06:10:02Z\t\t\t",
         "bin/e.sh\t2026-11-24T00:30:01Z\t\t\t", ""])
     open(os.path.join(state, ".nornir-status", "hostb.txt"), "w").write(heart)
+    open(os.path.join(state, ".nornir-status", "hostd.txt"), "w").write("bin/x.sh\t2026-11-24T06:00:01Z\t\t\t\n")
     env = dict(os.environ, BROKK_STATE_OVERRIDE=state, YMIR_HOME=d, BROKK_ROLES="dev")
     out = subprocess.run([sys.executable, os.path.join(ROOT, "bin/time/nornir-status.py"), "--json", "--no-ssh",
                           "--config", cfg, "--registry", reg, "--state", state], capture_output=True, text=True, env=env)
     res = json.loads(out.stdout)
     got = [(j["cmd"], j["at"], j["status"]) for j in res["jobs"]]
     want = {("bin/a.sh", "06:00"): "ELSEWHERE", ("bin/b.sh", "07:00"): "FAILED", ("bin/c.sh", "07:20"): "LATE",
-            ("bin/d.sh", "18:10"): "DUE", ("bin/d.sh", "06:10"): "ELSEWHERE", ("bin/e.sh", "00:30"): "MOVED"}
+            ("bin/d.sh", "18:10"): "DUE", ("bin/d.sh", "06:10"): "ELSEWHERE", ("bin/e.sh", "00:30"): "MOVED",
+            ("bin/g.sh", "08:00"): "UNREAD"}
     bad = [(k, v, [g for g in got if g[:2] == k]) for k, v in want.items() if (k + (v,)) not in got]
     assert not bad, bad
     assert not any(j["status"] == "DOWN" for j in res["jobs"]), "a job that is not this seat's must never be DOWN"
