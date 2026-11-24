@@ -6,3 +6,7 @@ Two pre-push wards refused the gather branch.
   `node_modules/` pattern only matches a directory. `.gitignore` now also carries `/node_modules`.
 - `rules-compliance-guard` (RULES/06) wanted a CHANGE LOG section on the new page
   `docs/features/terminal-cloth.md`. The page now ends with one.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #923
