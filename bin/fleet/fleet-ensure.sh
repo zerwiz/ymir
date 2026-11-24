@@ -615,25 +615,27 @@ wire_mcp() {  # every record MCP is fronted by THIS seat's own gateway
   # (bin/bridge/mcp-gateway.sh, :8316): the harness points at one local door, and the
   # gateway resolves the heart's address at request time (tailnet first, LAN
   # fallback, loopback on the heart). A heart-address change is a re-resolve
-  # inside the gateway, never a rewire of the seat. Snotra is not yet behind the
-  # gateway, so it still resolves the heart's own door here.
+  # inside the gateway, never a rewire of the seat. Snotra stands behind the
+  # gateway too (2026-11-23): the heart's doors face loopback, so a seat that is
+  # not the heart reaches all three through bin/bridge/heart-doors.sh (one ssh
+  # forward), which the gateway tries first. FLEET_SNOTRA_URL still overrides.
   mkdir -p "$HOME/.pi/agent"
-  python3 - "$GATEWAY_PORT" "$WELL_OVERRIDE" "$SNOTRA_URL" "$AUTOBOOT_HOST_ROLES" "$AUTOBOOT_FLEET_REGISTRY" "$HOME" <<'PY'
+  case " $AUTOBOOT_HOST_ROLES " in
+    *" heart "*) ;;
+    *) if [ "$CHECK_ONLY" = 1 ]; then
+         "$FLEET_BIN_DIR/bridge/heart-doors.sh" status >/dev/null 2>&1 \
+           || say "fleet: heart-doors — the ssh road to the heart's doors is down (bin/bridge/heart-doors.sh ensure)" >&2
+       else
+         "$FLEET_BIN_DIR/bridge/heart-doors.sh" ensure >/dev/null 2>&1 \
+           || say "fleet: heart-doors — could not raise the ssh road to the heart (bin/bridge/heart-doors.sh status)" >&2
+       fi ;;
+  esac
+  python3 - "$GATEWAY_PORT" "$WELL_OVERRIDE" "${FLEET_SNOTRA_URL:-}" "$HOME" <<'PY'
 import json, os, sys
-gp, well_override, snotra, roles, reg, home = sys.argv[1:7]
+gp, well_override, snotra_override, home = sys.argv[1:5]
 base = "http://127.0.0.1:%s/mcp" % gp
 well = well_override or ("%s/well" % base)
-if "heart" not in (roles or "").split():
-    # snotra is heart-only; resolve the heart's base from the fleet registry
-    try:
-        doc = json.load(open(reg))
-        heart = (doc.get("heart") or "")
-        row = (doc.get("hosts") or {}).get(heart, {})
-        hb = (row.get("tailnet") or row.get("lan") or "").split("://")[-1]
-        if hb:
-            snotra = "http://%s:8321/mcp" % hb
-    except Exception:
-        pass
+snotra = snotra_override or ("%s/snotra" % base)
 p = os.path.join(home, ".pi/agent/mcp-adapter.json")
 try: d = json.load(open(p))
 except Exception: d = {}
