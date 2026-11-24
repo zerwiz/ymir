@@ -32,3 +32,7 @@ The judge profile is read from env or `config/sessions.yaml`: plan 365's `ymir w
 yet, so there is no link to it. The judge pass is not scheduled on the heart, and the morning brief's cron job is not
 edited (`ymir sessions brief` gives the lines). Cursor and other tools have no adapter yet. Raw retention is left where
 each tool wrote it.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #927
