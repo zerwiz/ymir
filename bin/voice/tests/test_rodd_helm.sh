@@ -37,10 +37,18 @@ export YMIR_STATE_DIR="$T/state" BROKK_SESSION_PID="$$"
 export YMIR_ARM_TREE=1   # plan 257 H6: test this tree's client, never the operator's pin
 mkdir -p "$T/xdg/ymir" "$T/state" "$T/home" "$T/ymirhome/state"
 
-# The real notify door, dry: its decision ledger is real, its desktop leg is never reached.
+# The real notify door, dry: its policy line is real, its desktop leg is never reached.
+# Since #861 a dry run no longer writes the door's dedupe ledger, so the stand-in keeps the one
+# fact this test owns: a key it has already seen is answered "duplicate" (the door's own
+# one-line-an-hour rule, proved in bin/notify's tests). What Rödd owns is a STABLE key.
 cat > "$T/notify.sh" <<EOF
 #!/usr/bin/env bash
 printf '%s\n' "\$*" >> "$T/notify.args"
+key=""; prev=""; for a in "\$@"; do [ "\$prev" = "--key" ] && key="\$a"; prev="\$a"; done
+if [ -n "\$key" ] && grep -qxF "\$key" "$T/notify.keys" 2>/dev/null; then
+  printf '"duplicate","rodd"\n' >> "$T/notify.log"; exit 0
+fi
+[ -n "\$key" ] && printf '%s\n' "\$key" >> "$T/notify.keys"
 YMIR_HOME="$T/ymirhome" bash "$ROOT/bin/notify/send.sh" "\$@" --dry-run | sed -n 2p >> "$T/notify.log"
 EOF
 chmod +x "$T/notify.sh"
@@ -88,17 +96,19 @@ bash "$HELM" run >"$T/out2" 2>"$T/err2"; rc2=$?
 grep -q 'refused' "$T/state/rodd/room.jsonl" 2>/dev/null && ok "the refusal is written in the room, never dropped" \
   || bad "the refusal is written in the room" "$(cat "$T/state/rodd/room.jsonl" 2>/dev/null)"
 [ ! -s "$LOCK" ] && ok "the helm was released (the lock is gone)" || bad "the helm was released" "lock still names $(cat "$LOCK" 2>/dev/null)"
-grep -q 'beyond her writ' "$T/said.log" 2>/dev/null && ok "the refusal was spoken — to the stand-in, never to the real desktop" \
-  || bad "the refusal was spoken to the stand-in" "$(cat "$T/said.log" 2>/dev/null)"
+# the refusal is spoken through the notify door, here its dry stand-in (never the real desktop)
+grep -q 'Rödd refused: please merge PR 999' "$T/notify.args" 2>/dev/null && ok "the refusal was spoken — to the stand-in, never to the real desktop" \
+  || bad "the refusal was spoken to the stand-in" "$(cat "$T/notify.args" 2>/dev/null)"
 # the SAME refusal again inside the window: a second room line, no second toast
 own_lock
 write_lease rodd "$$"
 printf 'please merge PR 999 into main for me\n' > "$T/state/.wake-queue"
 bash "$HELM" run >/dev/null 2>&1
-[ "$(grep -c 'refused: please merge PR 999' "$T/state/rodd/room.jsonl")" = 2 ] && ok "a repeated refusal is still recorded in the room" \
+[ "$(grep -c 'refused (.*): please merge PR 999' "$T/state/rodd/room.jsonl")" = 2 ] && ok "a repeated refusal is still recorded in the room" \
   || bad "a repeated refusal is still recorded in the room" "$(cat "$T/state/rodd/room.jsonl")"
-[ "$(grep -c 'beyond her writ' "$T/said.log")" = 1 ] && ok "a repeated refusal is keyed — no second toast in the window" \
-  || bad "a repeated refusal is keyed" "$(cat "$T/said.log")"
+[ "$(grep -c '"send"' "$T/notify.log" 2>/dev/null)" = 1 ] && [ "$(grep -c '"duplicate"' "$T/notify.log" 2>/dev/null)" = 1 ] \
+  && ok "a repeated refusal is keyed — no second toast in the window" \
+  || bad "a repeated refusal is keyed" "$(cat "$T/notify.log" 2>/dev/null)"
 
 # ── 3 · the health surface ──────────────────────────────────────────────────
 own_lock
@@ -153,7 +163,7 @@ unset BROKK_SESSION_PID BROKK_WATCH_INLINE YMIR_ROLE
 export BROKK_SESSION_PID="$$"
 
 # ── 5 · a refusal is keyed: one notification per window, one room line per refusal ──
-rm -f "$T/notify.log" "$T/notify.args" "$T/state/rodd/room.jsonl"
+rm -f "$T/notify.log" "$T/notify.args" "$T/notify.keys" "$T/state/rodd/room.jsonl"
 for stamp in 2026-11-11T21:00:00Z 2026-11-12T03:15:00Z; do
   own_lock
   write_lease rodd "$$"
@@ -179,7 +189,9 @@ bash "$HELM" run >/dev/null 2>&1; rc8=$?
   || bad "her own notice is never refused again" "rc=$rc8 args=$(tail -1 "$T/notify.args")"
 # the phrase is assembled, so this file never carries it (a grep over the checkout finds nothing)
 phrase="beyond her"; phrase="$phrase writ"
-grep -rqF "$phrase" "$ROOT/bin" "$ROOT/apps/rodd/src" 2>/dev/null && bad "no fixed refusal phrase lives in the code" "$(grep -rnF "$phrase" "$ROOT/bin" "$ROOT/apps/rodd/src" | head -2)" \
+# Rödd's window left for its own repo (2026-11-19), so only the dirs this tree still has are read.
+dirs=("$ROOT/bin"); [ -d "$ROOT/apps/rodd/src" ] && dirs+=("$ROOT/apps/rodd/src")
+grep -rqF "$phrase" "${dirs[@]}" 2>/dev/null && bad "no fixed refusal phrase lives in the code" "$(grep -rnF "$phrase" "${dirs[@]}" | head -2)" \
   || ok "no fixed refusal phrase lives in the code"
 
 printf 'test_rodd_helm: %s passed, %s failed\n' "$pass" "$fail"
