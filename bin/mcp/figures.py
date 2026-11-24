@@ -256,6 +256,67 @@ def kept_answer(root: Path, question: str, max_age_days: int = 7):
     return newest[1:] if newest else None
 
 
+def _shelf_rows(shelf):
+    for f in shelf.rglob("*.md"):
+        try:
+            head = f.read_text(encoding="utf-8", errors="replace").split("---")
+            meta = dict(ln.split(":", 1) for ln in (head[1] if len(head) > 2 else "").splitlines() if ":" in ln)
+        except OSError:
+            continue
+        yield {k: v.strip().strip('"') for k, v in meta.items()}
+
+
+def find_kept(query: str, shareable_only: bool = False, limit: int = 5, root=None):
+    """Read-only search over the kept answers (plan 365 H3). `shareable_only` serves a collaborator: only an answer
+    tagged `shareable` leaves this machine, so private research never does (the realm law)."""
+    shelf = _research_shelf(root)
+    if not shelf:
+        return []
+    words = set(_norm(query).split())
+    rows = []
+    for m in _shelf_rows(shelf):
+        if shareable_only and "shareable" not in m.get("tags", ""):
+            continue
+        hay = set(_norm(m.get("question", "") + " " + m.get("finding", "")).split())
+        score = len(words & hay)
+        if score:
+            rows.append((score, {"question": m.get("question", ""), "finding": m.get("finding", "")[:300],
+                                 "source": m.get("sources", ""), "at": m.get("at", "")}))
+    return [r for _, r in sorted(rows, key=lambda x: -x[0])[:limit]]
+
+
+def heart_kept(question: str, ask=None):
+    """The heart's kept answer to the SAME question (plan 365 H2) — fetched by THIS machine over the ssh ring, after
+    its own shelf found nothing, and named by seat. The heart never answers for this machine; a heart that does not
+    answer in 5 seconds changes nothing: the caller fetches the web itself. Returns (finding, 'source via <seat>')."""
+    try:
+        hosts = json.load(open(os.path.join(os.environ.get("YMIR_HOME") or str(Path.home() / "Documents" / "ymirhome"),
+                                            "hodd", "data", "fleet.json"))).get("hosts", {})
+    except (OSError, ValueError):
+        return None
+    me = os.uname().nodename.split(".")[0]
+    seat = next((h for h, v in hosts.items() if "heart" in (v.get("roles") or []) and h != me), None)
+    if not seat:
+        return None
+    spec = hosts[seat]
+    dest = f"{spec['user']}@{spec.get('tailnet') or spec.get('lan') or seat}" if spec.get("user") else (spec.get("tailnet") or seat)
+    code = ("import sys,json,re,os,pathlib;q=re.sub(r'[^a-z0-9]+',' ',sys.argv[1].lower()).strip();"
+            "h=os.environ.get('YMIR_HOME') or os.path.expanduser('~/Documents/ymirhome');"
+            "[print(json.dumps(m)) for f in pathlib.Path(h,'hodd/library/research').rglob('*.md') "
+            "for m in [dict(l.split(':',1) for l in f.read_text(errors='replace').split('---')[1].splitlines() if ':' in l)] "
+            "if re.sub(r'[^a-z0-9]+',' ',m.get('question','').strip().strip('\"').lower()).strip()==q]")
+    run = ask or (lambda: subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=4", dest, "python3", "-c", repr(code), question],
+                                         capture_output=True, text=True, timeout=8).stdout)
+    try:
+        lines = [json.loads(x) for x in run().splitlines() if x.strip()]
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+    if not lines:
+        return None
+    m = max(lines, key=lambda x: x.get("at", ""))
+    return m.get("finding", "").strip().strip('"'), f"{m.get('sources', '').strip().strip('[]\"')} (kept by {seat})"
+
+
 def record_saving(cache: str, tokens_in: int, tokens_out: int, pages: int, seat_role: str = "") -> None:
     """Measure, never claim (plan 365 H4): one row per research call — kept-answer hit or miss, the page's tokens
     read, the tokens handed back. `ymir work` and Andhrimnir's report sum them per role and seat."""
@@ -271,7 +332,7 @@ def record_saving(cache: str, tokens_in: int, tokens_out: int, pages: int, seat_
         pass
 
 
-def research(root: Path, question: str, project: str = "", plan: str = "", post=_post, run=None) -> str:
+def research(root: Path, question: str, project: str = "", plan: str = "", post=_post, run=None, heart_ask=None) -> str:
     """Search, then scrape the best hit as markdown with only the main content; KEEP the finding (source, practice,
     which plan uses it) with `library.sh research keep`; answer short. A search with no hit is kept as a negative
     result, so nobody looks the same dead end up twice."""
@@ -281,6 +342,10 @@ def research(root: Path, question: str, project: str = "", plan: str = "", post=
     if kept:
         record_saving("hit", 0, len(kept[0]) // 4, 0)
         return f"{kept[0]}\n\nsource: {kept[1] or 'kept answer'}\nreused from the library (no web call)"
+    kept = heart_kept(question, ask=heart_ask)
+    if kept:
+        record_saving("hit-heart", 0, len(kept[0]) // 4, 0)
+        return f"{kept[0]}\n\nsource: {kept[1]}\nreused from the heart's kept answers (no web call)"
     url, key = firecrawl_env(root)
     if not key and "api.firecrawl.dev" in url:
         return "ymir_research: no Firecrawl key (FIRECRAWL_API_KEY) and no self-hosted FIRECRAWL_API_URL on this seat."

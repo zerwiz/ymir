@@ -574,6 +574,16 @@ def ymir_research(question: str, project: str = "", plan: str = "") -> str:
     return _fig.research(ROOT, question, project, plan)
 
 
+@mcp.tool()
+def ymir_research_find(query: str, limit: int = 5) -> str:
+    """Search the kept research answers, read-only (plan 365 H3). Served to granted collaborators: only answers the
+    operator tagged `shareable` are returned, so private research never leaves this machine. No web call is made."""
+    rows = _fig.find_kept(query, shareable_only=True, limit=max(1, min(limit, 10)), root=ROOT)
+    if not rows:
+        return "No shareable kept answer matches."
+    return "\n\n".join(f"{r['question']}\n{r['finding']}\nsource: {r['source']} · kept {r['at']}" for r in rows)
+
+
 def _register_figures() -> None:
     from mcp.server.fastmcp.prompts import Prompt
     from mcp.server.fastmcp.resources import FunctionResource

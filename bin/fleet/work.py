@@ -236,12 +236,37 @@ def cmd_send(a):
     return r.returncode
 
 
+def registry_repos(mode):
+    """The repositories intake reads, derived from the project registry in the home (plan 345, never named in code):
+    every project with a GitHub remote. Solo and offline read only the repos CLONED on this machine; fleet reads the
+    whole registry. A repo is in the road by having an issue labelled `ymir:work`, nothing else."""
+    path = os.path.join(home(), "hodd", "identity", "projects.yaml")
+    try:
+        import yaml
+        projects = (yaml.safe_load(open(path)) or {}).get("projects") or []
+    except Exception:
+        return []
+    out = []
+    for pr in projects:
+        g = pr.get("git") or {}
+        if g.get("host") != "github.com" or not g.get("owner") or not g.get("repo"):
+            continue
+        if mode != "fleet":
+            d = os.path.join(os.path.expanduser("~"), pr.get("repo") or "")
+            if pr.get("repo") not in (".",) and not os.path.isdir(os.path.join(d, ".git")) and not os.path.isfile(os.path.join(d, ".git")):
+                continue
+        out.append(f"{g['owner']}/{g['repo']}")
+    return sorted(set(out))
+
+
 def cmd_intake(a):
     dry = "--dry-run" in a
     _, roles, full = merged(load())
-    label, repos = full["intake"]["label"], full["intake"].get("repos") or []
+    mode = merged(load())[0]
+    label = full["intake"]["label"]
+    repos = sorted(set((full["intake"].get("repos") or []) + registry_repos(mode)))
     if not repos:
-        print("intake: no repos named — ymir work repos add owner/name (config key intake.repos)")
+        print("intake: no repositories — none cloned here and none named (the registry is hodd/identity/projects.yaml)")
         return 0
     claim = os.path.join(ROOT, "bin", "agents", "claim.sh")
     flags = f"--harness {roles['worker']['harness']} --model {roles['worker']['model']} --effort {roles['worker'].get('effort', 'medium')}".split()
@@ -317,7 +342,12 @@ def cmd_init(a):
 
 
 def cmd_repos(a):
-    """Which repositories intake reads: `repos`, `repos add owner/name`, `repos rm owner/name`."""
+    """Extra repositories intake reads beyond the registry: `repos`, `repos add owner/name`, `repos rm owner/name`.
+    `repos --all` lists what intake reads now (the registry's repos for this mode, plus the extras)."""
+    if a[:1] == ["--all"]:
+        m, _, full = merged(load())
+        print("\n".join(sorted(set((full["intake"].get("repos") or []) + registry_repos(m)))) or "none")
+        return 0
     cur = list(merged(load())[2]["intake"].get("repos") or [])
     if len(a) == 2 and a[0] in ("add", "rm"):
         new = sorted(set(cur + [a[1]])) if a[0] == "add" else [x for x in cur if x != a[1]]

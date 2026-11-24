@@ -214,8 +214,12 @@ def main():
             rows.append(row)
             continue
         st, detail, nxt = judge(job, seat_for(owner), owner, hosts)
-        heart = me if "heart" in my_roles else next(iter(by_role.get("heart", [])), None)
-        if st == "DARK" and words == ["forge"] and heart:
+        # The fallback seat is the owner's `fallback` in the fleet registry; a dark forge falls back to the heart.
+        fb = (hosts.get(owner) or {}).get("fallback") or ("heart" if words == ["forge"] else "")
+        heart = None
+        if fb:
+            heart = me if fb in my_roles or fb == me else next(iter(by_role.get(fb, [fb] if fb in hosts else [])), None)
+        if st == "DARK" and heart:
             hs, hd, hn = judge(job, seat_for(heart), heart, hosts)
             if hs in ("RAN", "IDLE"):
                 st, detail, nxt = "MOVED", f"{owner} dark → ran on {heart} {hd.split(' ')[1]} ✓", ""

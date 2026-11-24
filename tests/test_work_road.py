@@ -71,4 +71,16 @@ answer = fig.research(ROOT, "how does X work", post=boom)
 assert "X works by Y" in answer and "no web call" in answer, answer
 rows = [json.loads(x) for x in open(env["YMIR_RESEARCH_SAVING"])]
 assert rows and rows[-1]["cache"] == "hit"
-print("ok: work road — profile, Rule of Two, tiers, kept answer (%d checks)" % 14)
+
+# 7. H2: this machine asks the heart's kept answers itself and names the seat; H3: only shareable answers are served
+(d / "hodd" / "data").mkdir(parents=True)
+json.dump({"hosts": {"heartbox": {"roles": ["heart"], "user": "u"}}}, open(d / "hodd" / "data" / "fleet.json", "w"))
+got = fig.heart_kept("a question only the heart kept", ask=lambda: json.dumps({"finding": "the heart's finding", "sources": "[https://h.example|H]", "at": at}))
+assert got and "heart's finding" in got[0] and "kept by heartbox" in got[1], got
+assert fig.heart_kept("x", ask=lambda: "") is None
+(d / "research" / "pub.md").write_text(f'---\nquestion: "Shared topic one"\nfinding: "public finding"\ntags: research shareable\nat: {at}\n---\n')
+(d / "research" / "priv.md").write_text(f'---\nquestion: "Shared topic two"\nfinding: "private finding"\ntags: research\nat: {at}\n---\n')
+rows = fig.find_kept("shared topic", shareable_only=True)
+assert [r["finding"] for r in rows] == ["public finding"], rows
+assert len(fig.find_kept("shared topic")) == 2
+print("ok: work road — profile, Rule of Two, tiers, kept answer (%d checks)" % 18)
