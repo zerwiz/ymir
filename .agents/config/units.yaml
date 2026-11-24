@@ -192,3 +192,6 @@ units:
   - { name: snotra-ear,        mode: adopt, kind: service, roles: all, restart: false }
   # Gróa's agent names the WORKING tree on purpose: it is the checkout she fast-forwards
   - { name: groa-agent,        mode: adopt, kind: service, roles: all, restart: false, keep: [YMIR_REPO] }
+  # Eir's night pass, written by bin/agents/groa-agent/seat.sh and fired by Gróa's unit (OnSuccess/OnFailure).
+  # Unregistered, `runtimepin` read it as a stray and Gróa exited 4 every night (plan 369 item 6).
+  - { name: eir-night,         mode: adopt, kind: service, roles: all, restart: false }

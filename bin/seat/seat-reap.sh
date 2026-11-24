@@ -908,6 +908,18 @@ verify() {
 
 claude_settings() { printf '%s' "${CLAUDE_SETTINGS:-$HOME/.claude/settings.json}"; }
 
+# ONE DIGEST HOOK, AND THIS DOOR NO LONGER FIGHTS THE ONE THAT SEATS IT (plan 369 item 6).
+# bin/seat/harness-extensions-install.sh seats `bash "$HOME/.claude/hooks/saga-session.sh"`, which
+# resolves the CURRENT home, and PRUNES a hardcoded `<root>/bin/time/saga-session-start.sh` hook as a
+# second digest. This door used to seat exactly that hardcoded hook. Eir's nightly mend ran both
+# (`seats`, then `claudehooks`), each undid the other, `claudehooks` was never whole, and Gróa exited 4
+# every night. A session also printed the digest twice. Now the house hook counts as seated, and when
+# the house hook script is on disk it is the one this door seats.
+CLAUDE_HOUSE_HOOK='bash "$HOME/.claude/hooks/saga-session.sh"'
+claude_hook_cmd() {  # the SessionStart command this door would seat
+  if [ -f "$HOME/.claude/hooks/saga-session.sh" ]; then printf '%s' "$CLAUDE_HOUSE_HOOK"; else printf '%s' "$SESSION_DOOR"; fi
+}
+
 # The SessionStart hook is MERGED, never rewritten: another tool's keys are the
 # operator's, and this door has no business dropping them (the same reason
 # bin/pi/arm.sh refuses to mangle a YAML key it did not write).
@@ -923,7 +935,9 @@ except Exception:
 want=sys.argv[2]
 for grp in (d.get("hooks") or {}).get("SessionStart") or []:
     for h in grp.get("hooks") or []:
-        if h.get("command") == want:
+        cmd = h.get("command") or ""
+        # the hardcoded door, or the house's one digest hook (which resolves the current home)
+        if cmd == want or "/.claude/hooks/saga-session.sh" in cmd:
             raise SystemExit(0)
 raise SystemExit(1)
 PY
@@ -933,7 +947,7 @@ claude_hook_seat() {
   local f; f="$(claude_settings)"
   mkdir -p "$(dirname "$f")" || return 1
   [ -r "$f" ] && cp "$f" "$f.seat-reap.bak" 2>/dev/null
-  python3 - "$f" "$SESSION_DOOR" <<'PY'
+  python3 - "$f" "$(claude_hook_cmd)" <<'PY'
 import json,os,sys
 f, want = sys.argv[1], sys.argv[2]
 try:
