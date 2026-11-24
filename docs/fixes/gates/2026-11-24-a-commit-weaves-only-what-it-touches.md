@@ -31,3 +31,7 @@ doc or the body of one script paid the same price as a new door. Two commits in 
 
 A seat whose `<git-dir>/hooks/pre-commit` is a copy, not `core.hooksPath .githooks`, keeps the old
 hook until the install step `gates` seats it again. The release clone on the dev machine is one such seat.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #938
