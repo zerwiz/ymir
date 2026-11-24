@@ -155,7 +155,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks renewal packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault vaultkeys ward seats seatreap models)
+SURFACES=(floors seatpaths hooks renewal packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault vaultkeys ward seats seatreap models nornir)
 
 # ── the register (plan 278): config/surfaces.yaml names the surfaces, their roles and their risk class ──
 # The array above is the FALLBACK, kept until every seat carries the register. Without the register every
@@ -767,6 +767,10 @@ claudehooks_detail() {
     printf 'the Claude hooks: AGENTS.md · Eindri-only · NDA-write (the global Gná arm is opt-in)'
   fi
 }
+# Nornir (plan 365): every job judged on the seat that owns it. Red only for LATE, FAILED, DOWN or DARK; a job
+# that runs elsewhere and ran fine is green. A host with no schedule owes nothing.
+s_nornir() { [ -x "$SCRIPT_DIR/../time/nornir-status.sh" ] || return 0; bash "$SCRIPT_DIR/../time/nornir-status.sh" --json >/dev/null 2>&1; }
+nornir_detail() { bash "$SCRIPT_DIR/../time/nornir-status.sh" 2>/dev/null | awk -F'","' '/^  "(LATE|FAILED|DOWN|DARK)"/{n++; if(n<=2){gsub(/^  "/,"",$1); printf "%s %s — %s; ", $1, $4, $5}} /^needs:/{t=$0} END{print (n? t : "every job is where it should be")}' | cut -c1-240; }
 # The nightly pair (plan 350 C; the Allfather, 2026-11-22: "all users get Gróa running on a cron job every
 # night, and Eir after"). Red when the pair is not seated, when the last night failed (a stage hung, a door
 # was missing, Gróa failed outright), or when no night has run for 36 hours. The mend re-seats the pair.
@@ -1120,6 +1124,7 @@ detail() { # <name> -> the command that prints one short fact
     pirun) printf '%s\n' pirun_detail ;;
     claudehooks) printf '%s\n' claudehooks_detail ;;
     renewal)   printf '%s\n' renewal_detail ;;
+    nornir)    printf '%s\n' nornir_detail ;;
     opencode)  printf '%s\n' "command -v opencode >/dev/null 2>&1 && $SCRIPT_DIR/../seat/opencode-launcher.sh check 2>&1 | sed -n '2p' | sed -E 's/^ *\"[a-z]+\",//; s/\"//g' || echo 'no opencode on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
     armpin)    printf '%s\n' "$SCRIPT_DIR/../seat/armpin.sh --detail 2>/dev/null | head -1 || echo 'armpin door missing'" ;;

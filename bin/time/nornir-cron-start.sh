@@ -383,7 +383,7 @@ scheduler='
                    stamp_key="$this_hour/slot$((_min / _n))"
                    [ $((_min % _n)) -eq 0 ] && fire=1 ;;
         @daily)    stamp_key="$today"; [ "$now" = "00:00" ] && fire=1 ;;
-        *)         stamp_key="$today"; [ "$at" = "$now" ] && fire=1 ;;
+        *)         stamp_key="$today $at"; [ "$at" = "$now" ] && fire=1 ;;   # the time is in the stamp: one script at 06:10 AND 18:10 fires twice (plan 365)
       esac
       [ "$fire" = 1 ] || continue
       # A DAY gate (plan 305): a weekly row fires on its day only, and its stamp is the day, so a
@@ -394,9 +394,18 @@ scheduler='
       fi
       if [ -n "$gate" ]; then
         _match=0
-        for _w in ${gate#@}; do
+        for _w in $(printf "%s" "${gate#@}" | tr "," " "); do
           case ",${BROKK_ROLES:-dev}," in *",$_w,"*) _match=1 ;; esac
         done
+        # The forge fallback (plan 365): a row gated for the forge runs on the heart when the forge has
+        # been dark for more than 24 hours, so the record keeps its nightly work. The heart logs the row
+        # as usual; `ymir nornir` names it MOVED while the forge is away.
+        if [ "$_match" = 0 ]; then
+          case ",$(printf "%s" "${gate#@}" | tr " " ","),:,${BROKK_ROLES:-dev}," in
+            *,forge,*:*,heart,*)
+              bash "$root/bin/time/forge-dark.sh" --state "$state" >/dev/null 2>&1 && _match=1 ;;
+          esac
+        fi
         [ "$_match" = 1 ] || continue
       fi
       key=$(printf "%s" "$cmd" | tr -c "A-Za-z0-9._-" "_")
@@ -429,6 +438,21 @@ case "${1-}" in
     else
       printf 'cron: stopped jobs=%s%s\n' "$(job_count)" "$extra"
     fi
+    exit 0
+    ;;
+  --last)
+    # Per-job last run, read from THIS seat's own log (plan 365): the one fact the status resolver
+    # (bin/time/nornir-status.sh) asks every owning seat for, over the ssh ring or locally.
+    if pid=$(running_pid); then _st="running	$pid"; else _st="stopped	"; fi
+    printf '#state\t%s\n#now\t%s\t%s\n#log\t%s\n' "$_st" "$(date +%s)" "$(date +%z)" "$LOG_FILE"
+    [ -r "$LOG_FILE" ] && tail -n 60000 "$LOG_FILE" | awk '
+      / cron run: /  { ts=$1; c=$0; sub(/^[^ ]+ cron run: /,"",c); run[c]=ts; cur=c; want=1; next }
+      / cron FAIL rc=/ { ts=$1; c=$0; sub(/^[^ ]+ cron FAIL rc=/,"",c); rc=c; sub(/ .*/,"",rc); sub(/^[0-9]+ /,"",c); sub(/ :: .*/,"",c);
+                         fail[c]=ts; frc[c]=rc; want=0; next }
+      / cron SKIP /  { want=0; next }
+      /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]+Z cron / { next }
+      want && cur != "" && !(cur in note) && length($0) { note[cur]=substr($0,1,90); want=0 }
+      END { for (c in run) printf "%s\t%s\t%s\t%s\t%s\n", c, run[c], (c in fail ? fail[c] : ""), (c in frc ? frc[c] : ""), (c in note ? note[c] : "") }'
     exit 0
     ;;
   --stop)
@@ -503,4 +527,8 @@ else
 fi
 loop_pid=$!
 printf '%s\n' "$loop_pid" >"$PID_FILE"
+# A state override leaves the default state dir with an old log nobody writes (the heart read it and called
+# the clock dead, 2026-11-24). Say where the live log is, there, once per start.
+_def_state="${XDG_STATE_HOME:-$HOME/.local/state}/ymir"
+if [ "$_def_state" != "$STATE" ] && [ -d "$_def_state" ]; then printf '%s\n' "$LOG_FILE" >"$_def_state/cron.log.now" 2>/dev/null || true; fi
 printf 'cron: started pid=%s jobs=%s\n' "$loop_pid" "$jobs"

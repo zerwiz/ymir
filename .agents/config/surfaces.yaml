@@ -45,6 +45,7 @@ surfaces:
   - { name: harness,     risk: safe,  roles: all, why: "re-binds the pi extensions to the live root" }
   - { name: pidoor,      risk: safe,  roles: all, why: "seats the PATH block so `pi` is the one-home door; a new shell picks it up" }
   - { name: pirun,       risk: never, roles: all, why: "names which pi actually ran; a running pi is restarted by its operator, never by a mend" }
+  - { name: nornir, risk: safe, roles: all, why: "judges every scheduled job on the seat that owns it (plan 365)" }
   - { name: claudehooks, risk: safe,  roles: all, why: "re-seats Ymir's own Claude hooks" }
   - { name: opencode,    risk: never, roles: all, why: "an upstream flag change cannot be mended here" }
   - { name: arm,         risk: safe,  roles: all, why: "starts Ymir's own standing watcher" }

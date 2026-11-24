@@ -153,6 +153,7 @@ const DOORS = {
   odrerir:    { script: 'scripts/electron.sh',    about: "the live hall's window", args: ['start', '--view', 'odrerir'] },
   mimir:      { script: 'bin/records/mimir.sh',           about: 'the memory well' },
   config:     { script: 'bin/engine/ymir-config.sh',     about: 'your preferences — which notices are shown (stay silent with `notice <key> off`)' },
+  nornir:     { script: 'bin/time/nornir-status.sh',      about: 'every scheduled job, judged on the seat that owns it' },
   sense:      { script: 'bin/host/host-sense.sh',      about: 'what THIS machine is' },
   plan:       { script: 'bin/bridge/ymir-plan.sh',       about: 'what an install would do here — writes nothing' },
   migrate:    { script: 'bin/engine/ymir-migrate.sh',    about: "heal this home's structure forward (Gr\u00f3a's mend)" },
