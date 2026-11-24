@@ -52,3 +52,7 @@ variables it sets do not survive. Decoration goes to stderr; data stays on stdou
 
 If you see raw escape codes in a log, set `NO_COLOR=1`. If a step ends ✕, open the `log:` path it printed — the
 whole command output is there. The tests are `.agents/tests/style-progress.test.sh`.
+
+## CHANGE LOG
+
+- **2026-11-24** — written with the change it describes (the terminal cloth gets progress).
