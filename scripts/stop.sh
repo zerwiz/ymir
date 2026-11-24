@@ -37,12 +37,16 @@ API_PORT="${HLIDSKJALF_API_PORT:-3889}"
 
 stopped=0
 
+# The cloth (bin/desktop/ymir-style.sh): what was lowered, one mark per thing, on stderr.
+_cloth_u="$-"; . "$ROOT/bin/desktop/ymir-style.sh"; style_init; case "$_cloth_u" in *u*) ;; *) set +u ;; esac
+style_title "lower" "laying the standing hall down"
+
 # Gate API first — the SPA proxy points at it.
 if [[ -f "$API_PID_FILE" ]]; then
   API_PID="$(cat "$API_PID_FILE")"
   if kill -0 "$API_PID" 2>/dev/null; then
     kill -TERM -- "-$API_PID" 2>/dev/null || kill -TERM "$API_PID" 2>/dev/null || true
-    echo "Gate API stopped (pid $API_PID)."
+    style_line ok "gate API" "stopped (pid $API_PID)"
     stopped=1
   fi
   rm -f "$API_PID_FILE"
@@ -60,7 +64,7 @@ if [[ -f "$PID_FILE" ]]; then
     if kill -0 "$PID" 2>/dev/null && [[ "${1:-}" == "--force" ]]; then
       kill -KILL -- "-$PID" 2>/dev/null || kill -KILL "$PID" 2>/dev/null || true
     fi
-    echo "Hlidskjalf stopped (pid $PID)."
+    style_line ok hlidskjalf "stopped (pid $PID)"
     stopped=1
   fi
   rm -f "$PID_FILE"
@@ -68,13 +72,13 @@ fi
 
 # Runtime services: the Nornir schedule and the Bifrost model bridge.
 if [ -x "$ROOT/bin/time/nornir-cron-start.sh" ]; then
-  "$ROOT/bin/time/nornir-cron-start.sh" --stop >/dev/null 2>&1 && { echo "Nornir cron stopped."; stopped=1; }
+  "$ROOT/bin/time/nornir-cron-start.sh" --stop >/dev/null 2>&1 && { style_line ok nornir "cron stopped"; stopped=1; }
 fi
 if [ -x "$ROOT/bin/bridge/bifrost-bridge.sh" ]; then
-  "$ROOT/bin/bridge/bifrost-bridge.sh" --stop >/dev/null 2>&1 && { echo "Bifrost bridge stopped."; stopped=1; }
+  "$ROOT/bin/bridge/bifrost-bridge.sh" --stop >/dev/null 2>&1 && { style_line ok bifrost "bridge stopped"; stopped=1; }
 fi
 if [ -x "$ROOT/bin/bridge/mimir-bridge.sh" ]; then
-  "$ROOT/bin/bridge/mimir-bridge.sh" --stop >/dev/null 2>&1 && { echo "Mimir bridge stopped."; stopped=1; }
+  "$ROOT/bin/bridge/mimir-bridge.sh" --stop >/dev/null 2>&1 && { style_line ok mimir "bridge stopped"; stopped=1; }
 fi
 
 # Smíðja visualizer (API + UI).
@@ -85,7 +89,7 @@ for pair in "smidja-viz-api:Smíðja visualizer API" "smidja-viz-ui:Smíðja vis
     pid="$(cat "$pf")"
     if kill -0 "$pid" 2>/dev/null; then
       kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
-      echo "$label stopped (pid $pid)."
+      style_line ok smidja "$label stopped (pid $pid)"
       stopped=1
     fi
     rm -f "$pf"
@@ -127,7 +131,9 @@ for p in "${SMIDJA_VIZ_API_PORT:-8437}" "${SMIDJA_VIZ_UI_PORT:-8438}"; do
 done
 
 if [[ "$stopped" -eq 0 ]]; then
-  echo "Hlidskjalf is not running."
+  style_line skip hlidskjalf "is not running"
+else
+  style_next "ymir raise — lift the hall again"
 fi
 
 if curl -s -o /dev/null "http://127.0.0.1:${PORT}/" 2>/dev/null; then

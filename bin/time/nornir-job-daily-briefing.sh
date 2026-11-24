@@ -292,13 +292,13 @@ printf 'briefing: wrote %s (%s bytes)\n' "$BRIEF_FILE" "$(wc -c <"$BRIEF_FILE" |
 runes_append "nornir" "briefing.written" --realm "$REALM" \
   --message "daily briefing for $DATE written to $BRIEF_FILE" >/dev/null || printf 'briefing: rune append failed (non-fatal)\n'
 
-# A brief is not clean while a letter sits unwritten past its limit. The brief above is
-# still PUBLISHED — he must be able to read why the day is not clean — but this job does
-# not exit green over it, because a green exit is what a house reads as "nothing to see".
+# AGED DRAFTS ARE HIS DECISION, NOT A BROKEN JOB (2026-11-22): the brief was written, so the job
+# succeeded. The old drafts go on his to-do list (one card per day) and in the ledger.
 if [ "$DRAFTS_RC" = "1" ]; then
-  printf 'briefing: NOT CLEAN — %s\n' "$DRAFTS_LINE" >&2
+  printf 'briefing: drafts aged — %s (put on the to-do list)\n' "$DRAFTS_LINE"
   runes_append "nornir" "briefing.drafts_aged" --realm "$REALM" \
     --message "$DRAFTS_LINE" >/dev/null 2>&1 || true
-  exit 1
+  [ -x "$ROOT/bin/records/todo.sh" ] && bash "$ROOT/bin/records/todo.sh" add "Decide the old mail drafts: $DRAFTS_LINE" \
+    --lane Today --source daily-briefing --key "drafts-aged:$DATE" >/dev/null 2>&1 || true
 fi
 exit 0

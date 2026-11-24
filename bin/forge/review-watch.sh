@@ -138,7 +138,7 @@ command -v gh >/dev/null 2>&1 || refuse "gh is not on PATH here — a watch with
 # NAME the door, every repository must be the operator's, and the hand must be the identity it names.
 . "$ROOT/bin/forge/warden-lib.sh"
 warden_begin review-watch || die "this machine cannot be named from the fleet registry"
-warden_require_door || exit 3
+warden_require_door || exit "${WARDEN_RC_NOT_HERE:-78}"
 WARDEN_REPOS="${REPOS[*]}"
 warden_require_repos "${REPOS[@]}" || exit 3
 warden_require_identity || exit 3

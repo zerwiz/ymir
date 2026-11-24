@@ -32,7 +32,7 @@ dry = os.environ["DRY_Q"] == "1"
 want_board = os.environ.get("BOARD_Q") or ""
 
 spec = importlib.util.spec_from_file_location(
-    "snotra_trello", os.path.join(root, "bin", "time", "snotra", "snotra-trello.py"))
+    "snotra_trello", os.path.join(root, "systems", "snotra", "services", "cron", "snotra-trello.py"))
 trello = importlib.util.module_from_spec(spec)
 try:
     spec.loader.exec_module(trello)          # defines CONFIG, token(), api()

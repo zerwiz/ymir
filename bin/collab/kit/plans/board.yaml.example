@@ -1,0 +1,11 @@
+# The board row of a project's registry entry (hodd/identity/projects.yaml). Copy, pick ONE adapter, delete the rest.
+# A credential is always a REFERENCE (env:, vault:, claude-mcp:) — never a value.
+board:
+  adapter: file            # mcp | github | trello | file
+  assignee: ada            # optional: who a new plan card is assigned to
+  plans: plans/            # optional: the plan ledger, relative to the project
+
+  # adapter: file          → place: .            (BOARD.md and .board/ are kept here, in the project)
+  # adapter: github        → place: owner/repo   and  github: {project: 1, owner: owner}
+  # adapter: trello        → place: <trello board id>   and  people: {ada: ada-trello-login}
+  # adapter: mcp           → place: <place>  and  mcp: {url: https://boards.example.org/mcp, token_from: env:BOARD_TOKEN}

@@ -43,7 +43,7 @@ names a tool the server does not register. Add the row in the same change that b
 
 ## Limits
 
-- The MCP SDK must be installed for the user (`python3 -m pip install --user mcp`).
+- The MCP SDK must be installed for the user (`python3 -m pip install --user 'mcp<2'`).
 - Resources are read when the server starts: a project skill added later shows after the session reconnects, and
   `ymir_figure` always reads the current shelf.
 

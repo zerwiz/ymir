@@ -25,6 +25,9 @@ DRY=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 DST="${YMIR_FLEET_DIR:-$HOME/.fleet}"
+# The cloth (bin/desktop/ymir-style.sh): this runs inside `npm install`, so it speaks only when a human is
+# watching and stays one short line per thing refreshed. (stderr: npm shows it; stdout stays clean.)
+_cloth_u="$-"; . "$SCRIPT_DIR/../desktop/ymir-style.sh"; style_init; case "$_cloth_u" in *u*) ;; *) set +u ;; esac
 
 # plan 275 (2026-11-12): this is the npm POSTINSTALL, so it ran from every folder npm installed in — a worker's
 # worktree, a test's temp folder, a release being built — and from there restarted the live services and redrew the
@@ -67,7 +70,7 @@ for pair in "${TOOLS[@]}"; do
       printf 'fleet-deploy: would refresh %s/\n' "$name"
     else
       cp -R "$ROOT/$src/." "$DST/$name/" 2>/dev/null || continue
-      printf 'fleet-deploy: refreshed %s/\n' "$name"
+      style_line ok refreshed "$name/"
     fi
     changed=$((changed + 1))
     continue
@@ -77,7 +80,7 @@ for pair in "${TOOLS[@]}"; do
     printf 'fleet-deploy: would refresh %s\n' "$name"
   else
     cp -f "$ROOT/$src" "$DST/$name" 2>/dev/null || continue
-    printf 'fleet-deploy: refreshed %s\n' "$name"
+    style_line ok refreshed "$name"
   fi
   changed=$((changed + 1))
 done
@@ -89,7 +92,7 @@ if command -v systemctl >/dev/null 2>&1 && [ -d "$HOME/.config/systemd/user" ]; 
   for u in "${UNITS[@]}"; do
     [ -f "$HOME/.config/systemd/user/$u.service" ] || continue
     if [ "$DRY" = 1 ]; then printf 'fleet-deploy: would try-restart %s\n' "$u"; continue; fi
-    if systemctl --user try-restart "$u" >/dev/null 2>&1; then printf 'fleet-deploy: %s restarted\n' "$u"; fi
+    if systemctl --user try-restart "$u" >/dev/null 2>&1; then style_line ok restarted "$u"; fi
   done
 fi
 
@@ -104,9 +107,9 @@ if [ "${YMIR_SKIP_DESKTOP:-0}" != 1 ] && [ -d "$HOME/.local/share/applications" 
   else
     [ -x "$ROOT/bin/desktop/design-icon.sh" ] && bash "$ROOT/bin/desktop/design-icon.sh" install >/dev/null 2>&1 || true
     [ -x "$ROOT/bin/desktop/desktop-place.sh" ] && bash "$ROOT/bin/desktop/desktop-place.sh" apply >/dev/null 2>&1 || true
-    printf 'fleet-deploy: desktop entries refreshed\n'
+    style_line ok desktop "entries refreshed"
   fi
 fi
 
-printf 'fleet-deploy: %s file(s) refreshed\n' "$changed"
+style_line ok fleet "$changed file(s) refreshed"
 exit 0

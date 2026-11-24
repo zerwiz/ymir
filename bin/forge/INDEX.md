@@ -29,7 +29,7 @@ bin[64]{file,does,kind,verdict,disposition,callers,lines}:
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,143
   "gather-notice.sh","gather-notice.sh — when the LAST errand of a batch finishes, the helm is told to gather it.","tool","wired","keep",3,186
   "gather.sh","gather.sh — gather a batch of errand branches into ONE push and ONE PR.","tool","tested","keep",13,362
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",651,168
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",669,168
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","tool","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
@@ -42,7 +42,7 @@ bin[64]{file,does,kind,verdict,disposition,callers,lines}:
   "intake.py","'''intake.py — read every registered repo once, and say honestly what could not be read.","tool","wired","keep",2,433
   "issue-watch.sh","issue-watch.sh — READ THE ISSUES, and close the ones that are already solved.","tool","wired","keep",0,106
   "judge-carry.py","'''judge-carry.py — may the judge's approval of one head carry over to a newer head?","tool","wired","keep",2,173
-  "judge-merge.sh","judge-merge.sh — the judge's verdict is the seal: APPROVE merges at once, NEEDS-REWORK goes home.","tool","tested","keep",5,343
+  "judge-merge.sh","judge-merge.sh — the judge's verdict is the seal: APPROVE merges at once, NEEDS-REWORK goes home.","tool","tested","keep",5,350
   "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",11,155
   "merge-method.sh","merge-method.sh — which `gh pr merge` flag a pull request takes (RULES/08, batch road).","tool","wired","keep",6,58
   "merge-verdict.sh","merge-verdict.sh — may this PR be merged right now?","tool","wired","keep",5,75
@@ -72,7 +72,7 @@ bin[64]{file,does,kind,verdict,disposition,callers,lines}:
   "smith-seat.sh","smith-seat.sh — seat ANY figure in its own herdr workspace, the same way every time.","tool","wired","keep",2,177
   "test_gather_notice.sh","test_gather_notice.sh — the LAST errand of a batch calls the gather.","tool","wired","keep",1,136
   "test_gjallarhorn_no_hall.sh","test_gjallarhorn_no_hall.sh — a tunnel never publishes a hall.","tool","wired","keep",1,80
-  "test_gjallarhorn_publish.sh","test_gjallarhorn_publish.sh — an app is published only behind the hall's login.","tool","wired","keep",0,99
+  "test_gjallarhorn_publish.sh","test_gjallarhorn_publish.sh — an app is published only behind the hall's login.","tool","wired","keep",0,123
   "test_judge_merge.sh","test_judge_merge.sh — the judge's verdict is the seal (RULES/08, its sections appended 2026-11-21).","tool","wired","keep",0,483
   "test_review_seat_keeper.sh","test_review_seat_keeper.sh — the keeper: the reviewer's seat says WHY it refuses, and a dead seat","tool","wired","keep",1,221
   "test_smith_gh.sh","test_smith_gh.sh — the smith's gh refuses every road to a merge, and lets every read through.","tool","wired","keep",0,83
@@ -82,7 +82,7 @@ bin[64]{file,does,kind,verdict,disposition,callers,lines}:
   "utgard-lane.sh","utgard-lane.sh — best of N: one brief, many boxes, one board.","tool","wired","keep",1,227
   "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,128
   "verdict-watch.sh","verdict-watch.sh — EVERY report is delivered, because the ARTEFACT is watched, not the agent.","tool","wired","keep",2,105
-  "warden-lib.sh","warden-lib.sh — the shared law every outward warden keeps (plan 290 §3; the Allfather, 2026-11-14).","lib","wired","keep",13,244
+  "warden-lib.sh","warden-lib.sh — the shared law every outward warden keeps (plan 290 §3; the Allfather, 2026-11-14).","lib","wired","keep",14,246
   "warden-policy.py","'''warden-policy.py — the ONE reader of a machine's wardens.yaml, and of what a warden may touch.","tool","wired","keep",10,446
   "worktree-reap.py","'''worktree-reap.py — the road that made a worktree is the road that reaps it (plan 339.4).","tool","wired","keep",6,550
   "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",10,233

@@ -99,7 +99,9 @@ warden_skip() {  # <why> — the clean skip: a door this machine does not hold i
   printf '%s: skipped on %s — %s\n' "${WARDEN_DOOR:-warden}" "${WARDEN_MACHINE:-this machine}" "$*"
 }
 
-warden_require_door() {  # 0 seated · 1 not seated (with the reason printed)
+# Exit code for "not this machine's door": a clean skip, shown as skip (not this machine's door), never FAIL.
+WARDEN_RC_NOT_HERE=78
+warden_require_door() {  # 0 seated · 1 not seated (with the reason printed; callers exit $WARDEN_RC_NOT_HERE)
   local why
   why="$(_warden_policy on "$WARDEN_DOOR" 2>&1 >/dev/null)" || {
     printf '%s: REFUSED on %s — %s\nhelp: name this door in %s (enabled: on) if this machine should run it\n' \

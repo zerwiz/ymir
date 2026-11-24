@@ -61,7 +61,7 @@ if [ -f "$STATE/.seal-hold" ]; then
 fi
 
 # 1 · this machine must NAME the door · 2 · only the operator's own repositories · 3 · its own identity
-warden_require_door || exit 3
+warden_require_door || exit "${WARDEN_RC_NOT_HERE:-78}"
 warden_require_identity || exit 3
 
 # list reviewer-merges projects
