@@ -40,3 +40,7 @@ be mended:
   `hodd/saves`), `seatreap`, `autoboot` and `vaultkeys`. They are named in the night's fault report, and
   `config/owed-accepted.txt` is where he may accept one.
 - The pin was not flipped.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #936
