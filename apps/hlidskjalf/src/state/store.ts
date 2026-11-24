@@ -218,6 +218,7 @@ interface YmirState {
   refreshA2A: () => Promise<void>;
   refreshDoors: () => Promise<void>;
   refreshReviews: () => Promise<void>;
+  refreshWell: () => Promise<void>;
   setSelectedSession: (id: string | null) => void;
   loadSessionDetail: (id: string) => Promise<void>;
 
@@ -475,6 +476,19 @@ export const useYmir = create<YmirState>((set, get) => ({
     // (60s) caps the gh read, so this is one cheap round-trip, never a throng.
     const info = await gateApi.reviews().catch(() => undefined);
     if (info) set({ reviews: info, live: true });
+  },
+  refreshWell: async () => {
+    // The well had no beat of its own (plan 369 item 3): it was read ONCE, at boot. A first read
+    // that met the bridge while it was still warming (or the gate mid-restart) left `recall`
+    // empty, and the Well page said COLD until the page was reloaded, though the bridge was up.
+    const [mimir, recall] = await Promise.all([
+      gateApi.mimirHealth().catch(() => undefined),
+      gateApi.well('').catch(() => undefined),
+    ]);
+    const patch: Partial<YmirState> = {};
+    if (mimir) patch.mimir = mimir;
+    if (Array.isArray(recall)) patch.recall = recall;
+    if (Object.keys(patch).length) set(patch);
   },
   refreshSmidja: async () => {
     try {
