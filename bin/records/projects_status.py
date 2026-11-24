@@ -337,6 +337,20 @@ def health_next(row: dict) -> None:
     row["health"], row["next"] = health, nxt
 
 
+def session_summary(pid: str) -> dict | None:
+    """Plan 368: the sessions that touched this project (any tool), read from THIS machine's own index. No index, no field."""
+    import importlib.util
+    f = Path(__file__).with_name("sessions_index.py")
+    try:
+        spec = importlib.util.spec_from_file_location("sessions_index", f)
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        r = m.project_summary(pid)
+        return r if r["sessions"] else None
+    except Exception:
+        return None
+
+
 def build(a) -> dict:
     here = a.seat_name or this_seat()
     projects = registry()
@@ -371,6 +385,7 @@ def build(a) -> dict:
         row["ci"] = "red" if any(x["ci"] == "red" for x in row["prs"]) else (
             "pending" if any(x["ci"] == "pending" for x in row["prs"]) else ("green" if row["prs"] else "none"))
         health_next(row)
+        row["sessions"] = session_summary(pid) if row["where"] else None
         out.append(row)
     out = [r for r in out if (not a.realm or r["realm"] == a.realm)
            and (not a.seat or any(w["seat"] == a.seat for w in r["where"]))

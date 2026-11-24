@@ -148,6 +148,7 @@ const DOORS = {
   eir:        { script: 'bin/agents/eir-doctor.sh',      about: 'diagnose every surface; mend what is broken' },
   groa:       { script: 'bin/agents/groa-update.sh',     about: 'take the latest, then mend this home forward' },
   projects:   { script: 'bin/records/projects.sh',     about: 'every project you work on — worktrees, PRs, kit (add · kit update · reap)' },
+  sessions:   { script: 'bin/records/sessions.sh',     about: 'every agent session on this machine, from every tool — scan · list · decisions · updates' },
   smidja:     { script: 'bin/desktop/smidja-board.sh',    about: "the smithy's board on :8437 (build · start · stop · status)" },
   hlidskjalf: { script: 'scripts/electron.sh',    about: "the high seat's window", args: ['start', '--view', 'hlidskjalf'] },
   sessrumnir: { script: 'scripts/electron.sh',    about: "the seat-hall's window", args: ['start', '--view', 'sessrumnir'] },

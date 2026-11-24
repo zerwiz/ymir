@@ -2779,6 +2779,14 @@ const server = Bun.serve({
         }));
       }
       if (p === '/api/worktrees') return json(await worktrees());
+      if (p === '/api/sessions/index' || p === '/api/sessions/decisions') {
+        // plan 368: this machine's own index; ?fleet=1 only adds other seats (this machine asks them); ?view=shared = public projects
+        const flags = [p.endsWith('decisions') ? 'decisions' : 'list', '--json'];
+        if (url.searchParams.get('fleet') === '1') flags.push('--fleet');
+        if (url.searchParams.get('view') === 'shared') flags.push('--public-view');
+        const raw = await runAsync(['bash', join(ROOT, 'bin/records/sessions.sh'), ...flags], 30_000, 50);
+        try { return json(JSON.parse(raw)); } catch { return json({ sessions: [], decisions: [], error: 'the session index gave no answer — run: ymir sessions scan' }); }
+      }
       if (p === '/api/projects') {
         // plan 367: one resolver (bin/records/projects-status.sh); PRs are cached a minute per repo inside it.
         // ?view=shared drops every project not marked public (RULES/04: a private project never shows in a shared view).
