@@ -9,7 +9,8 @@
 #   answer.sh silent [--hours N]          errands with a return address and no report (default 2 h)
 #
 # It wraps report.sh (the seven-field handoff must exist first) and sends by the kind of the return address
-# recorded with the errand (reply-to.sh): hermes → hermes-tell.sh · herdr → eindri-send.sh · seat → fleet-tell.sh ·
+# recorded with the errand (reply-to.sh): hermes → hermes-tell.sh · herdr → eindri-send.sh · arm → rodd-arm.sh tell (the
+# holder's wake queue, never its input box: plan 369 item 8) · seat → fleet-tell.sh ·
 # telegram → notify/send.sh · issue → gh issue comment. A refusal ("busy", "mid-turn") is not a loss: the answer stays in
 # state/answers/ and `retry` lands it once the sender's turn ends. Sent answers are never resent.
 set -u
@@ -35,6 +36,8 @@ send() {  # <address> <line> -> 0 handed, 1 refused/busy (queue it)
     # process that exits with the line, which wakes the sender). No live waiter: the answer stays queued for it.
     hermes)  waiter_alive "$ID_NOW" || return 1; return 0 ;;
     herdr)   out="$(bash "$HERE/eindri-send.sh" --from "agent $ACTOR" "$rest" "$2" 2>&1)" || return 1 ;;
+    # the arm holder reads its wake queue between turns; a line typed into its pane waits behind its own draft
+    arm)     out="$(bash "$HERE/../voice/rodd-arm.sh" tell --from "agent $ACTOR" "$2" 2>&1)" || return 1 ;;
     seat)    out="$(bash "$HERE/../fleet/fleet-tell.sh" --from "$ACTOR" "${rest/\//:}" "$2" 2>&1)" || return 1 ;;
     telegram) out="$(bash "$HERE/../notify/send.sh" --source errand --severity INFO --message "$2" 2>&1)" || return 1 ;;
     issue)   out="$(gh issue comment "${rest##*#}" --repo "${rest%#*}" --body "$2" 2>&1)" || return 1 ;;
