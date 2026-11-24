@@ -14,7 +14,7 @@ import sys, json
 for l in sys.stdin:
     if l.startswith("  \""):
         print("\t".join(json.loads("[" + l.strip() + "]")))' | while IFS=$'\t' read -r st owner at job detail nxt; do
-    case "$st" in RAN|MOVED) s=ok ;; ELSEWHERE|DUE|IDLE) s=info ;; *) s=fail ;; esac
+    case "$st" in RAN|MOVED) s=ok ;; ELSEWHERE|DUE|IDLE|UNREAD) s=info ;; *) s=fail ;; esac
     style_line "$s" "$st" "$at ${job##*/} — $detail${nxt:+ → $nxt}"
   done
 fi
