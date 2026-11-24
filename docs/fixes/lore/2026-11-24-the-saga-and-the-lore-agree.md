@@ -17,13 +17,12 @@ page carried faults of its own:
 
 Chapter XXXVII is appended to `docs/lore.md` (RULES/06 — nothing above it rewritten):
 
-- the reforging as a table: Rust **built** (YmirCode's core), Elixir and Ash **named, not built**;
-- YmirCode recorded as built, in its own repository, with the Tauri line corrected;
+- the reforging as a table: Rust for the core and an Elixir/OTP plane for hosted work, both **decided** (YmirCode ADR 0012), the core **in design**, the plane **not started**;
+- YmirCode recorded as it stands: specification and plans written, only a terminal UI prototype in code; the Tauri line corrected (ADR 0010: egui);
 - the Einherjar defined as Brokk and the eight; every other card is a keeper or a craft;
 - each page fault named with how to read past it;
 - what the saga still owes (Chapter Three does not name the seven gates).
 
 ## Proved
 
-Checked against the tree: `.agents/agents/` lists the cards named; YmirCode's `AGENTS.md` names a Rust core, a terminal
-app, a native egui desktop app and an Android app; `git grep -i elixir` finds no Elixir code in this tree.
+Checked against the sources: `.agents/agents/` lists the cards named; YmirCode's `README.md` gives its status as design with only a terminal UI prototype in code; its ADR 0012 decides the Rust core and the separate Elixir/OTP plane; ADR 0010 decides the egui desktop.

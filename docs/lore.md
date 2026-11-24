@@ -1599,16 +1599,18 @@ newer shape: two steels, each where it is strongest.
 
 | Steel | Where it goes | State on 2026-11-24 |
 |---|---|---|
-| **Rust** | the core that must be fast and small | **built** — YmirCode's core is Rust |
-| **Elixir**, with policies in **Ash** | the supervised fleet, the part that must never fall | **named, not built** — no Elixir or Ash code exists in this tree or in YmirCode yet |
+| **Rust** | the core: the agent loop, tools, providers, sessions, approvals — the same core in every face | **decided** (YmirCode ADR 0002, re-affirmed by ADR 0012 on 2026-11-23); the core is **in design**, specified and planned but not yet written |
+| **Elixir/OTP**, with Phoenix, Oban and PostgreSQL | a separate control plane for hosted work: tenants, fleets across machines, schedules, the console | **decided** (ADR 0012), in its own repository; **not started**. The saga's *"policies in Ash"* is the house's Elixir habit, not yet a decision of this plan |
 
-**YmirCode** is the first of the new steel, and it is built: the house's own coding agent and its whole harness. It has
-a Rust core, a terminal app, a native desktop app and an Android app. Every face reaches the core through one
-versioned protocol, never the core directly, so the core can change under the faces without breaking them. It lives
-in its own repository (`zerwiz/YmirCode`).
+**YmirCode** is the first of the new steel: the house's own coding agent and its whole harness, in its own repository
+(`zerwiz/YmirCode`). Its shape is one Rust core and three faces — a terminal app (Ratatui), a native desktop app (egui,
+no webview) and an Android app (Kotlin and Compose, the core through UniFFI). Every face, and every product built on
+it, reaches the core through one versioned protocol, so the core can change underneath without breaking anything on
+top. On 2026-11-24 its status is **design**: the specification, twelve decision records and twenty-two plans are
+written, and the only code is a terminal UI prototype. The first usable core is plan YC-019.
 
 > [!NOTE]
-> The saga says the desktop face is *"a Tauri app"*. The desktop app that is built is native (egui), not Tauri. The
+> The saga says the desktop face is *"a Tauri app"*. YmirCode's decision (ADR 0010) is a native egui app, not Tauri. The
 > book is read aloud from recordings, so its sentence stands until the next recording; this line is the correction.
 
 ### The fleet — one primary, eight specialists, and the rest are not specialists
