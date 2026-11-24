@@ -35,7 +35,7 @@ two-digit ticket number counted within that plan, and a short slug.
 
 ## Header
 
-`ticket`, `plan`, `title`, `status`, `assignee`, `priority`, `created`, `updated`, `pr_url`.
+`ticket`, `plan`, `title`, `status`, `assignee`, `priority`, `created`, `updated`, `pr_url`. A board may also read the optional `product`, `start`, `due`, `labels` and `links` (see `docs/headers.md`).
 
 Ticket status: `Open → In Progress → In Review → Done`, plus `Blocked` and `Cancelled`.
 

@@ -51,7 +51,30 @@ own documents are copied in as shipped.
 
 ## The References rule
 
-**Every document, plan and ticket ends with a `## References` section** naming what it was built from: the rules,
+**Every document, plan and ticket ends with a `## Fields for a board
+
+A project that mirrors its plans and documents to a work board reads a few more lines. `created` is the one every
+plan and document should carry; the rest are optional.
+
+| Field | Meaning |
+|---|---|
+| `created` | the date the file was first written. Set once, never changed |
+| `updated` | the date of the last change |
+| `product` | which product the file belongs to, when a repository holds more than one |
+| `id` | the file's own number under its product's prefix, for example `BETA-004` |
+| `legacy_id` | an earlier number the file was known by. The old number is kept here, never rewritten |
+| `owner` | the person accountable: one name. An optional `co_owners` line lists others |
+| `start`, `due` | optional dates for the board |
+| `labels` | optional, comma separated |
+| `parent` | on a ticket: the plan it belongs to |
+| `links` | optional: pull request, issue or document links |
+
+**One prefix per product.** When a repository holds more than one product, each product has its own prefix and its
+own counter, so two products never share a number. A product may name its prefix in a one-line `.prefix` file in its
+plans folder. When a product is renamed, its earlier plans keep their old numbers in `legacy_id`; nothing is
+renumbered, because other files link to them.
+
+## References` section** naming what it was built from: the rules,
 the other documents, the code paths and the decisions it rests on. The status script reports `no References` for
 a file without one (a `README.md` index is the one exception). A claim with nothing behind it is a claim the next
 reader cannot check.
@@ -65,3 +88,4 @@ reader cannot check.
 ## CHANGE LOG
 
 - **2026-11-11** — written by the errand that shipped it; CHANGE LOG section added when the branch was merged for one PR.
+- **2026-11-24** — added the board fields (`created`, `product`, `id`, `legacy_id`, `co_owners`, `start`, `due`, `labels`, `parent`, `links`) and the one-prefix-per-product rule.
