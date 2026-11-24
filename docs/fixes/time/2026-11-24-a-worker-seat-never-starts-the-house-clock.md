@@ -16,3 +16,7 @@ A herdr worker seat is created with `BROKK_MACHINE_STATE_DIR` and `BROKK_STATE_O
 ## Proof
 
 `bash .agents/tests/nornir-seat-guard.test.sh`. The test uses a fake root with a stub notify sink, so it cannot page anyone.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #935
