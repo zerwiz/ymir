@@ -6,3 +6,7 @@ class as the table in `bin/boards/cardlib.py`, which the scan already excused.
 
 `mocks-scan.sh` now excuses quoted `"todo"` lines in both files. Nothing else in them is excused, so a
 real `stub` or `placeholder` there is still caught.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #923
