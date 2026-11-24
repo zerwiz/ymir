@@ -2785,6 +2785,16 @@ const server = Bun.serve({
         }));
       }
       if (p === '/api/worktrees') return json(await worktrees());
+      if (p === '/api/projects') {
+        // plan 367: one resolver (bin/records/projects-status.sh); PRs are cached a minute per repo inside it.
+        // ?view=shared drops every project not marked public (RULES/04: a private project never shows in a shared view).
+        const flags = ['--json'];
+        if (url.searchParams.get('view') === 'shared') flags.push('--public-view');
+        if (url.searchParams.get('refresh') === '1') flags.push('--refresh');
+        if (url.searchParams.get('fleet') === '1') flags.push('--fleet');
+        const raw = await runAsync(['bash', join(ROOT, 'bin/records/projects-status.sh'), ...flags], 60_000, 50);
+        try { return json(JSON.parse(raw)); } catch { return json({ count: 0, projects: [], error: 'the resolver gave no status' }); }
+      }
       if (p === '/api/me') return json({ login: loginOf(req) ?? 'operator', realm: 'work' });
       if (p === '/api/workspace') {
         const realm = url.searchParams.get('realm') ?? 'work';

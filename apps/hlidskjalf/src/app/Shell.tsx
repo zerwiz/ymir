@@ -32,7 +32,7 @@ const Profile = lazyGate(() => import('../gates/Profile'), 'Profile');
 const Runtime = lazyGate(() => import('../gates/Runtime'), 'Runtime');
 const Cron = lazyGate(() => import('../gates/Cron'), 'Cron');
 const Sessions = lazyGate(() => import('../gates/Sessions'), 'Sessions');
-const Worktrees = lazyGate(() => import('../gates/Worktrees'), 'Worktrees');
+const Worktrees = lazyGate(() => import('../gates/Projects'), 'Projects');
 const Trace = lazyGate(() => import('../gates/Trace'), 'Trace');
 const Decisions = lazyGate(() => import('../gates/Decisions'), 'Decisions');
 const Stats = lazyGate(() => import('../gates/Stats'), 'Stats');

@@ -177,6 +177,11 @@ def main(argv=None) -> int:
     ap.add_argument("--register", choices=["plain", "house"])
     ap.add_argument("--languages", default=None, help="project:client,client — e.g. en:sv")
     ap.add_argument("--skip", action="append", default=[], help="a glob of kit files not to install (also project.yaml install.skip)")
+    ap.add_argument("--report", action="store_true",
+                    help="let this repository report its state to the house that seated the kit (plan 367); written into "
+                         ".collab-kit.json as report{} and kept by every later --apply. Without it the repository reports nothing")
+    ap.add_argument("--house", default=os.environ.get("YMIR_HOUSE", "house"),
+                    help="the house --report names; a collaborator's repository reports to this one house only")
     a = ap.parse_args(argv)
     repo = Path(a.repo).resolve()
     if not (repo / ".git").exists():
@@ -300,6 +305,15 @@ def main(argv=None) -> int:
                 "upgraded_this_run": len(rows["older"]) + len(rows["renamed"]), "local": rows["local"],
                 "skipped": rows["skipped"],
                 "blobs": {rel: blob((repo / rel).read_bytes()) for rel in kit_files() if (repo / rel).is_file()}}
+    prior = {}
+    try:
+        prior = json.loads((repo / ".collab-kit.json").read_text()).get("report") or {}
+    except (OSError, ValueError):
+        pass
+    if a.report:
+        manifest["report"] = {"to": [a.house], "project": repo.name}
+    elif prior:
+        manifest["report"] = prior          # a report once seated stays seated until the owner removes it
     (repo / ".collab-kit.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     print(f"  applied: {len(rows['missing'])} installed, {len(rows['older'])} upgraded, {len(rows['renamed'])} renamed, "
           f"{len(rows['local'])} local kept")
