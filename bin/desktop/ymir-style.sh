@@ -179,7 +179,7 @@ style_next() {  # one command per line, as "verb — what it does"
 #     exactly one plain line per step, no \r, no escape bytes
 #   · the command runs in a subshell: a shell function works, its variables do not persist
 #   · decoration goes to stderr; with --data the command's stdout is replayed on stdout
-#     after the ending line, so a script's data contract survives being wrapped
+#     after the ending line (pass or fail), so a script's data contract survives being wrapped
 #
 # Env: YMIR_LOG_DIR (default ${YMIR_STATE_DIR:-$XDG_STATE_HOME or ~/.local/state/ymir}/log),
 #      YMIR_STEP_KEEP=1 keeps the log of a step that passed too, YMIR_STEP_TAIL (default 15).
@@ -274,7 +274,7 @@ style_step() {  # [--data] <what> -- <command…>
   fi
   _style_end "$rc" "$label" $((SECONDS-t0)) "$log"
   if [ -n "$out" ]; then
-    [ "$rc" -eq 0 ] && cat "$out"
+    cat "$out"     # on a failure too: a caller may parse the rows a failed run still printed
     rm -f "$out"
   fi
   return "$rc"
