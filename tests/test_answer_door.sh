@@ -39,6 +39,20 @@ case "$hook" in *'"decision": "block"'*) ok "the stop hook blocks an errand that
 hook="$(printf '{"stop_hook_active": true}' | YMIR_ERRAND_ID=job3 YMIR_ROOT="$ROOT" bash "$ROOT/.claude/hooks/errand-stop.sh")"
 [ -z "$hook" ] && ok "the stop hook lets go on the second try" || bad "hook trapped the session"
 
+
+# the hermes: road — a waiter the sender starts at dispatch exits with the answer when the handoff lands (end to end)
+unset YMIR_ANSWER_SEND_CMD
+bash "$RT" record job5 hermes:abc
+( YMIR_WAIT_POLL=1 bash "$AN" wait job5 >"$S/waiter.out" 2>&1 & echo $! >"$S/waiter.pid" ); sleep 2
+[ "$(bash "$AN" pending | grep -c 'job5')" = 0 ] && ok "no answer is claimed before the worker reports" || bad "pending early"
+bash "$RP" write job5 --state done --changed x --verified y --not-verified z --next n >/dev/null 2>&1
+[ "$(bash "$AN" job5)" = sent ] && ok "a live waiter takes the answer: sent" || bad "waiter did not take it"
+for _ in 1 2 3 4 5 6 7 8; do kill -0 "$(cat "$S/waiter.pid")" 2>/dev/null || break; sleep 1; done
+kill -0 "$(cat "$S/waiter.pid")" 2>/dev/null && bad "the waiter is still blocking" || ok "the waiter exited (the sender's wake)"
+grep -q "\[errand job5\]" "$S/waiter.out" && ok "the waiter printed the answer line" || bad "waiter output: $(cat "$S/waiter.out")"
+bash "$RT" record job6 hermes:abc; bash "$RP" write job6 --state done --changed x --verified y --not-verified z --next n >/dev/null 2>&1
+[ "$(bash "$AN" job6)" = queued ] && ok "with no waiter the hermes answer stays queued, never claimed handed" || bad "claimed handed with no waiter"
+
 # R4 — a worker silent past its lease is named
 touch -d '3 hours ago' "$S/job4.replyto"; printf 'hermes:abc\n' >"$S/job4.replyto"; touch -d '3 hours ago' "$S/job4.replyto"
 bash "$AN" silent | grep -q "silent: job4" && ok "a worker silent for 3 hours is named" || bad "silent"

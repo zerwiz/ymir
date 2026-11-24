@@ -187,6 +187,9 @@ cmd_new() {
     REPLY_TO="$(bash "$SCRIPT_DIR/reply-to.sh" resolve ${REPLY_TO:+--reply-to "$REPLY_TO"})" || exit 2
     bash "$SCRIPT_DIR/reply-to.sh" record "$id" "$REPLY_TO"
     export YMIR_REPLY_TO="$REPLY_TO"
+    # A Hermes session cannot be typed into from outside: its answer comes back by a WAITER the sender starts now,
+    # as a background task of its own harness, so that the waiter's exit is the wake. (answer.sh wait)
+    case "$REPLY_TO" in hermes:*) echo "return road: start this as a background task so the answer wakes you →  bash bin/agents/answer.sh wait $id" >&2 ;; esac
   fi
   case "$id" in */*|.*|*' '*) echo "error: invalid task-id '$id'" >&2; exit 2 ;; esac
 
