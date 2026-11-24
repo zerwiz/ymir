@@ -355,12 +355,12 @@ def build(a) -> dict:
         if clone:
             row["where"].append(seat_entry(p, clone, here, gmap))
         rows[pid] = row
-    if a.fleet and not a.local:
+    if a.fleet and not a.here_only:
         remote_seats(rows, projects, here)   # opt-in: other seats are asked only in fleet mode
     out = []
     by_id = {str(p.get("id")): p for p in projects}
     keep = [pid for pid, row in rows.items() if a.all or row["where"]]   # default: a clone on some seat
-    if not a.local:
+    if not a.here_only:
         from concurrent.futures import ThreadPoolExecutor
         with ThreadPoolExecutor(8) as ex:   # one gh call per repo, in parallel; each cached for a minute
             for pid, prs in zip(keep, ex.map(lambda i: prs_of(by_id[i], not a.no_net and bool(rows[i]["where"]), a.refresh), keep)):
@@ -400,7 +400,7 @@ def toon(doc: dict) -> str:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="projects-status.sh", description=__doc__.split("\n")[0])
     ap.add_argument("--json", action="store_true")
-    ap.add_argument("--local", action="store_true", help="this seat only; no ssh, no PR lookup")
+    ap.add_argument("--local", dest="here_only", action="store_true", help="this seat only; no ssh, no PR lookup")
     ap.add_argument("--fleet", action="store_true", help="also ask the other seats over the ring (default: this machine only)")
     ap.add_argument("--no-net", action="store_true", help="no GitHub call")
     ap.add_argument("--refresh", action="store_true", help="ignore the one-minute PR cache")
