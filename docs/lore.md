@@ -1584,6 +1584,71 @@ or re-read for nothing — measures each spend and ranks the savings by size, an
 is `.agents/agents/andhrimnir-tokens.md`; his skill is `andhrimnir-tokens`; the how-to is
 [`docs/features/token-audits.md`](features/token-audits.md).
 
+## XXXVII. The Saga and the Lore Agree — the reforging, the fleet, and the faults in this page (2026-11-24)
+
+At the Allfather's word, after both were read side by side: *"ok. fix it."* The Saga of Ymir
+([`docs/lorestory.md`](lorestory.md)) is the book the homepage reads aloud. This document is the naming law. Section
+XXXVI already carved the figures the book tells and this page had missed. Three things still disagreed, and this page
+carries some faults of its own. They are recorded here; nothing above is rewritten (RULES/06).
+
+### The reforging — what is built, and what is still only named
+
+Section VIII says the gates are re-forged in **Rut-steel**: Rust, NATS, gRPC and libgit2, after
+[`docs/ymir-rut.md`](ymir-rut.md). That stays as the record of the first plan. The saga's Chapter Thirteen tells the
+newer shape: two steels, each where it is strongest.
+
+| Steel | Where it goes | State on 2026-11-24 |
+|---|---|---|
+| **Rust** | the core that must be fast and small | **built** — YmirCode's core is Rust |
+| **Elixir**, with policies in **Ash** | the supervised fleet, the part that must never fall | **named, not built** — no Elixir or Ash code exists in this tree or in YmirCode yet |
+
+**YmirCode** is the first of the new steel, and it is built: the house's own coding agent and its whole harness. It has
+a Rust core, a terminal app, a native desktop app and an Android app. Every face reaches the core through one
+versioned protocol, never the core directly, so the core can change under the faces without breaking them. It lives
+in its own repository (`zerwiz/YmirCode`).
+
+> [!NOTE]
+> The saga says the desktop face is *"a Tauri app"*. The desktop app that is built is native (egui), not Tauri. The
+> book is read aloud from recordings, so its sentence stands until the next recording; this line is the correction.
+
+### The fleet — one primary, eight specialists, and the rest are not specialists
+
+Section XXIII's table lists eleven rows, and section XXX says *"eight specialists, one primary"*. The saga names nine:
+**Brokk** the counsellor, and the eight specialists **Sindri, Bragi, Huginn, Mimir, Kvasir, Forseti, Snotra and
+Galdr**. Both counts are right once the table is read carefully:
+
+- **Rödd** is an application (the voice window), not an agent. **Nanna** is the assistant who answers inside it.
+  Neither is one of the eight.
+- Cards added since then stand beside the eight; they do not join them. **Móðguðr** (the auditor), **Andhrímnir**
+  (tokens), **Víðarr** (the defender), **Skírnir** (the assistant) and **Hnoss** (design) each have a card in
+  `.agents/agents/`, and so do the house's keepers (Gróa, Sýn, Vör, Urðr, Frigg and others).
+
+The rule to hold: **the Einherjar are Brokk and the eight. Every other card is a keeper or a craft, named for its own
+job.**
+
+### Gimlé — already settled
+
+Section XXXV called Gimlé a product. Section XXXVI already recorded it as the built collaboration suite, which is what
+the saga tells. Nothing more is owed here.
+
+### Faults in this page, named so no reader is misled
+
+| Where | The fault | How to read it |
+|---|---|---|
+| After section XXX | The *Smíðja's Eye* text of section XII is pasted a second time, with its ports and commands | Read section XII; the copy says the same |
+| The second **XVII** | Two chapters carry the number XVII: *The Diagnostics and the Brief* and *The Renewal and the Healing* | Both are true; the second is the later one (Gróa and Eir) |
+| End of the Garmr section | A literal `\n` is printed on its own line | Ignore it; it is a stray character |
+| Section XXIX | The index says *"Total: 21 skills"* and lists 17 | Ask the shelf, not this page: `bash bin/agents/skill-find.sh --list` |
+| Sections V and XII | Gjallarhorn *"carrying Ymir to the world"* and the hall ports read as if the halls were public | Since 2026-11-14 the halls are loopback only and no tunnel may point at one (`AGENTS.md`, plan 275 item 30) |
+
+### What the saga still owes
+
+The saga's Chapter Three says *"at the gates of the tree stand the daemons that keep it"* but does not name them. The
+seven are in section III's table: Bifrost, Hlidskjalf, Svartalfaheim, Brokk, Utgard, Yggdrasil and Ratatoskr. The
+next recording of that chapter should name them.
+
+*Two books, one house: the saga tells it, the lore names it, and where they part, the lore says so plainly.*
+
 ## CHANGE LOG
 
 - **2026-11-14** — Kaia renamed to **Völundr, the master of the smiths**, at the Allfather's word; the document's
@@ -1592,3 +1657,4 @@ is `.agents/agents/andhrimnir-tokens.md`; his skill is `andhrimnir-tokens`; the 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - 2026-11-22 — XXXVI: the halls that came after — eleven figures carved, Gimlé and the decision models brought up to date.
 - 2026-11-22 — Móðguðr and Andhrímnir carved: the two built figures the lore had not yet named.
+- 2026-11-24 — XXXVII: the saga and the lore agree — the reforging (built vs named), the Einherjar count, and this page's own faults named.
