@@ -95,7 +95,8 @@
   "scripts": {
     "test": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
     "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
-    "prepack": "bin/desktop/app-build.sh",
+    "prepack": "bin/desktop/app-build.sh && bin/forge/npm/pack-links.sh stage",
+    "postpack": "bin/forge/npm/pack-links.sh restore",
     "postinstall": "bash bin/fleet/fleet-deploy.sh || true"
   },
   "dependencies": {

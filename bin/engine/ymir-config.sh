@@ -28,6 +28,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/../vault/hoard-lib.sh"
 hoard_settings_dir SETTINGS
 STORE="$SETTINGS/notices.conf"
+# The cloth (bin/desktop/ymir-style.sh): decoration to stderr for a human, data stays on stdout.
+_cloth_u="$-"; . "$SCRIPT_DIR/../desktop/ymir-style.sh"; style_init; case "$_cloth_u" in *u*) ;; *) set +u ;; esac
 KNOWN="version patience next hints"
 
 usage() { sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; }
@@ -69,6 +71,7 @@ case "${1-}" in
     else
       set_state "$key" "$value"
       printf 'notices[1]{key,state}:\n  "%s","%s"\n' "$key" "$value"
+      style_line ok "$key" "notice is now $value"
       [ "$value" = off ] && printf 'this notice will not be shown again — restore it with: ymir config notice %s on\n' "$key"
     fi
     ;;

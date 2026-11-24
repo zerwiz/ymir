@@ -57,7 +57,7 @@ bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",0,170
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",2,74
   "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",7,63
-  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",41,2031
+  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",41,2037
   "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","tool","wired","keep",0,89
   "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","tested","keep",9,94
   "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",4,332

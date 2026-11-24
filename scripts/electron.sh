@@ -47,6 +47,8 @@ fi
 VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# The cloth (bin/desktop/ymir-style.sh): decoration to stderr for a human, data stays on stdout.
+_cloth_u="$-"; . "$SCRIPT_DIR/../bin/desktop/ymir-style.sh"; style_init; case "$_cloth_u" in *u*) ;; *) set +u ;; esac
 # The state dir is the operator's home, not the tree (Rule 04): it is stood up
 # below, once hoard-lib has resolved it. Never mkdir "$ROOT/state" here — that is
 # the drift the plan's purity row names.
@@ -234,9 +236,10 @@ if ! electron_bin "$(app_dir hlidskjalf)" "$ROOT" hlidskjalf >/dev/null 2>&1 \
   if [ "$NO_INSTALL" = 1 ]; then
     printf 'error: electron not installed in %s\nhelp: (cd %s && npm install)\n' "$(app_dir hlidskjalf)" "$(electron_install_root "$APP")" >&2; exit 1
   fi
-  printf 'electron: installing dependencies (first run)…\n' >&2
+  style_title "electron" "the first run — the desktop shell needs its dependencies"
   _installd="$(electron_install_root "$APP")"
-  ( cd "$_installd" && npm install ) >/dev/null 2>&1 || { printf 'error: npm install failed — see %s\n' "$_installd" >&2; exit 1; }
+  style_step "installing the desktop shell's dependencies (npm install)" -- bash -c 'cd "$1" && npm install' _ "$_installd" \
+    || { printf 'error: npm install failed — see %s\n' "$_installd" >&2; exit 1; }
 fi
 
 # npm 11+ gates postinstall scripts (allowScripts), so Electron's binary is
@@ -274,8 +277,7 @@ if ! ensure_electron_binary; then
   mend_pkg="$(app_pkg hlidskjalf)"
   # tier 1 — the deps themselves may be ungated (npm's policy skips dev-deps):
   # the npm package's apps arrive without node_modules at all
-  ( cd "$(electron_install_root "$APP")" && npm install --include=dev >/dev/null 2>&1 ) || true
-  echo "the Electron runtime is missing or partial — mending it…" >&2
+  style_step "mending the Electron runtime (npm install --include=dev)" -- bash -c 'cd "$1" && npm install --include=dev' _ "$(electron_install_root "$APP")" || true
   # tier 2 — npm's own roads: approve, rebuild, then the package's downloader.
   # They run FIRST, because any of them can empty dist/ when the gated download
   # fails: a runtime placed before them does not survive.
@@ -413,5 +415,5 @@ if [ "$VIEW" = both ]; then
 else
   start_one "$VIEW"
   sleep 2
-  if is_running "$VIEW"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$VIEW" "$(pid_of "$VIEW")" "$(view_host "$VIEW")"; else printf 'error: electron failed to start; see %s\n' "$(log_file "$VIEW")" >&2; exit 1; fi
+  if is_running "$VIEW"; then style_line ok "$VIEW" "window is up — $(view_host "$VIEW")"; printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$VIEW" "$(pid_of "$VIEW")" "$(view_host "$VIEW")"; else printf 'error: electron failed to start; see %s\n' "$(log_file "$VIEW")" >&2; exit 1; fi
 fi

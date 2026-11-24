@@ -1,3 +1,7 @@
+# An example of the hound's unit, with the heartbeat watchdog. __YMIR_ROOT__ is the placeholder the
+# installer replaces; the unit that is actually installed is rendered from
+# tools/mill/systemd/garmr-hound.service by `bin/ward/garmr.sh install`. This example carries no
+# machine and no home — the repository is public (RULES/04).
 [Unit]
 Description=Garmr the hound — what executes, who touches the sensitive shelves, what listens and what leaves (read-only senses)
 After=network-online.target
@@ -6,7 +10,7 @@ After=network-online.target
 Type=notify
 User=root
 Group=root
-ExecStart=/usr/bin/python3 /home/heimdall/ymir-runtime/bin/ward/garmr/hound.py
+ExecStart=/usr/bin/python3 __YMIR_ROOT__/bin/ward/garmr/hound.py
 Restart=always
 RestartSec=10
 WatchdogSec=120

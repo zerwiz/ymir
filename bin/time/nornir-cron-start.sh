@@ -258,6 +258,11 @@ scheduler='
       _rc=$?
     fi
     if [ "$_rc" -eq 0 ]; then rm -f "$_out" "$_err"; return 0; fi
+    # A door this machine does not run (not its door) is a clean skip, never a failure (RULES/25; exit 78 = EX_CONFIG).
+    if [ "$_rc" -eq "${WARDEN_RC_NOT_HERE:-78}" ]; then
+      printf "%s cron SKIP not-here: %s\n" "$ts" "$cmd" >>"$log"
+      rm -f "$_out" "$_err"; return 0
+    fi
     if declare -f cron_row_tail >/dev/null 2>&1; then
       _tail="$(cron_row_tail "$_err" "$_out")"
     else
@@ -315,14 +320,27 @@ scheduler='
     fi
     if [ "${BROKK_NORNIR_PERSIST:-0}" != "1" ]; then
       lockf="$mach/brokk.lock"
-      owner=$(tr -d "[:space:]" <"$lockf" 2>/dev/null || true)
-      st=$(ps -o stat= -p "$owner" 2>/dev/null | tr -d " ")
-      if [ -z "$owner" ] || [ "$owner" = "1" ] || [ ! -d "/proc/$owner" ] \
-         || [ "${st#Z}" != "$st" ] || [ "${st#X}" != "$st" ]; then
-        printf "%s cron retired - no live session lock at %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$lockf" >>"$log"
+      # A lock missing for a moment (a runtime flip rewrites it) must not stop the clock: wait a
+      # grace period and re-check before retiring (2026-11-22: three retirements around flips).
+      _grace=${BROKK_CRON_LOCK_GRACE:-600}; _waited=0
+      while :; do
+        owner=$(tr -d "[:space:]" <"$lockf" 2>/dev/null || true)
+        st=$(ps -o stat= -p "$owner" 2>/dev/null | tr -d " ")
+        if [ -n "$owner" ] && [ "$owner" != "1" ] && [ -d "/proc/$owner" ] \
+           && [ "${st#Z}" = "$st" ] && [ "${st#X}" = "$st" ]; then _live=1; break; fi
+        [ "$_waited" -ge "$_grace" ] && { _live=0; break; }
+        sleep "${BROKK_CRON_LOCK_RECHECK:-15}"; _waited=$((_waited + ${BROKK_CRON_LOCK_RECHECK:-15}))
+      done
+      if [ "$_live" = 0 ]; then
+        printf "%s cron retired - no live session lock at %s (waited %ss)\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$lockf" "$_waited" >>"$log"
+        # A clock that stops is an alarm, not a quiet exit: the trouble panel and the board read this.
+        printf "%s no live session lock at %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$lockf" >"$state/.cron-retired" 2>/dev/null || true
+        [ -x "$root/bin/notify/send.sh" ] && bash "$root/bin/notify/send.sh" --source cron --severity HIGH \
+          --key "cron-retired:$today" --message "the Nornir clock retired: no live session lock" >/dev/null 2>&1 || true
         rm -f "$state/cron.pid" 2>/dev/null || true
         exit 0
       fi
+      rm -f "$state/.cron-retired" 2>/dev/null || true
     fi
     now=$(date +%H:%M)
     today=$(date +%Y-%m-%d)

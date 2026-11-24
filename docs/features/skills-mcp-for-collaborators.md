@@ -12,7 +12,7 @@ It is deliberately tiny. The whole catalogue is four tool descriptions (about 30
 
 - A Ymir home (`<home>`), because the door serves a **built copy** of the skills, not the live
   library. The built copy is `<home>/hodd/skills-share/published/`.
-- Python with the MCP SDK: `python3 -m pip install --user mcp`.
+- Python with the MCP SDK: `python3 -m pip install --user 'mcp<2'`.
 - For a collaborator: an MCP client (Claude, Codex, Pi, Cursor — anything that speaks MCP) and
   a grant at Gimlé. The skills door is one door in Gimlé's hall; there is no separate URL or
   second password to remember.

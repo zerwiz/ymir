@@ -34,6 +34,8 @@ ROOT="$(CDPATH='' cd "$SELF_DIR/../.." && pwd)"
 # shellcheck source=/dev/null
 [ -r "$ROOT/bin/fleet/ymir-platform.sh" ] && . "$ROOT/bin/fleet/ymir-platform.sh"
 release_config
+# The cloth (bin/desktop/ymir-style.sh): decoration to stderr for a human, data stays on stdout.
+_cloth_u="$-"; . "$ROOT/bin/desktop/ymir-style.sh"; style_init; case "$_cloth_u" in *u*) ;; *) set +u ;; esac
 
 usage() {
   cat <<'EOF'
@@ -175,9 +177,9 @@ say "  $resolved_count,$passes"
 deps_status="skipped"; deps_road=""; deps_reason=""
 if command -v npm >/dev/null 2>&1; then
   say "deps[1]{road}:"
-  if [ -f "$STAGE/package-lock.json" ] && ( cd "$STAGE" && npm ci --no-audit --no-fund --prefer-offline >/dev/null 2>&1 ); then
+  if [ -f "$STAGE/package-lock.json" ] && style_step "installing the release's dependencies (npm ci)" -- bash -c 'cd "$1" && npm ci --no-audit --no-fund --prefer-offline' _ "$STAGE"; then
     deps_status="installed"; deps_road="npm ci"
-  elif ( cd "$STAGE" && npm install --no-audit --no-fund --prefer-offline >/dev/null 2>&1 ); then
+  elif style_step "installing the release's dependencies (npm install)" -- bash -c 'cd "$1" && npm install --no-audit --no-fund --prefer-offline' _ "$STAGE"; then
     deps_status="installed"; deps_road="npm install"
   else
     deps_status="failed"; deps_reason="npm could not install the dependency closure inside the release"
@@ -218,7 +220,7 @@ build_asset() {  # <label> <dir> <command...>
   if [ "$deps_status" != "installed" ]; then
     assets_skipped="$assets_skipped $label(no dependencies)"; return 0
   fi
-  if ( cd "$STAGE/$dir" && "$@" >/dev/null 2>&1 ); then
+  if style_step "building $label" -- bash -c 'cd "$1" && shift && "$@"' _ "$STAGE/$dir" "$@"; then
     assets_built="$assets_built $label"
   else
     assets_skipped="$assets_skipped $label(build failed)"
