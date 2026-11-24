@@ -526,6 +526,7 @@ Every user-facing feature has a **plain-language how-to**: what it is, what you
 need, and the exact commands.
 
 - **[docs/features/](docs/features/)** — the index.
+- [The work road — an ask to a merged change](docs/features/the-work-road.md) — `ymir work`: mode, models per role, merge tiers.
 - [The guardian (Garmr) — watch your own machine](docs/features/the-guardian.md) — what executes,
   who touches the meeting and vault shelves, what listens and what leaves; a **ᛉ hound** chip in
   Hlidskjalf, and `bin/ward/garmr.sh pause|resume` when you want quiet

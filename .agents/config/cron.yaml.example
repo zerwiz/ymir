@@ -28,6 +28,10 @@
 # runes — and observes it into the well. 05:40, so the 07:00 briefing and the assistant share one text.
 # His own phrase "update skirnirs database" (and /update) runs the same door on demand.
 @dev 05:40 systems/skirnir/services/assistant-brief.sh refresh
+# The work road (plan 365): labelled issues enter the queue every ten minutes; nothing happens until `intake.repos` names a repo.
+@heart @every:10 bin/time/nornir-job-work-intake.sh
+# Queued answers are re-sent every minute until the sender's turn is free (plan 365 R2). Any role: the sender may be anywhere.
+@every:1 bin/agents/answer.sh retry
 @heart 07:00 bin/time/nornir-job-daily-briefing.sh
 # THE DAILY LINE (documentation design, 2026-11-01): what moved, what is blocked, what is owed, written
 # from the handoffs and the cards rather than from memory. The briefing above is the morning read; this is

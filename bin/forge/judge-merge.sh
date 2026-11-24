@@ -65,6 +65,19 @@ for a in "$@"; do case "$a" in --dry-run) DRY=1 ;; *) ARGS+=("$a") ;; esac; done
 
 say() { printf '%s\n' "$*"; }
 
+# The merge tier (plan 365, plan 338): an approval merges at once only for a tier whose switch is on. T0 (documents,
+# fix notes, lock files) is on; T1 (ordinary code) is off until the Allfather turns it on; T2 (rules, config, gates,
+# secrets, identity, releases, deletions) always waits for his seal. Prints the reason and returns 1 to hold.
+tier_holds() {  # <n> <repo> <review-id>
+  local say_t t
+  say_t="$(python3 "$ROOT/bin/forge/merge-tier.py" "$1" --repo "$2" 2>/dev/null)" || return 1
+  case "$say_t" in
+    *"$(printf '\twait')") t="${say_t%%$'\t'*}"
+      say "judge-merge: $3 — $t: $(printf '%s' "$say_t" | cut -f2) — the Allfather seals this one (ymir work: merge tiers)"; return 0 ;;
+  esac
+  return 1
+}
+
 # ── the verdict block, read from the report's tail ─────────────────────────────────────────────
 parse_verdict() {  # <report> → result<US>count<US>list<US>judged-head (US = \x1f)
   python3 - "$1" <<'PY'
@@ -211,6 +224,7 @@ carry_over() {  # <repo> <n> <approved> <rid> → 0 when the approval carried to
   printf '%s\n' "$out"
   [ "$rc" = 0 ] || return 1
   say "judge-merge: $rid — the approval of ${approved:0:12} carries to ${cur:0:12} (only base merges and change-log lines since)"
+  if tier_holds "$n" "$repo" "$rid"; then return 0; fi
   if [ "$DRY" = 1 ]; then say "  would run: $SEAL seal $n --repo $repo --head $cur --review $rid"; return 0; fi
   out="$("$SEAL" seal "$n" --repo "$repo" --head "$cur" --review "$rid" 2>&1)"; rc=$?
   printf '%s\n' "$out"
@@ -288,6 +302,7 @@ act() {  # <review-id>
         say "judge-merge: $rid — APPROVE names no judged-head (want ${head:0:12}); nothing merges on an approval that cannot say what it read"
         return 0
       fi
+      if tier_holds "$n" "$repo" "$rid"; then return 0; fi
       if [ "$DRY" = 1 ]; then say "judge-merge: $rid — APPROVE; would run: $SEAL seal $n --repo $repo --head $head --review $rid"; return 0; fi
       out="$("$SEAL" seal "$n" --repo "$repo" --head "$head" --review "$rid" 2>&1)"; rc=$?
       printf '%s\n' "$out"

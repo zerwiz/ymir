@@ -416,6 +416,23 @@ if [ -x "$CLAIM_SH" ] && [ "${YMIR_CLAIMS:-on}" != off ] && [ -n "$_slug" ] && [
   unset _co _crc
 fi
 
+# ── the judge from the work profile (plan 365) ───────────────────────────────
+# When the operator has chosen a profile (`ymir work models`), the judge is the profile's judge, resolved by the ONE
+# resolver, and it refuses the worker's own model family (the Rule of Two, plan 338). With no chosen profile the
+# home's agents.yaml row keeps naming the judge, as before. YMIR_REVIEW_MODEL stays the deliberate per-run override.
+_model_err2="$(mktemp)"
+if [ -z "${YMIR_REVIEW_MODEL:-}" ] && [ "${NO_TASK:-0}" = 0 ] && [ -n "${TASK_META:-}" ]; then
+  _wm="$(meta_value "$TASK_META" model)"
+  _jf="$(python3 "$SCRIPT_DIR/../fleet/work.py" resolve judge --explicit-only --flags ${_wm:+--avoid-model "$_wm"} 2>"$_model_err2")"; _jrc=$?
+  if [ "$_jrc" = 0 ] && [ -n "$_jf" ]; then
+    HARNESS="$(printf '%s' "$_jf" | sed -n 's/.*--harness \([^ ]*\).*/\1/p')"
+    MODEL="$(printf '%s' "$_jf" | sed -n 's/.*--model \([^ ]*\).*/\1/p')"
+  elif [ "$_jrc" != 4 ]; then
+    skip "the work profile's judge was refused — $(head -1 "$_model_err2" 2>/dev/null)"
+  fi
+  rm -f "$_model_err2"; unset _wm _jf _jrc
+fi
+
 # ── the spawn line (printed whole on --dry-run) ──────────────────────────────
 spawn=( "$SCRIPT_DIR/einherjar-spawn.sh" "$REVIEW_ID" "$PROJECT" --scout
         --backend "$BACKEND" --harness "$HARNESS" --model "$MODEL" --effort "$EFFORT" --role forseti )

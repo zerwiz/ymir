@@ -2191,3 +2191,7 @@ Proofs: `bin/notify/tests/test_alert_owner_road.py` (15 cases, a fake Telegram a
 ## 2026-11-21 — the Claude seat's permission profile is chosen by role
 
 The Claude seat's permission profile is chosen by ROLE (RULES/08). `einherjar-spawn.sh --role <figure>` (recorded as `role=` in the task record, kept on `--relaunch`, never exported or inherited) and an explicit `herdr-run.sh --role` (never the role guessed from the brief) choose it through `src/ymir_runtime/claude_seat.py profile_for`: the judge (`forseti`, seated by `eindri-review-spawn.sh --role forseti`) gets `.agents/harnesses/claude-judge.settings.json`, which allows the merge door (`bin/forge/judge-merge.sh`, `bin/agents/pr-seal.sh seal`) and still denies raw `gh pr merge`; every other role gets `claude-worker.settings.json`, which denies both. Fix note: `docs/fixes/seat/2026-11-21-the-judges-seat-opens-the-merge-door.md`.
+
+## 2026-11-24 — the spawner counts a herdr server only when herdr can be driven (plan 366)
+
+`bin/agents/einherjar-spawn.sh` finds herdr in `~/.local/bin` and `~/.cargo/bin` when a unit PATH lacks it, prefers tmux when a server runs but the binary is out of reach, and a dry run prints its plan with no backend. This ended the heart refusing to follow `main` (its proof of `opencode-launcher` failed on "herdr is not on PATH").
