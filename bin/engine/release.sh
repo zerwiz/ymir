@@ -177,8 +177,25 @@ build() {
   local ref="origin/main" from="$SRC_DEFAULT" sha url tmp log d prev
   while [ $# -gt 0 ]; do case "$1" in
     --ref) ref="$2"; shift 2 ;; --from) from="$2"; shift 2 ;; *) fail "unknown option $1" ;; esac; done
-  git -C "$from" fetch -q origin 2>/dev/null || true
-  sha="$(git -C "$from" rev-parse --verify -q "$ref^{commit}")" || fail "no commit $ref in $from"
+  # `--from` may be a URL (plan 366): the release engine keeps one bare mirror of it and updates that, so a build never
+  # reads a stale local branch. `--ref main` means the REMOTE main: origin/<ref> is tried before a local <ref>, because
+  # the runtime's own local main lags (it rebuilt e5ebd388 on 2026-11-24, a day behind).
+  local mirror=0 cache c
+  case "$from" in
+    *://*|git@*)
+      mkdir -p "$REL"; cache="$REL/.source-$(printf '%s' "$from" | cksum | cut -d' ' -f1).git"
+      if [ -d "$cache" ]; then git -C "$cache" remote update -q 2>/dev/null || say "warning	fetch of $from failed — building from the last mirror"
+      else git clone -q --mirror "$from" "$cache" || fail "cannot clone $from"; fi
+      from="$cache"; mirror=1 ;;
+    *) git -C "$from" fetch -q origin 2>/dev/null || say "warning	fetch failed — building from what $from already has" ;;
+  esac
+  sha=""
+  for c in "origin/${ref#origin/}" "$ref"; do
+    [ "$mirror" = 1 ] && c="${c#origin/}"
+    sha="$(git -C "$from" rev-parse --verify -q "$c^{commit}" 2>/dev/null)" && break
+  done
+  [ -n "$sha" ] || fail "no commit $ref in $from"
+  [ "${YMIR_RELEASE_RESOLVE_ONLY:-0}" = 1 ] && { say "resolved	${sha:0:12}"; return 0; }   # the test seam: which commit would be built
   sha="${sha:0:12}"; d="$REL/$sha"
   if [ -f "$d/.release-proved" ]; then say "release	$d	already built and proved"; return 0; fi
   tmp="$REL/.building-$sha-$$"; log="$LOGDIR/build-$sha.log"; rm -rf "$tmp"

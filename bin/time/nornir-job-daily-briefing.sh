@@ -193,6 +193,18 @@ if [ -x "$SCRIPT_DIR/nornir-cron-start.sh" ]; then
 else
   emit "- cron: scheduler not installed"
 fi
+# Every job judged on the seat that owns it (plan 366). THIS machine reads its own state first and fetches the other
+# seats' rows itself; the line names the seat of each trouble row, and nothing waits on the heart.
+if [ -x "$SCRIPT_DIR/nornir-status.sh" ]; then
+  _ns="$(BROKK_STATE_OVERRIDE="$STATE" timeout 40 bash "$SCRIPT_DIR/nornir-status.sh" 2>/dev/null)"
+  _needs="$(printf '%s\n' "$_ns" | sed -n 's/^needs: \([0-9]*\).*/\1/p')"
+  if [ "${_needs:-0}" = 0 ]; then emit "- nornir: every scheduled job is where it should be"
+  else
+    emit "- nornir: ${_needs} job(s) need you"
+    printf '%s\n' "$_ns" | awk -F'","' '/^  "(LATE|FAILED|DOWN|DARK)"/{gsub(/^  "/,"",$1); printf "  - %s on %s: %s — next: %s\n", $1, $2, $5, $6}' | sed 's/"$//' | head -6 | while IFS= read -r _l; do emit "$_l"; done
+  fi
+  unset _ns _needs _l
+fi
 if [ -r "$STATE/.lock" ]; then
   lock_owner=$(tr -d '[:space:]' <"$STATE/.lock")
   if [ -n "$lock_owner" ] && kill -0 "$lock_owner" 2>/dev/null; then
