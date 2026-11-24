@@ -42,7 +42,8 @@ export type DomainId =
   | 'askr'
   | 'mannheim';
 
-export type AgentStatus = 'nominal' | 'degraded' | 'down';
+/** `idle` is a roster figure with no pane: ready for an errand, not broken (plan 369 item 4). */
+export type AgentStatus = 'nominal' | 'idle' | 'degraded' | 'down';
 
 export type TaskState =
   | 'SUBMITTED'
