@@ -156,6 +156,9 @@ def cmd_show(_):
     rt = os.path.realpath(os.path.expanduser("~/ymir-runtime"))
     if os.path.exists(rt):
         print(f"runtime: {os.path.basename(rt)[:12]} — ymir release status says whether it follows main")
+    ans = subprocess.run(["bash", os.path.join(ROOT, "bin", "agents", "answer.sh"), "pending"], capture_output=True, text=True).stdout.strip()
+    if ans:
+        print("answers:\n" + "\n".join("  " + x for x in ans.splitlines()))
     q = queue()
     print(f"queue: open {q['open']} · review {q['review']} · duplicates {q['dupes']}")
     sv = os.path.join(home(), "state", "research-saving.jsonl")
@@ -230,6 +233,10 @@ def cmd_send(a):
     if not repo:
         repo = gh("repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner").stdout.strip()
     label = merged(load())[2]["intake"]["label"]
+    # R1: the sender's own address rides in the issue, so the answer finds its way back (the issue itself is the fallback)
+    me = subprocess.run(["bash", os.path.join(ROOT, "bin", "agents", "reply-to.sh"), "resolve"], capture_output=True, text=True).stdout.strip()
+    if me:
+        ask += f"\n\nReply-to: {me}"
     gh("label", "create", label, "--repo", repo, "--color", "C9974F", "--description", "work for the Ymir work road")
     r = gh("issue", "create", "--repo", repo, "--title", ask.splitlines()[0][:80], "--body", ask, "--label", label)
     print(r.stdout.strip() or r.stderr.strip())
@@ -291,7 +298,8 @@ def cmd_intake(a):
             gh("label", "create", "ymir:picked", "--repo", repo, "--color", "6B6250")
             gh("issue", "edit", str(n), "--repo", repo, "--add-label", "ymir:picked")
             m = subprocess.run(["bash", os.path.join(ROOT, "bin", "forge", "mjollnir.sh"), "run", "--project", repo.split("/")[-1],
-                                "--issue", str(n), *flags], capture_output=True, text=True)
+                                "--issue", str(n), *flags], capture_output=True, text=True,
+                               env=dict(os.environ, YMIR_REPLY_TO=f"issue:{repo}#{n}"))
             print(f"picked {key} → mjollnir rc={m.returncode} {(m.stdout or m.stderr).strip().splitlines()[-1:] }")
     return 0
 

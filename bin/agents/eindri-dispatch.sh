@@ -150,7 +150,7 @@ spawn_args() { # id repo scout-ish...
 }
 
 cmd_new() {
-  local id repo KIND=ship MODE= SCOUT=0 WAVE= TITLE= SCOPE= DONE= HARNESS= BACKEND= SEAT= NO_SEAT= FIGURE= SKILLS= DRY=0
+  local REPLY_TO= id repo KIND=ship MODE= SCOUT=0 WAVE= TITLE= SCOPE= DONE= HARNESS= BACKEND= SEAT= NO_SEAT= FIGURE= SKILLS= DRY=0
   local POS=()
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -167,6 +167,8 @@ cmd_new() {
       --seat) SEAT="${2-}"; shift ;;
       --seat=*) SEAT=${1#--seat=} ;;
       --no-seat) NO_SEAT=1 ;;
+      --reply-to) REPLY_TO="${2-}"; shift ;;
+      --reply-to=*) REPLY_TO=${1#--reply-to=} ;;
       --figure) FIGURE="${2-}"; shift ;;
       --figure=*) FIGURE=${1#--figure=} ;;
       --skills) SKILLS="${2-}"; shift ;;
@@ -180,6 +182,12 @@ cmd_new() {
   id="${POS[0]-}"
   repo="${POS[1]-}"
   [ -n "$id" ] || { echo "error: task-id required (new <id> [repo])" >&2; exit 2; }
+  # R1 (plan 365): no ask without a return address. A dry run may go without; a real errand may not.
+  if [ "$DRY" != 1 ] && [ -z "${YMIR_REPLY_TO_OPTIONAL:-}" ]; then
+    REPLY_TO="$(bash "$SCRIPT_DIR/reply-to.sh" resolve ${REPLY_TO:+--reply-to "$REPLY_TO"})" || exit 2
+    bash "$SCRIPT_DIR/reply-to.sh" record "$id" "$REPLY_TO"
+    export YMIR_REPLY_TO="$REPLY_TO"
+  fi
   case "$id" in */*|.*|*' '*) echo "error: invalid task-id '$id'" >&2; exit 2 ;; esac
 
   # THE HANDOFF MINIMUM (the law): refuse to dispatch a naked smith
@@ -293,6 +301,7 @@ cmd_new() {
     printf '%s\n' "- ask a question: write \`data/$id/questions/q-<n>.md\` — Brokk answers in \`answers/\`"
     printf '%s\n' "- steer arrives in \`data/$id/inbox/\` (acked by your arm)"
     printf '%s\n' "- completion marker: \`state/$id.done\` — your arm files the close hook"
+    [ -n "${REPLY_TO:-}" ] && printf '\n**Return address (plan 365 R1):** `%s` — you were sent by them. When you stop, write the handoff (`bin/agents/report.sh write %s …`) and answer with `bin/agents/answer.sh %s`; you cannot end without it.\n' "$REPLY_TO" "$id" "$id"
     printf '\n**Research (plan 365 H1):** ask before you read — research goes through `ymir_research` (Huginn: Firecrawl first, the answer kept). A kept answer is reused before any new fetch; do not read the web raw.\n'
     printf '\n**Expected close (the report contract):** write \`data/%s/result.md\`; the arm files the close hook, a rune is carved, and the Allfather tail + well lesson follow (law 7).\n' "$id"
     printf '\n**History (same wave):**\n\n'

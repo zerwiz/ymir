@@ -209,6 +209,7 @@ SEAT_ROLE=
 ISOLATION=auto
 FORCE=0
 DRY=0
+REPLY_TO=""
 POS=()
 want_value=
 for a in "$@"; do
@@ -225,6 +226,7 @@ for a in "$@"; do
       backend) BACKEND=$a; BACKEND_SET=1 ;;
       isolation) ISOLATION=$a ;;
       role) SEAT_ROLE=$a ;;
+      reply_to) REPLY_TO=$a ;;
       *) echo "error: internal parser state for --$want_value" >&2; exit 1 ;;
     esac
     want_value=
@@ -248,6 +250,8 @@ for a in "$@"; do
     --isolation) want_value=isolation ;;
     --isolation=*) ISOLATION=${a#--isolation=} ;;
     --role) want_value=role ;;
+    --reply-to) want_value=reply_to ;;
+    --reply-to=*) REPLY_TO=${a#--reply-to=} ;;
     --role=*) SEAT_ROLE=${a#--role=} ;;
     --force) FORCE=1 ;;
     --dry-run) DRY=1 ;;
@@ -291,6 +295,16 @@ if [ "$RELAUNCH" -eq 1 ]; then
 fi
 if [ "$SCOUT" -eq 1 ]; then
   KIND=scout
+fi
+
+# --- the return address (plan 365 R1): no real spawn without one --------------
+# A worker that does not know who to answer ends in silence. The address is --reply-to, else the caller's own identity
+# (bin/agents/reply-to.sh); a dry run, a relaunch (it already has one) and YMIR_REPLY_TO_OPTIONAL=1 (the loud override)
+# are the only ways past. It is kept with the errand, and the worker answers it with bin/agents/answer.sh.
+if [ "$DRY" -eq 0 ] && [ "$RELAUNCH" -eq 0 ] && [ -z "${YMIR_REPLY_TO_OPTIONAL:-}" ]; then
+  REPLY_TO="$(bash "$SCRIPT_DIR/reply-to.sh" resolve ${REPLY_TO:+--reply-to "$REPLY_TO"})" || exit 2
+  bash "$SCRIPT_DIR/reply-to.sh" record "$ID" "$REPLY_TO" || exit 2
+  export YMIR_REPLY_TO="$REPLY_TO" YMIR_ERRAND_ID="$ID"
 fi
 
 # --- explicit harness -------------------------------------------------------

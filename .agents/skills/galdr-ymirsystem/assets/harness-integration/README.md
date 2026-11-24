@@ -1742,3 +1742,7 @@ This section corrects the Hermes lines above. They said `bin/seat/hermes-seat.sh
 - **`harness-extensions-install.sh`** prints a `hermes` row in install and in `--check`.
 - **The session hook** (`bin/seat/hermes-session-hook.sh` → `session_hook.py`) injects the Sága digest on the first turn in any cwd. `YMIR_HERMES_DIGEST_SCOPE=house` restores the old scope.
 - **`ymir doctor hermes`** and **`ymir wait-worker`** are new verbs. The how-to is `docs/features/ymir-whole-in-hermes.md`, and the fix note is `docs/fixes/seat/2026-11-18-hermes-seated-from-the-pin-and-woken-by-its-workers.md`.
+
+## 2026-11-24 — the Stop hook that holds an errand until it has answered (plan 365 R3)
+
+`.claude/hooks/errand-stop.sh` is seated by `bin/seat/harness-extensions-install.sh` as a user-scope `Stop` hook. Inside an errand with a recorded return address it blocks the stop until `bin/agents/answer.sh guard <errand>` passes. The pi extension, the opencode plugin and Codex notify must call the same guard (not yet wired).
