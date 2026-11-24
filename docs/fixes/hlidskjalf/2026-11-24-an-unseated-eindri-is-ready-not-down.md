@@ -30,3 +30,7 @@ wore the word and the red of a fault.
 
 The Stream's "no live events yet" is a separate matter. The SPA's proxy logged a socket hang-up on
 `/api/stream` at 21:09, two minutes after the gate restarted, and the stream reconnects on its own.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #934
