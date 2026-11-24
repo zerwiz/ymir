@@ -15,7 +15,8 @@ otherwise from the plan files themselves — any `plans/<PREFIX>-NNN-*.md` — a
 repository with no plans yet.
 
 Plans (`plans/PREFIX-NNN-*.md`) carry YAML front matter: ticket_number, title, type, priority, status,
-validated_by, validated_on, updated. The plan lifecycle (RULES/19) is
+validated_by, validated_on, updated; `created`, `product` and `legacy_id` are read when present, and a plan with
+a header but no `created` is reported as a warning only. The plan lifecycle (RULES/19) is
 `Proposed -> In Review -> Validated -> In Progress -> Done`, plus `Rejected` and `Superseded`. `Backlog`, the
 status plans used before RULES/19, is still read but reported as a warning only. A plan is *validated* when its
 status is Validated, In Progress or Done, and then `validated_by` and `validated_on` must be filled in.
@@ -163,6 +164,8 @@ def scan_plans(tickets=None):
             problems.append("validated without validated_by/validated_on")
         if "## References" not in text:
             problems.append("no References")
+        if meta and not meta.get("created"):
+            warnings.append("no created date")  # board field: a warning, never a failure
         number = meta.get("ticket_number", "?")
         mine = [t for t in tickets if plan_key(t["plan"]) == number]
         rows.append({
@@ -174,6 +177,9 @@ def scan_plans(tickets=None):
             "validated_by": meta.get("validated_by", ""),
             "validated_on": meta.get("validated_on", ""),
             "tickets": len(mine),
+            "created": meta.get("created", ""),
+            "product": meta.get("product", ""),
+            "legacy_id": meta.get("legacy_id", ""),
             "updated": meta.get("updated", ""),
             "file": str(p.relative_to(ROOT)),
             "problems": problems,
