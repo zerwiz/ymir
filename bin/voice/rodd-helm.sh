@@ -91,8 +91,12 @@ PY
 # The instruction is normalised before it is hashed — a leading ISO stamp and the
 # queue's own tab-separated header are not part of what was asked — so the SAME request
 # re-met tomorrow is the same key, and a different request is a different one.
+# The drain also prefixes each WAKE with Sól's local stamp ("2026-11-24 21:36 CET — "), so that
+# stamp is stripped too (plan 369 item 2: with it left in, the key changed every minute and the
+# same refusal raised a fresh toast each time).
 instruction_of() {  # <wake line> → the words that were asked
   printf '%s' "$1" | awk -F'\t' '{print $NF}' \
+    | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}(:[0-9]{2})?( [A-Z+0-9-]+)? — //' \
     | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]+Z?[[:space:]]+//' | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//'
 }
 refusal_key() {  # <instruction> → rodd:refusal:<sha>
