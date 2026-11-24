@@ -29,7 +29,6 @@ except ImportError:  # pragma: no cover - the one production dependency
 
 ROOT = Path(__file__).resolve().parents[2]
 
-
 def _home() -> Path:
     """The private home, through the house's resolver — never a guess (Rule 07)."""
     try:
@@ -47,7 +46,6 @@ def _home() -> Path:
         return Path(env)
     raise RuntimeError("no YMIR_HOME — bin/vault/hodd.sh path answered nothing")
 
-
 def _run(argv: list[str], timeout: int = 120) -> str:
     try:
         out = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, cwd=str(ROOT))
@@ -61,9 +59,7 @@ def _run(argv: list[str], timeout: int = 120) -> str:
     except Exception as exc:  # never hang a harness
         return f"failed: {exc}"
 
-
 mcp = FastMCP("ymir")
-
 
 @mcp.tool()
 def ymir_where() -> str:
@@ -80,7 +76,6 @@ def ymir_where() -> str:
         "doors     " + str(ROOT / "bin"),
     ])
 
-
 @mcp.tool()
 def ymir_rule(topic: str) -> str:
     """The house law that governs a topic, read from RULES/ (e.g. 'delete', 'secrets',
@@ -96,7 +91,6 @@ def ymir_rule(topic: str) -> str:
             hits.append(f"{p.name}: {headline.lstrip('# ').strip()}")
     return "\n".join(hits[:12]) if hits else f"no rule names {topic!r} — read RULES/README.md"
 
-
 @mcp.tool()
 def ymir_structure(depth: int = 2) -> str:
     """The shape of the private home: every shelf and how many files it holds."""
@@ -107,7 +101,6 @@ def ymir_structure(depth: int = 2) -> str:
             n = sum(1 for _ in p.rglob("*") if _.is_file())
             rows.append(f"{p.name}/  ({n} files)")
     return "\n".join(rows) or "(no shelves)"
-
 
 @mcp.tool()
 def ymir_find(what: str, content: bool = True) -> str:
@@ -123,12 +116,10 @@ def ymir_find(what: str, content: bool = True) -> str:
             pass
     return "\n".join(dict.fromkeys(found)) or f"nothing named or saying {what!r}"
 
-
 @mcp.tool()
 def ymir_recall(query: str, k: int = 5) -> str:
     """Drink from the well before acting: Ymir's memory of what was learned."""
     return _run(["bash", str(ROOT / "bin" / "records" / "mimir.sh"), "recall", query, "--k", str(k)], 90)
-
 
 @mcp.tool()
 def ymir_todo_board(action: str = "list", title: str = "", lane: str = "", due: str = "", owner: str = "",
@@ -155,7 +146,6 @@ def ymir_todo_board(action: str = "list", title: str = "", lane: str = "", due: 
         return _run([door, action], 60)
     return f"todo: no action {action!r} (add · list · move · lanes · flush · status)"
 
-
 @mcp.tool()
 def ymir_remember(lesson: str, tags: str = "") -> str:
     """Water the well after: record what was learned, so the next hand starts ahead."""
@@ -163,7 +153,6 @@ def ymir_remember(lesson: str, tags: str = "") -> str:
     if tags:
         argv += ["--tags", tags]
     return _run(argv, 90)
-
 
 @mcp.tool()
 def ymir_daily(note: str = "") -> str:
@@ -177,31 +166,25 @@ def ymir_daily(note: str = "") -> str:
         return f"appended to {p}"
     return p.read_text() if p.exists() else f"no entries yet for {day}"
 
-
 @mcp.tool()
 def ymir_calendar(action: str = "what") -> str:
     """The calendar through Mánagandr: 'what' is coming, 'probe' asks if consent holds."""
     return _run(["bash", str(ROOT / "bin" / "time" / "snotra" / "calendar-ask.sh"), action], 90)
-
 
 @mcp.tool()
 def ymir_heal() -> str:
     """Eir, the healer: diagnose every surface of the house (a check, never a change)."""
     return _run(["bash", str(ROOT / "bin" / "agents" / "eir-doctor.sh"), "check"], 600)
 
-
 @mcp.tool()
 def ymir_gates() -> str:
     """Which gate covers which surface in this house (the ward list)."""
     return _run(["bash", str(ROOT / "bin" / "gates" / "guards.sh"), "--list"], 120)
 
-
-
 @mcp.tool()
 def ymir_update() -> str:
     """Gróa, the updater: is the checkout behind, and did the instruction surface move?"""
     return _run(["bash", str(ROOT / "bin" / "agents" / "groa-update.sh"), "--check"], 180)
-
 
 @mcp.tool()
 def ymir_secret_keys(filter: str = "") -> str:
@@ -212,14 +195,12 @@ def ymir_secret_keys(filter: str = "") -> str:
         return "\n".join(lines) or f"no secret names holding {filter!r}"
     return out
 
-
 @mcp.tool()
 def ymir_hermes_list() -> str:
     """Every Hermes session on this machine, with its state in the house's one vocabulary
     (ready · working · blocked: <why> · dead). Read from the runtime's own admissions, never
     from a title. Use it before sending to a session, so a paused one is not woken."""
     return _run(["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "list"], 120)
-
 
 @mcp.tool()
 def ymir_hermes_send(session: str, text: str) -> str:
@@ -230,7 +211,6 @@ def ymir_hermes_send(session: str, text: str) -> str:
                 "hermes:%s" % session, text], 900)
     return out or "the door refused the wake (is the session paused? read ymir_hermes_list)"
 
-
 @mcp.tool()
 def ymir_hermes_recover(session: str, yes: bool = False) -> str:
     """Show what a paused Hermes session was carrying when its gateway died, and discard the
@@ -240,7 +220,6 @@ def ymir_hermes_recover(session: str, yes: bool = False) -> str:
             "hermes:%s" % session] + (["--yes"] if yes else [])
     return _run(argv, 300)
 
-
 @mcp.tool()
 def ymir_context(json_output: bool = False) -> str:
     """What THIS agent's context actually holds: used, window, remaining, the compaction
@@ -249,13 +228,11 @@ def ymir_context(json_output: bool = False) -> str:
     out = _run(["bash", str(ROOT / "bin" / "seat" / "context.sh")] + (["--json"] if json_output else []), 60)
     return out
 
-
 @mcp.tool()
 def ymir_core_four() -> str:
     """The four dials that decide an agent's outcome, in one read: model, context window
     and compaction thresholds, the prompt surfaces in force, and the tool counts."""
     return _run(["bash", str(ROOT / "bin" / "seat" / "core-four.sh")], 60)
-
 
 @mcp.tool()
 def ymir_pending() -> str:
@@ -263,12 +240,10 @@ def ymir_pending() -> str:
     mail drafts, and the status lines that say 'needs the operator'."""
     return _run(["bash", str(ROOT / "bin" / "seat" / "pending.sh")], 60)
 
-
 @mcp.tool()
 def ymir_studio(action: str = "status") -> str:
     """The OpenDesign studio (the container on :7456) — status, start, or stop."""
     return _run(["bash", str(ROOT / "bin" / "pi" / "opendesign.sh"), action], 180)
-
 
 @mcp.tool()
 def ymir_errand(action: str, id: str, project: str = "", mode: str = "direct-PR",
@@ -295,13 +270,11 @@ def ymir_errand(action: str, id: str, project: str = "", mode: str = "direct-PR"
         return _run(["bash", str(ROOT / "bin" / "fleet" / "fleet-tell.sh"), "--steer", "--to", id, "--", message], 120)
     return "action must be start | read | steer | close"
 
-
 # --- the house task board: ONE writer, and it is a door in bin/ ---------------
 # Plan 228 §3 (F2): this face does not own the file; it CALLS `bin/records/todos.sh`,
 # the one writer of `<home>/state/todos.json`. Two boards is one board too many.
 def _tasks_door() -> Path:
     return ROOT / "bin" / "records" / "todos.sh"
-
 
 def _door_run(door: Path, *args: str) -> tuple[int, str]:
     """Run the door; return (exit code, text) so a failure is never reported as success."""
@@ -311,7 +284,6 @@ def _door_run(door: Path, *args: str) -> tuple[int, str]:
         return out.returncode, ((out.stdout or "").strip() or (out.stderr or "").strip())
     except Exception as exc:  # never hang a harness
         return 1, f"failed: {exc}"
-
 
 def _door_indexes(door: Path) -> list[int]:
     rc, listing = _door_run(door, "list", "--json")
@@ -324,41 +296,6 @@ def _door_indexes(door: Path) -> list[int]:
         return []
     rows = data if isinstance(data, list) else data.get("todos", [])
     return list(range(len(rows)))
-
-
-@mcp.tool()
-def todo(action: str = "list", content: str = "", index: int = -1) -> str:
-    """The house task board, shared by every harness: list · add · update · remove · clear."""
-    door = _tasks_door()
-    if not door.exists():
-        return f"the task door is missing: {door} (bin/records/todos.sh)"
-    if action == "list":
-        return _door_run(door, "list")[1] or "(no todos)"
-    if action == "add":
-        if not content:
-            return "add needs content"
-        return _door_run(door, "add", content)[1]
-    if action == "update":
-        if index < 0:
-            return "update needs an index (see `list`)"
-        want = (content or "done").strip().lower()
-        verb = "done" if want in ("done", "closed", "complete", "completed") else "reopen"
-        return _door_run(door, verb, str(index))[1]
-    if action == "remove":
-        if index < 0:
-            return "remove needs an index (see `list`)"
-        return _door_run(door, "remove", str(index))[1]
-    if action == "clear":
-        # From the highest index down, so a removal never shifts a row still to be removed.
-        idxs = _door_indexes(door)
-        if not idxs:
-            return "(no tasks to clear)"
-        failed = [str(i) for i in reversed(idxs) if _door_run(door, "remove", str(i))[0] != 0]
-        if failed:
-            return f"clear failed: could not remove #{', #'.join(failed)}"
-        return f"cleared {len(idxs)} task(s)"
-    return "action must be list | add | update | remove | clear"
-
 
 @mcp.tool()
 def ymir_plan(slug: str = "", title: str = "", action: str = "new", realm: str = "", project: str = "",
@@ -386,18 +323,15 @@ def ymir_plan(slug: str = "", title: str = "", action: str = "new", realm: str =
                 argv += [flag, val]
     return _run(argv, 60)
 
-
 @mcp.tool()
 def ymir_note(path: str, heading: str, body: str) -> str:
     """Append a DATED section to an existing home document (append-only; a correction cites the old entry)."""
     return _run(["bash", str(ROOT / "bin" / "records" / "note.sh"), path, heading, body], 60)
 
-
 @mcp.tool()
 def ymir_header(action: str = "check", path: str = "hodd") -> str:
     """The declared-truth header of home documents: check (list the ones missing one) or apply (add a minimal one)."""
     return _run(["bash", str(ROOT / "bin" / "records" / "header.sh"), action, path], 300)
-
 
 @mcp.tool()
 def ymir_push(message: str, paths: list[str]) -> str:
@@ -406,18 +340,15 @@ def ymir_push(message: str, paths: list[str]) -> str:
         return "push needs message and paths[]"
     return _run(["bash", str(ROOT / "bin" / "vault" / "push.sh"), message, *paths], 180)
 
-
 @mcp.tool()
 def ymir_seats() -> str:
     """Where the work actually is: every pane in herdr (or tmux), and a shell whose owner is gone named DEAD."""
     return _run(["bash", str(ROOT / "bin" / "seat" / "seats.sh"), "list"], 120)
 
-
 @mcp.tool()
 def ymir_hall(runes: int = 5) -> str:
     """The whole house in one read: the seat, the doors, the queue, the last runes carved."""
     return _run(["bash", str(ROOT / "bin" / "agents" / "hall.sh"), "--runes", str(runes)], 120)
-
 
 @mcp.tool()
 def ymir_arm(action: str = "status", harness: str = "") -> str:
@@ -425,7 +356,6 @@ def ymir_arm(action: str = "status", harness: str = "") -> str:
     if action == "hook":
         return _run(["bash", str(ROOT / "bin" / "pi" / "arm.sh"), "hook", harness or "claude"], 60)
     return _run(["bash", str(ROOT / "bin" / "pi" / "arm.sh"), "status"], 60)
-
 
 @mcp.tool()
 def gna_fleet_tell(to: str = "", line: str = "", verb: str = "tell", all: bool = False,
@@ -526,7 +456,6 @@ def ymir_place(path: str, why: str, source: str = "") -> str:
                        capture_output=True, text=True, timeout=120, env=env, cwd=str(ROOT))
     return (r.stdout or r.stderr).strip()
 
-
 @mcp.tool()
 def ymir_find_home(path: str, note: str = "", sample: str = "") -> str:
     """Where should this file go? The placement oracle: the destination shelf, the reason, and the
@@ -538,12 +467,10 @@ def ymir_find_home(path: str, note: str = "", sample: str = "") -> str:
         argv += ["--sample", sample]
     return _run(argv, 60)
 
-
 @mcp.tool()
 def ymir_layout(path: str) -> str:
     """The layout law itself: which shelf a home-relative path belongs to, and why (or the refusal)."""
     return _run(["python3", str(ROOT / "bin" / "records" / "layout.py"), "classify", path], 60)
-
 
 @mcp.tool()
 def ymir_import(sources: list[str], area: str = "", dry_run: bool = True) -> str:
@@ -555,51 +482,20 @@ def ymir_import(sources: list[str], area: str = "", dry_run: bool = True) -> str
         argv += ["--dry-run"]
     return _run(argv, 180)
 
-
 @mcp.tool()
 def ymir_index(shelf: str = "hodd") -> str:
     """What is uncalled, empty or stray in a shelf: empty dirs now, and the home's git strays by name."""
     return _run(["python3", str(ROOT / "bin" / "records" / "layout.py"), "index", shelf], 120)
-
 
 @mcp.tool()
 def ymir_dellingr(path: str = "hodd", eldri: int = 90, forn: int = 365) -> str:
     """Dellingr grades a document or shelf: nýr · eldri · forn · safn, from measurable signals only."""
     return _run(["bash", str(ROOT / "bin" / "records" / "grade.sh"), path, "--eldri", str(eldri), "--forn", str(forn)], 180)
 
-
 @mcp.tool()
 def ymir_close_dead(pane: str) -> str:
     """Close a shell whose owner is GONE. Refuses a pane that holds a live agent."""
     return _run(["bash", str(ROOT / "bin" / "seat" / "seats.sh"), "close", pane], 120)
-
-
-@mcp.tool()
-def subagent(agent: str = "", task: str = "") -> str:
-    """Dispatch one of Ymir's Eindri figures (kvasir · sindri · bragi · huginn · forseti · mimir …).
-    Omit both to list the roster. The behaviour is the errand door (einherjar-spawn.sh)."""
-    if not agent:
-        return _run(["bash", str(ROOT / "bin" / "agents" / "agent-run.sh"), "--list"], 60)
-    return f"dispatch {agent}: run `bin/agents/agent-run.sh {agent} \"{task}\"` (the launch word sets the tone of the errand)"
-
-
-@mcp.tool()
-def well_recall(query: str, k: int = 5) -> str:
-    """Drink from the well before acting — Völundr's memory of what was already learned."""
-    return ymir_recall(query, k)
-
-
-@mcp.tool()
-def well_observe(lesson: str, tags: str = "") -> str:
-    """Water the well after: record what was learned, so the next hand starts ahead."""
-    return ymir_remember(lesson, tags)
-
-
-@mcp.tool()
-def gna_watch_arm() -> str:
-    """Pi's own name for the arm: start the first required watcher cycle — or read why it cannot be armed."""
-    return ymir_arm("status")
-
 
 @mcp.tool()
 def ymir_telegram(action: str = "list", machine: str = "", text: str = "") -> str:
@@ -625,72 +521,6 @@ def ymir_telegram(action: str = "list", machine: str = "", text: str = "") -> st
 # `skuld_branch_report` IS ported below — its durable write is `skuld-branch-outcome.sh append`;
 # the branch's merge note into the Allfather-facing conversation stays the branch extension's.
 
-
-@mcp.tool()
-def brokk_branch_outcomes(recent: int = 20) -> str:
-    """Read the supervision branch's durable outcome store: what fleet events it handled, each verdict and summary."""
-    n = str(max(1, int(recent or 20)))
-    out = _run(["bash", str(ROOT / "bin" / "skuld" / "skuld-branch-outcome.sh"), "list", "--recent", n], 60)
-    return "(no branch outcomes recorded)" if out == "(no output)" else out
-
-
-@mcp.tool()
-def skuld_ticket(state: str = "", limit: int = 20) -> str:
-    """The tickets: what is queued, in flight, or closed — read from the DERIVED work queue (bin/gates/queue.sh)."""
-    q = _run(["bash", str(ROOT / "bin" / "gates" / "queue.sh"), "--check"], 120)
-    lines = [l for l in q.splitlines() if l.startswith("| ")]
-    head = next((l for l in lines if l.startswith("| # ")), None)
-    want = state.lower().strip()
-    body = [l for l in lines if l != head and (not want or want in l.lower())]
-    rows = []
-    for l in body[: max(1, int(limit or 20))]:
-        c = [x.strip() for x in l.split("|")]
-        if len(c) < 4:
-            continue
-        rows.append(f'  "{c[3] or c[2]}","{c[2][:78]}"')
-    return "\n".join([f"tickets[{len(rows)}]{{state,what}}:", *rows, "",
-                      "derived from register.md + questions.md — a queue that is authored rots."])
-
-
-@mcp.tool()
-def skuld_plan(topic: str = "", realm: str = "", project: str = "ymir") -> str:
-    """What is planned: the plan ledger in the home (one row per plan file, with its headline). Omit topic for the shelf."""
-    shelf = os.environ.get("YMIR_PLAN_DIR", "")
-    if not shelf:
-        # The ledger's realm is the OPERATOR's, so it is discovered inside his home — the
-        # repository never spells one (RULES/04). `realm` still narrows the search.
-        homes = [_home() / "svartalfaheim" / realm] if realm else sorted(
-            p for p in (_home() / "svartalfaheim").glob("*") if p.is_dir())
-        cands = [c for h in homes for c in (h / "projects" / project / "plans", h / "workspace" / project / "plans")]
-        found = [c for c in cands if c.is_dir()]
-        if not found:
-            return ("no plan ledger in this home — set YMIR_PLAN_DIR, or run bin/records/plan.sh "
-                    "from a home that holds one")
-        if len(found) > 1 and not realm:
-            return ("this home holds %d plan ledgers — name one with YMIR_PLAN_DIR or --realm:\n  %s"
-                    % (len(found), "\n  ".join(str(c) for c in found)))
-        shelf = str(found[0])
-    d = Path(shelf)
-    def _num(n: str) -> int:
-        h = n.split("-")[0]
-        return int(h) if h.isdigit() else 10**9
-    names = sorted((p.name for p in d.glob("*.md")), key=lambda n: (_num(n), n)) if d.is_dir() else []
-    t = topic.lower().strip()
-    hit = [n for n in names if not t or t in n.lower()]
-    if not hit:
-        return f'no plan matches{f" {topic!r}" if t else ""} in {shelf}\nthe shelf holds: {len(names)} files'
-    rows = [f"plans[{len(hit)}]{{file,headline}}:"]
-    for n in hit:
-        try:
-            lines = (d / n).read_text(errors="replace").splitlines()
-            head = (lines[2] if len(lines) > 2 else (lines[0] if lines else ""))[:88]
-        except OSError:
-            head = ""
-        rows.append(f'  "{n}","{head.replace(chr(34), chr(39))}"')
-    rows += ["", "state and what is owed: bin/gates/queue.sh --check · why it exists: ymir_rule <topic>"]
-    return "\n".join(rows)
-
-
 @mcp.tool()
 def skuld_branch_report(task: str, verdict: str, summary: str, wake: str = "", silent: bool = False) -> str:
     """Record one handled fleet event in the durable branch-outcome store (append-only).
@@ -710,95 +540,6 @@ def skuld_branch_report(task: str, verdict: str, summary: str, wake: str = "", s
         argv += ["--wake", wake.strip()]
     out = _run(argv, 60)
     return f"branch outcome recorded (seq {out})." if out.strip().isdigit() else out
-
-
-@mcp.tool()
-def constellation_list() -> str:
-    """The Ymir mesh: every peer in the agent-card registry, with its endpoint and skills (invalid cards are named)."""
-    return _run(["bash", str(ROOT / "bin" / "bridge" / "constellation.sh"), "list"], 60)
-
-
-@mcp.tool()
-def constellation_card(peer: str) -> str:
-    """One peer's agent card exactly as the registry holds it. Read-only."""
-    if not peer.strip():
-        return "constellation_card REFUSED — peer is required"
-    return _run(["bash", str(ROOT / "bin" / "bridge" / "constellation.sh"), "show", peer.strip()], 60)
-
-
-@mcp.tool()
-def constellation_ask(peer: str, skill: str) -> str:
-    """Check whether a peer declares a skill and what grant a call would need. No call is ever sent:
-    a call needs a grant (per pair, per skill) and a short-lived skill-scoped token."""
-    peer, skill = peer.strip(), skill.strip()
-    if not peer or not skill:
-        return "constellation_ask REFUSED — both peer and skill are required"
-    door = str(ROOT / "bin" / "bridge" / "constellation.sh")
-    card = _run(["bash", door, "show", peer], 60)
-    grants = _run(["bash", door, "grants", "--peer", peer], 60)
-    declared = skill in card
-    return "\n".join([
-        f'constellation_ask REFUSED — no call is sent to "{peer}" for skill "{skill}".',
-        f"the peer {'declares' if declared else 'does NOT declare'} that skill in its card.",
-        f"a call needs a grant: bin/bridge/constellation.sh grant {peer} {skill}, then a token from `mint`.",
-        "", "grants on record for this peer:", grants,
-    ])
-
-
-@mcp.tool()
-def logretta_stack() -> str:
-    """The council's roster: is the stack seated on this machine, and does it validate?"""
-    return _run(["bash", str(ROOT / "bin" / "pi" / "logretta-ensure.sh"), "status"], 60)
-
-
-def _excalidraw_root() -> Path:
-    return Path(os.environ.get("EXCALIDRAW_ROOT") or (Path.home() / "CodeP" / "excalidraw"))
-
-
-@mcp.tool()
-def excalidraw_diagram(action: str = "create", spec: dict | None = None, out: str = "",
-                       path: str = "", columns: int = 0) -> str:
-    """Write an .excalidraw scene from a spec ({nodes:[{id,label?,shape?}], edges?}) or describe one (action=describe, path)."""
-    root = _excalidraw_root()
-    script = root / "server" / "diagram" / "write.mjs"
-    if not script.exists():
-        return f"no diagram writer at {script} — set EXCALIDRAW_ROOT to the fork's checkout."
-    if action == "describe":
-        if not path:
-            return "action=describe needs a path."
-        return _run(["node", str(script), "--describe", path], 60)
-    if not spec or not isinstance(spec.get("nodes"), list):
-        return "action=create needs spec.nodes — an array of {id, label?, shape?}."
-    dest = out or str(root / "diagram.excalidraw")
-    argv = ["node", str(script), "--out", dest] + (["--columns", str(columns)] if columns else [])
-    try:
-        import json as _json
-        p = subprocess.run(argv, input=_json.dumps(spec), capture_output=True, text=True, timeout=60)
-        text = "\n".join(x for x in ((p.stdout or "").strip(), (p.stderr or "").strip()) if x) or "(no output)"
-        return text if p.returncode == 0 else f"{text}\n(exit {p.returncode})"
-    except Exception as exc:
-        return f"failed: {exc}"
-
-
-@mcp.tool()
-def excalidraw_app(action: str = "status") -> str:
-    """The Excalidraw desktop app over its local dev server: status (default), start, or stop."""
-    root = _excalidraw_root()
-    if action == "status":
-        import urllib.request
-        try:
-            with urllib.request.urlopen("http://127.0.0.1:7311/", timeout=1.2) as r:
-                return f"the app's dev server answers on :7311 ({r.status})."
-        except Exception as exc:
-            return f"the app is not up on :7311 ({exc})."
-    if action not in ("start", "stop"):
-        return "action must be status | start | stop"
-    script = root / "scripts" / f"{action}.sh"
-    if not script.exists():
-        return f"missing {script} — set EXCALIDRAW_ROOT to the fork's checkout."
-    subprocess.Popen([str(script)], cwd=str(root), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                     stderr=subprocess.DEVNULL, start_new_session=True)
-    return f"{action}.sh launched (detached). Check with action=status in a few seconds."
 
 
 # --- the figures, served (plan 358, 2026-11-22): prompts, resources, one kit tool, Huginn's road -------------------
