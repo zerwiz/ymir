@@ -14,9 +14,9 @@ a product renamed mid-flight kept sharing the other's counter.
 `start`, `due`, `labels`, `parent`, `links`) and states one prefix per product, with an earlier number kept in
 `legacy_id` when a product is renamed. The ticket README points to the same fields.
 
-## Not changed
+## Checker
 
-`scripts/status.py` still checks the same required fields. Reading `created` and the other new lines is a follow-up.
+`scripts/status.py` reads `created`, `product` and `legacy_id` when present and reports a plan that has a header but no `created` as a warning only. The required fields and the exit code are unchanged.
 
 ## References
 
