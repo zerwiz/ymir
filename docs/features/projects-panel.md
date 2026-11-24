@@ -39,3 +39,7 @@ Filters on the panel and the CLI: seat, realm, has PRs, red CI, stale. Pull requ
 - *Empty panel:* nothing is registered or cloned here yet. Run `ymir projects add <repo-url>`.
 - *No PRs shown:* run `gh auth status`; add `--refresh` to skip the one-minute cache.
 - *A seat shows "unreachable":* check its ssh entry; the rest of the answer is still correct.
+
+## CHANGE LOG
+
+- 2026-11-24 — added with plan 367 (the Worktrees tab becomes Projects).
