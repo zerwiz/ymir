@@ -34,3 +34,7 @@ nobody, while the worker believed they had landed.
 
 The fleet overlay in the home (`config/eindri-core.md`) still tells workers to report into the helm's
 pane. It is the operator's file, and it is corrected in the home in the same plan.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #937
