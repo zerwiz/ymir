@@ -20,3 +20,7 @@ not in each reader.
 `bin/desktop/app-build.sh` (the `prepack` build) still listed `odrerir`, `sessrumnir` and
 `smidja-factory/apps/visualizer`. Those apps moved to their own repos; only `apps/hlidskjalf` stays in
 this tree. The default list and its comments now say so.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #923
