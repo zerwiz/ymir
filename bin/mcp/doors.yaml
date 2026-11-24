@@ -10,5 +10,6 @@ doors:
   - {door: bin/records/plan.sh, tool: ymir_plan, built: 2026-11-22, what: a plan numbered after the ledger and the board}
   - {door: bin/records/note.sh, tool: ymir_note, built: 2026-11-22, what: an appended note and the card follows}
   - {door: bin/mcp/figures.py, tool: ymir_figure, built: 2026-11-22, what: a figure's kit for a task}
+  - {door: bin/records/library.sh, tool: ymir_research_find, built: 2026-11-24, what: kept research answers, read-only, shareable ones only}
   - {door: bin/records/library.sh, tool: ymir_research, built: 2026-11-22, what: Huginn's road kept in the library}
   - {door: bin/records/context-gauge.sh, tool: ymir_context_gauge, when: the context gauge exists (plan 358 Part 1), what: how much each agent loads at start}
