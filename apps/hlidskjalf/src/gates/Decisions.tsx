@@ -1,3 +1,4 @@
+import { AllDecisions } from '../components/AllSessions';
 import { useYmir } from '../state/store';
 import { MetricTile } from '../components/MetricTile';
 
@@ -62,6 +63,7 @@ export function Decisions() {
           )}
         </div>
       </section>
+      <AllDecisions />
     </>
   );
 }

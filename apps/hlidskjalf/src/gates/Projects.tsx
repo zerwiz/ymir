@@ -12,6 +12,7 @@ type PR = { number: number; title: string; branch: string; ci: string; review: s
 export type Project = {
   id: string; name: string; realm: string; visibility: string; remote: string; where: Where[]; prs: PR[];
   pr_count: number; ci: string; health: string[]; next: string[];
+  sessions?: { sessions: number; by_tool: Record<string, number>; by_seat: Record<string, number>; updates: { action: string; text: string; tool: string; session: string }[] } | null;
 };
 type Doc = { count: number; projects: Project[]; error?: string };
 
@@ -79,7 +80,7 @@ export function Projects() {
       )}
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
-          <thead><tr>{['project', 'where', 'worktrees', 'PRs', 'CI', 'kit', 'health'].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
+          <thead><tr>{['project', 'where', 'worktrees', 'PRs', 'CI', 'kit', 'sessions', 'health'].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
           <tbody>
             {rows.map((p) => {
               const kit = p.where.map((w) => w.kit).find(Boolean) ?? null;
@@ -93,10 +94,14 @@ export function Projects() {
                     <td style={td}>{p.pr_count}</td>
                     <td style={{ ...td, color: p.ci === 'red' ? 'crimson' : p.ci === 'green' ? 'seagreen' : undefined }}>{p.ci}</td>
                     <td style={td}>{kitLabel(kit)}</td>
+                    <td style={td}>{p.sessions ? `${p.sessions.sessions} · ${Object.entries(p.sessions.by_tool).map(([t, n]) => `${t} ${n}`).join(', ')}` : '—'}</td>
                     <td style={td}>{p.health.length ? p.health.join('; ') : 'ok'}{p.next.map((n) => <div key={n}><code>{n}</code></div>)}</td>
                   </tr>
                   {isOpen && (
-                    <tr key={p.id + ':open'}><td colSpan={7} style={{ ...td, background: 'rgba(127,127,127,0.08)' }}>
+                    <tr key={p.id + ':open'}><td colSpan={8} style={{ ...td, background: 'rgba(127,127,127,0.08)' }}>
+                      {(p.sessions?.updates ?? []).map((u) => (
+                        <div key={u.session + u.text}><b>next:</b> {u.action} — {u.text} <span style={{ opacity: 0.6 }}>({u.tool})</span></div>
+                      ))}
                       {p.prs.map((r) => (
                         <div key={r.number}>#{r.number} {r.title} — {r.ci} · {r.review}{r.draft ? ' · draft' : ''}</div>
                       ))}
