@@ -85,3 +85,7 @@ Every role asks before it reads: research goes through `ymir_research` (Huginn).
 - `ymir work models` says `no — …` for a role: that model cannot be served here; set another with `ymir work models set`.
 - A judge is refused as the same family as the worker: choose a judge from another family.
 - Nothing is picked up: `ymir work intake --dry-run` lists what it sees; check `intake.repos` and the `ymir:work` label.
+
+## CHANGE LOG
+
+- 2026-11-24 — opened with plan 365: the mode, the models per role, the merge tiers, the release door and kept research answers.
