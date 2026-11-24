@@ -11,3 +11,7 @@ keeps the `ymir_`-prefixed tools that are extensions rather than built-ins.
   house doors, not built-ins).
 
 At the operator's word.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #923
