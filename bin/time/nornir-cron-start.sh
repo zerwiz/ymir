@@ -385,7 +385,17 @@ scheduler='
                    stamp_key="$this_hour/slot$((_min / _n))"
                    [ $((_min % _n)) -eq 0 ] && fire=1 ;;
         @daily)    stamp_key="$today"; [ "$now" = "00:00" ] && fire=1 ;;
-        *)         stamp_key="$today $at"; [ "$at" = "$now" ] && fire=1 ;;   # the time is in the stamp: one script at 06:10 AND 18:10 fires twice (plan 365)
+        *)         stamp_key="$today $at"; [ "$at" = "$now" ] && fire=1   # the time is in the stamp: one script at 06:10 AND 18:10 fires twice (plan 365)
+                   # CATCH-UP (panels-mend): a scheduler that was down (retired for want of a session lock, or restarted
+                   # by a release flip) never saw its minute. A clock time already past today, for a job with no run
+                   # stamped today, fires ONCE now, inside BROKK_CRON_CATCHUP_HOURS (default 14). The stamp holds the date of today
+                   # date afterwards, so a later row of the same job cannot fire it again.
+                   if [ "$fire" = 0 ] && [ "$at" \< "$now" ]; then
+                     _cw=${BROKK_CRON_CATCHUP_HOURS:-14}
+                     _lag=$(( (10#${now%%:*} * 60 + 10#${now#*:}) - (10#${at%%:*} * 60 + 10#${at#*:}) ))
+                     _prev=$(cat "$stamp_dir/$(printf "%s" "$cmd" | tr -c "A-Za-z0-9._-" "_")" 2>/dev/null)
+                     if [ "$_lag" -le $((_cw * 60)) ] && [ "${_prev%% *}" != "$today" ]; then fire=1; fi
+                   fi ;;
       esac
       [ "$fire" = 1 ] || continue
       # A DAY gate (plan 305): a weekly row fires on its day only, and its stamp is the day, so a
