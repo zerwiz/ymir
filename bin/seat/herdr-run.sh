@@ -211,6 +211,7 @@ local_model_guard() {  # <model-string>
 seat_tab() {  # <name> <cwd> -> prints "<tab_id> <pane_id>"
   local name=$1 cwd=$2 ws out env_arg
   env_arg="$(seat_state_dir "$name")"
+  mkdir -p "$env_arg" 2>/dev/null || true   # the seat dir exists before the pane reads it (nornir seat guard)
   ws="$(home_workspace)"
   if [ -n "$ws" ]; then
     out="$(hdr tab create --workspace "$ws" --cwd "$cwd" --label "$name" \
