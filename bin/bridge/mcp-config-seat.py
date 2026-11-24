@@ -64,7 +64,7 @@ HOME = os.path.expanduser("~")
 STAMP = _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 CODEX_BEGIN = "# >>> ymir mcp (bin/bridge/mcp-config.sh seat) — generated, do not hand-edit >>>"
 CODEX_END = "# <<< ymir mcp <<<"
-RECORD_DOORS = ("well", "bolthorn", "skuld")
+RECORD_DOORS = ("well", "bolthorn", "skuld", "snotra")
 # Out of the set for EVERY harness, pi included (the Allfather, 2026-11-10): removed where found,
 # never seated. YMIR_MCP_RETIRED (comma-separated) replaces the list.
 RETIRED = tuple(n.strip() for n in os.environ.get("YMIR_MCP_RETIRED", "gmail,drive,docs").split(",") if n.strip())

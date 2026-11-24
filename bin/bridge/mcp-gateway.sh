@@ -79,6 +79,10 @@ GATEWAY_PORT="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
 WELL_PORT="${YMIR_MCP_WELL_PORT:-8317}"
 SKILLS_PORT="${YMIR_MCP_SKILLS_PORT:-8319}"
 TICKETS_PORT="${YMIR_MCP_TICKETS_PORT:-8320}"
+SNOTRA_PORT="${YMIR_MCP_SNOTRA_PORT:-8321}"
+# the heart's doors listen on loopback only (2026-11-12); a seat that is not the heart reaches
+# them through bin/bridge/heart-doors.sh, an ssh forward to <heart port> + this offset
+HEART_DOOR_OFFSET="${YMIR_HEART_DOOR_OFFSET:-10000}"
 NODE="${MCP_GATEWAY_NODE:-node}"
 
 # The engine: beside the door in the tree, or materialized into the seat's
@@ -93,9 +97,9 @@ server_path() {
 
 # ── the role-resolved upstream map ───────────────────────────────────────────
 resolve_upstreams() {
-  python3 - "$REGISTRY" "$HOST" "$WELL_PORT" "$SKILLS_PORT" "$TICKETS_PORT" <<'PY'
+  python3 - "$REGISTRY" "$HOST" "$WELL_PORT" "$SKILLS_PORT" "$TICKETS_PORT" "$SNOTRA_PORT" "$HEART_DOOR_OFFSET" <<'PY'
 import json, sys
-reg, me, wp, sp, tp = sys.argv[1:6]
+reg, me, wp, sp, tp, np_, off = sys.argv[1:8]
 try: doc = json.load(open(reg))
 except Exception: doc = {}
 hosts = doc.get("hosts") or {}
@@ -130,11 +134,22 @@ for a in heart_addrs:
         well.append(u)          # the heart's well door as a fallback for seats without one
 skills = [mk(a, sp) for a in heart_addrs]
 tickets = [mk(a, tp, "") for a in heart_addrs]     # skuld serves bare HTTP (:8320)
+snotra = [mk(a, np_) for a in heart_addrs]
+if not is_heart and heart:
+    # the ssh door first: the heart's doors face loopback, so the tailnet URLs only answer on a
+    # heart that widened its bind (fleet.env); bin/bridge/heart-doors.sh holds the forward
+    def door(port, suffix="/mcp"):
+        try: return mk("127.0.0.1", int(port) + int(off), suffix)
+        except ValueError: return None
+    for lst, port, suffix in ((skills, sp, "/mcp"), (tickets, tp, ""), (snotra, np_, "/mcp")):
+        u = door(port, suffix)
+        if u: lst.insert(0, u)
 
 print(json.dumps({
   "well":     {"urls": well, "local_first": True},
   "bolthorn": {"urls": skills, "local_first": False},
   "skuld":    {"urls": tickets, "local_first": False},
+  "snotra":   {"urls": snotra, "local_first": False},
 }))
 PY
 }
