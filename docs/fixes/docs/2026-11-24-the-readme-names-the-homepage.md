@@ -10,3 +10,7 @@ above the existing "created by" line. Nothing was removed.
 
 The npm package's `homepage` field changes at the next release. That is plan 369 item 14, together with the new
 keywords and description.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #939
