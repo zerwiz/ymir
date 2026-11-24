@@ -6,3 +6,7 @@ and the door then reported the SDK as missing.
 
 The hint now reads `pip install --user 'mcp<2'`, matching `bin/engine/prereq-ensure.sh`, and the two
 feature pages that repeated the old command say the same.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #923
