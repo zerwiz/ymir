@@ -17,3 +17,7 @@ The pieces existed (Mjölnir, dispatch, the judge, the merge door, the release e
 - Page: `docs/features/the-work-road.md`.
 
 Proof: `python3 tests/test_work_road.py` and `python3 tests/test_nornir_status.py`.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #924
