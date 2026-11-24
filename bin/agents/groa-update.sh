@@ -68,6 +68,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+style_title "groa" "$([ "$CHECK" = 1 ] && echo 'checking what an update would renew' || echo 'renewing Ymir and every home it keeps')"
 # Resolve remote/branch from the master registry when the resolver is present.
 if [ -x "$SCRIPT_DIR/project-git.sh" ] && "$SCRIPT_DIR/project-git.sh" list 2>/dev/null | grep -q 'ymir-platform'; then
   [ -n "$REMOTE" ] || REMOTE="$("$SCRIPT_DIR/project-git.sh" ymir-platform --field remote 2>/dev/null)"
@@ -96,6 +97,8 @@ fi
 . "$SCRIPT_DIR/groa-verdict-lib.sh"
 command -v sol_line >/dev/null 2>&1 || sol_line() { date '+%Y-%m-%d %H:%M %Z'; }
 GSTEP_STOPPED=""
+# The cloth (bin/desktop/ymir-style.sh): the step lines below wear it when a human is watching.
+_cloth_u="$-"; . "$SCRIPT_DIR/../desktop/ymir-style.sh"; style_init; case "$_cloth_u" in *u*) ;; *) set +u ;; esac
 exec 7>&2   # step lines go to the real stderr even when the step runs inside $( … 2>&1 )
 gstep() {
   local label=$1 limit=$2 var rc t0
@@ -104,11 +107,17 @@ gstep() {
   limit="${!var:-${YMIR_GROA_STEP_TIMEOUT:-$limit}}"
   t0=$SECONDS
   timeout -k 5 "$limit" "$@"; rc=$?
+  # A human at a terminal gets the cloth; a pipe, CI or a log keeps the stamped line the gate tests pin
+  # (bin/gates/tests/test_groa_steps.sh) — one sentence per step, no marks.
+  local plain=1; [ "$STYLE_ON" = 1 ] && plain=0
   case $rc in
-    0)       printf '%s — step %s: ok in %ss\n' "$(sol_line)" "$label" "$((SECONDS - t0))" >&7 ;;
-    124|137) printf '%s — step %s: STOPPED at its %ss limit (ran %ss) — the update goes on, and its verdict counts this as a failure\n' "$(sol_line)" "$label" "$limit" "$((SECONDS - t0))" >&7
+    0)       if [ "$plain" = 1 ]; then printf '%s — step %s: ok in %ss\n' "$(sol_line)" "$label" "$((SECONDS - t0))" >&7
+             else style_line ok "$label" "ok in $((SECONDS - t0))s" 2>&7; fi ;;
+    124|137) if [ "$plain" = 1 ]; then printf '%s — step %s: STOPPED at its %ss limit (ran %ss) — the update goes on, and its verdict counts this as a failure\n' "$(sol_line)" "$label" "$limit" "$((SECONDS - t0))" >&7
+             else style_line fail "$label" "STOPPED at its ${limit}s limit (ran $((SECONDS - t0))s) — the update goes on; the verdict counts it" 2>&7; fi
              GSTEP_STOPPED="$GSTEP_STOPPED $label" ;;
-    *)       printf '%s — step %s: failed (rc=%s) in %ss\n' "$(sol_line)" "$label" "$rc" "$((SECONDS - t0))" >&7 ;;
+    *)       if [ "$plain" = 1 ]; then printf '%s — step %s: failed (rc=%s) in %ss\n' "$(sol_line)" "$label" "$rc" "$((SECONDS - t0))" >&7
+             else style_line fail "$label" "failed (rc=$rc) in $((SECONDS - t0))s" 2>&7; fi ;;
   esac
   return $rc
 }
@@ -581,4 +590,6 @@ fi
 [ "${GATEWAY_FAILED:-0}" = 0 ] || exit 1
 # Exit 4: the tree and the seat moved, but installs are owed or a step stopped (plan 278). Distinct from
 # 1 (seating failed) so a caller can tell "not updated" from "updated, not whole".
+if [ "$verdict_rc" = 0 ]; then style_next "ymir raise — lift the hall on the renewed tree" "ymir eir — diagnose every surface"
+else style_next "ymir eir fix — mend what is still owed" "ymir groa --check — see what is behind"; fi
 exit "$verdict_rc"
