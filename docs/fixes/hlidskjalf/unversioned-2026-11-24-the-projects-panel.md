@@ -24,3 +24,7 @@ house that seated it only. The file stays `.collab-kit.json` (it already existed
 ### Not done
 
 Kit update is run on this machine only; a remote seat's kit is shown, not changed.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #925
