@@ -94,6 +94,31 @@ if [ ! -r "$CRON_CONFIG" ] && [ -r "$BROKK_HOME/config/cron.yaml.example" ]; the
   CRON_CONFIG="$BROKK_HOME/config/cron.yaml.example"
 fi
 PID_FILE="$STATE/cron.pid"
+# A WORKER SEAT MUST NEVER START, REPLACE OR STOP THE HOUSE CLOCK (2026-11-24). A herdr seat is created with
+# BROKK_MACHINE_STATE_DIR (and BROKK_STATE_OVERRIDE) set to ONE private dir, so a seat never takes the helm's
+# lock. Its Claude session hook still called this door: the scheduler it started bound to the seat's lock
+# dir, found no lock, retired, and the house clock missed a day of @dev jobs. A seat is a private machine dir
+# that is also its own state dir and is not the helm's; it is refused with one named line. A machine dir
+# that does not exist is refused the same way, never turned into a retirement.
+_mach="${BROKK_MACHINE_STATE_DIR:-}"
+if [ -n "$_mach" ] && [ "${BROKK_NORNIR_PERSIST:-0}" != "1" ]; then
+  _hp=""; _hh=""
+  . "$SCRIPT_DIR/../vault/hoard-lib.sh" 2>/dev/null || true
+  ymir_home_root _hh 2>/dev/null || _hh=""
+  [ -n "$_hh" ] && [ -f "$_hh/state/.lock-path" ] && _hp="$(dirname "$(cat "$_hh/state/.lock-path" 2>/dev/null)")"
+  _helm_dir="${_hp:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
+  case "${1-}" in --status|--last) ;; *)
+    if [ ! -d "$_mach" ]; then
+      printf 'cron[1]{state,why}:\n  "refused","BROKK_MACHINE_STATE_DIR %s does not exist; the clock is not started against a missing lock dir"\n' "$_mach" >&2
+      exit 0
+    fi
+    if [ "$_mach" != "$_helm_dir" ] && [ "$_mach" = "${BROKK_STATE_OVERRIDE:-}" ]; then
+      printf 'cron[1]{state,why}:\n  "refused","a worker seat does not start or stop the house clock — %s is a seat dir, the helm lock is in %s"\n' "$_mach" "$_helm_dir" >&2
+      exit 0
+    fi ;;
+  esac
+  unset _hp _hh
+fi
 LOG_FILE="$STATE/cron.log"
 STAMP_DIR="$STATE/.cron-fired"
 LOCK_DIR="$STATE/.cron-locks"
@@ -291,6 +316,7 @@ scheduler='
   TAB=$(printf "\t")
   mkdir -p "$stamp_dir" "$lock_dir"
   while :; do
+    today=$(date +%Y-%m-%d)
     # Retire when the session that started this scheduler is gone: a seat that
     # ends must not leave its cron loop behind (2026-09-23 -- eight orphan loops
     # from ended seats). The scheduler lives only while the state lock is held by
@@ -336,7 +362,7 @@ scheduler='
       if [ "$_live" = 0 ]; then
         printf "%s cron retired - no live session lock at %s (waited %ss)\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$lockf" "$_waited" >>"$log"
         # A clock that stops is an alarm, not a quiet exit: the trouble panel and the board read this.
-        printf "%s no live session lock at %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$lockf" >"$state/.cron-retired" 2>/dev/null || true
+        mkdir -p "$state" 2>/dev/null; printf "%s no live session lock at %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$lockf" >"$state/.cron-retired" 2>/dev/null || true
         [ -x "$root/bin/notify/send.sh" ] && bash "$root/bin/notify/send.sh" --source cron --severity HIGH \
           --key "cron-retired:$today" --message "the Nornir clock retired: no live session lock" >/dev/null 2>&1 || true
         rm -f "$state/cron.pid" 2>/dev/null || true
