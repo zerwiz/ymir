@@ -8,8 +8,11 @@
 #
 #   bin/desktop/app-build.sh [surface …]      default: every app that carries a build script
 #
-# Skips an app that has no package.json (smidja's engine is Python; the smithy
-# arrives as @zerwiz/smidja-factory) and an app with no build script, naming it.
+# Only apps that still live in this tree are built here. The others left for their own
+# repos (zerwiz/odrerir, sessrumnir, smidja, bilskirnir, rodd, hvergelmir) and are built
+# and installed by bin/apps/apps.sh; only apps/hlidskjalf stays.
+#
+# Skips an app that has no package.json and an app with no build script, naming it.
 set -uo pipefail
 
 _root() {
@@ -22,12 +25,10 @@ _root() {
 }
 ROOT="$(_root)"
 want=("$@")
-# Every surface that SERVES a built bundle must be here. The Smíðja visualizer is
-# NESTED (apps/smidja-factory/apps/visualizer) and was missing from this list, so
-# its dist/ was never built before packing and the npm package shipped without
-# the interface — the API answered, the app view showed nothing (2026-09-23).
-# A path may be nested; it is joined onto apps/ below.
-[ ${#want[@]} -eq 0 ] && want=(hlidskjalf odrerir sessrumnir smidja-factory/apps/visualizer)
+# Every surface that SERVES a built bundle and still lives in this tree must be here, or
+# its dist/ is never built before packing and the npm package ships without the interface
+# (the 2026-09-23 fault). A path may be nested; it is joined onto apps/ below.
+[ ${#want[@]} -eq 0 ] && want=(hlidskjalf)
 
 built=0 skipped=0 failed=0
 for s in "${want[@]}"; do
@@ -40,7 +41,7 @@ for s in "${want[@]}"; do
   fi
   printf 'app-build[1]{%s}:\n  "building…"\n' "$s"
   # The build's own output is KEPT. It used to go to /dev/null while the failure
-  # line said "see its output above" — above nothing. When CI reported "sessrumnir
+  # line said "see its output above" — above nothing. When CI reported "an app
   # web surface not built", the log that would have said WHY was thrown away one
   # step earlier (2026-09-30). A build that fails silently is how a tarball ships
   # with no surfaces at all.

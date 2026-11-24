@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[189]{file,does,kind,verdict,disposition,callers,lines}:
+bin[190]{file,does,kind,verdict,disposition,callers,lines}:
   "SKILL.md","---","data","tested","keep",26,23
   "SKILL.md","---","data","tested","keep",26,23
   "SKILL.md","---","data","tested","keep",26,22
@@ -31,12 +31,13 @@ bin[189]{file,does,kind,verdict,disposition,callers,lines}:
   "areas-guard.sh","areas-guard (tree ward) — the canon and the copy that travels must not drift.","tool","wired","keep",7,118
   "blocking-door-guard.sh","cache: tree — the verdict is a pure function of the tracked tree.","tool","wired","keep",1,69
   "board-engine-guard.sh","board-engine-guard.sh — a NEW file in Ymir may not carry one board engine's code (plan 335, the split).","tool","wired","keep",2,123
-  "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,82
+  "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,100
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",3,149
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",12,329
   "cdp.mjs","// cdp.mjs — the DevTools driver behind bin/gates/soak.sh (plan 286 P1, P2, P5).","data","wired","keep",2,940
   "check-row.md","One measured row","data","wired","keep",2,14
   "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",16,122
+  "claim-guard.sh","claim-guard.sh — the push ward that reads the claims ledger (plan 343.14).","tool","wired","keep",0,54
   "claude-pretool.sh","claude-pretool.sh — Claude Code's PreToolUse seam onto the house's pre-tool checks (plan 239 P2).","tool","wired","keep",0,27
   "claude-stop-arm.sh","claude-stop-arm.sh — Claude Code's Stop-hook arm: ONE client per session, only for the helm,","tool","wired","keep",2,62
   "confidential-guard.sh","confidential-guard.sh — while a confidential session is live, nothing outside the","tool","wired","keep",2,63
@@ -87,7 +88,7 @@ bin[189]{file,does,kind,verdict,disposition,callers,lines}:
   "nda-guard.py","'''nda-guard — company, client and NDA-project names never reach Ymir's public repository.","tool","wired","keep",3,178
   "nda-guard.sh","nda-guard.sh — company, client and NDA-project names never reach the public repo (RULES/04, 2026-11-12).","tool","wired","keep",2,37
   "ndalib.py","'''ndalib — the NDA matcher: company, client and NDA-project names never enter the public tree.","tool","wired","keep",3,208
-  "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",2,304
+  "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",4,304
   "packaging-guard.sh","cache: tree — this ward's verdict is a pure function of the tracked tree (no $YMIR_HOME read,","tool","wired","keep",2,123
   "path-ledger-guard.sh","path-ledger-guard.sh — Rule 25: a path that MOVED may not be referenced again.","tool","tested","keep",1,126
   "path-legality-guard.sh","path-legality-guard.sh — a tracked path must be a name EVERY host can hold.","tool","wired","keep",1,126
@@ -212,6 +213,6 @@ bin[189]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=170, tested=19
+**Tally.** verdict: wired=171, tested=19
 
-**Tally.** disposition: keep=186, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/tests/test_hermes_seat.py=1
+**Tally.** disposition: keep=187, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/tests/test_hermes_seat.py=1

@@ -247,3 +247,9 @@ bin/data/
 
 # git's merge-driver temp inputs, left behind when a merge driver is interrupted (2026-11-12)
 .merge_file_*
+
+# pack-links.sh staging manifest (exists only while npm pack runs)
+/.pack-links.manifest
+
+# a worktree seats node_modules as a symlink, which the directory pattern above does not match
+/node_modules

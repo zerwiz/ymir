@@ -74,6 +74,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from board_adapter_mcp import BoardRefusal, McpBoard, resolve_token  # noqa: E402
+from board_adapters import AdapterRefusal, make_board  # noqa: E402
 
 LABEL = "plan"
 TITLE_RE = re.compile(r"^(\d+) · (.*)$")
@@ -509,7 +510,29 @@ def plan_body(p):
     return text, cut
 
 
+_NODE = (re.compile(r'(\b\w+)\[\((?!")(.*?)\)\]'), '[(', ')]'), (re.compile(r'(\b\w+)\[(?![("])(.*?)\]'), '[', ']'), \
+        (re.compile(r'(\b\w+)\{(?!")(.*?)\}'), '{', '}')
+_ODD = re.compile(r'<br\s*/?>|[();:#]')
+
+
+def fix_mermaid(md):
+    """A label with a line break, a bracket or a colon is refused by the board's renderer unless it is QUOTED (plan 355,
+    diagram 1 did not draw). Inside every ```mermaid block such a node label is rewritten as `ID["…<br/>…"]` — the
+    form every renderer accepts — and a stray double quote becomes `#quot;`. A label that is already quoted stays."""
+    def block(m):
+        out = []
+        for ln in m.group(2).split("\n"):
+            for rx, o, c in _NODE:
+                ln = rx.sub(lambda g: g.group(0) if not _ODD.search(g.group(2)) else
+                            f'{g.group(1)}{o}"{re.sub(chr(60) + "br */?>", "<br/>", g.group(2)).replace(chr(34), "#quot;")}"{c}',
+                            ln)
+            out.append(ln)
+        return m.group(1) + "\n".join(out) + m.group(3)
+    return re.sub(r"(```mermaid\n)(.*?)(\n```)", block, md, flags=re.S)
+
+
 def card_markdown(p, text, cut):
+    text = fix_mermaid(text)
     head = f"{LOCK} · `{p['rel']}` in the {p.get('where', 'home')}."
     tail = "\n\n*(The plan is longer than a card holds; the rest is in the file.)*" if cut else ""
     return f"{head}\n\n---\n\n{text.rstrip()}{tail}\n"
@@ -538,8 +561,13 @@ def build_board(home, row):
     board = row.get("board") or {}
     if not board:
         raise Refusal(f"project '{row.get('id')}' has no board: block in the registry")
+    if board.get("adapter") in ("file", "github", "trello"):
+        try:
+            return make_board(board, row.get("path") or row.get("repo_path") or "", home)
+        except AdapterRefusal as e:
+            raise Refusal(str(e))
     if board.get("adapter") != "mcp":
-        raise Refusal(f"board.adapter '{board.get('adapter')}' has no adapter yet — only 'mcp' exists")
+        raise Refusal(f"board.adapter '{board.get('adapter')}' is not one of mcp, file, github, trello")
     place, mcpc = board.get("place"), board.get("mcp") or {}
     if not place or not mcpc.get("url") or not mcpc.get("token_from"):
         raise Refusal("board.place, board.mcp.url and board.mcp.token_from are all required")
@@ -668,7 +696,8 @@ class Sync:
             out = self.board.create_card(title, desc, p["group"], self.labels + self.topic_labels(p), fmt="markdown",
                                          source=source,
                                          assignees=plan_assignees(self.home, self.row),
-                                         start=opened_date(p["abs"]), priority=self.priority_of(p))
+                                         start=opened_date(p["abs"]), priority=self.priority_of(p),
+                                         done=closed_date(p["abs"]) if p["group"] == "done" else None)
             self.note_diagrams(p, out)
             num = out.get("card")
             if num is None:  # an older board names no number: find the card it just made
@@ -730,7 +759,8 @@ class Sync:
         if change:
             # the description (with its stamp) is written LAST: a stamp on the card means its link and steps stand
             out = self.board.update_card(num, title=change.get("title"), description=change.get("description"),
-                                         group=change.get("group"), fmt="markdown")
+                                         group=change.get("group"), fmt="markdown",
+                                         done=closed_date(p["abs"]) if change.get("group") == "done" else None)
             self.note_diagrams(p, out)
         self.n["updated" if ours else "upgraded"] += 1
 
@@ -775,6 +805,38 @@ class Sync:
                 self.board.update_card(c["card"], title=want if c["title"] != want else None,
                                        description=phase_markdown(accept, stamp), fmt="markdown")
                 self.n["steps"] += 1
+
+
+def closed_date(path):
+    """The date the closing status was appended (2026-11-22): a YYYY-MM-DD in the last Status line itself, else the
+    date git blames that line to, else the date of the file's last commit; None when none of these is known —
+    a date is never invented."""
+    try:
+        lines = open(path, encoding="utf-8", errors="replace").read().splitlines()
+    except OSError:
+        return None
+    at = None
+    for i, ln in enumerate(lines):
+        if re.match(r"\s*(\*\*Status:?\*\*:?|Status:)\s*\S", ln, re.I):
+            at = i
+    if at is None:
+        return None
+    m = re.search(r"\d{4}-\d{2}-\d{2}", lines[at])
+    if m:
+        return m.group(0)
+    d = os.path.dirname(path) or "."
+    try:
+        r = subprocess.run(["git", "-C", d, "blame", "-L", f"{at + 1},{at + 1}", "--porcelain", "--",
+                            os.path.basename(path)], capture_output=True, text=True, timeout=30)
+        t = re.search(r"^committer-time (\d+)", r.stdout, re.M)
+        if t and not r.stdout.startswith("0000000"):  # an uncommitted line blames to the null commit
+            import datetime
+            return datetime.datetime.fromtimestamp(int(t.group(1)), datetime.timezone.utc).strftime("%Y-%m-%d")
+        r = subprocess.run(["git", "-C", d, "log", "-1", "--format=%cs", "--", os.path.basename(path)],
+                           capture_output=True, text=True, timeout=30)
+        return r.stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):
+        return None
 
 
 def opened_date(path):

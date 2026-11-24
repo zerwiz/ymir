@@ -14,7 +14,8 @@ The ledger stays the record. The card is a generated view of it, and says so on 
 | the plan's phases, each with its accept line | **sub-items** `NNN.<id> · <phase>`, each saying `Done means: …` |
 | a link, *Plan file in the home* | from `board.file_url`, else the home's own git remote |
 | the state | the state **group** from the ledger's status |
-| diagrams | the board draws each ```` ```mermaid ```` block where it can; one it cannot draw stays code and is named in the report |
+| a done date | `closed YYYY-MM-DD` when an appended status closes the plan |
+| diagrams | the board draws each ```` ```mermaid ```` block where it can; one it cannot draw stays code and is named in the report; a label with a line break, bracket or colon is written quoted (`ID["…<br/>…"]`) first |
 
 A phase is a row of any table in the plan that has a `#` column, a phase or step column, and an accept or *done means*
 column.

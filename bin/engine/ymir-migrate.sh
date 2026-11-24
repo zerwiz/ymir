@@ -50,6 +50,9 @@ for a in "$@"; do case "$a" in --dry-run|-n) DRY=1 ;; esac; done
 [ -d "$MIG_DIR" ] || { printf 'ymir-migrate[1]{state}:\n  "none","no migrations directory"\n'; exit 0; }
 mkdir -p "$STATE_DIR"; [ -f "$APPLIED" ] || : >"$APPLIED"
 
+# The cloth (bin/desktop/ymir-style.sh): decoration to stderr for a human, data stays on stdout.
+_cloth_u="$-"; . "$SCRIPT_DIR/../desktop/ymir-style.sh"; style_init; case "$_cloth_u" in *u*) ;; *) set +u ;; esac
+
 is_applied() { grep -qxF "$1" "$APPLIED" 2>/dev/null; }
 desc_of() { sed -n 's/^# *[0-9]\{4\}-[a-z0-9-]* *—* *//p' "$1" | head -1; }
 
@@ -68,6 +71,7 @@ fi
 [ "$ACTION" = apply ] || { printf 'error: unknown action %s\nhelp: bin/engine/ymir-migrate.sh [status|apply [--dry-run]]\n' "$ACTION" >&2; exit 2; }
 
 ran=0; skipped=0; deferred=0
+style_title "migrate" "$([ "$DRY" = 1 ] && echo 'what would heal this home forward' || echo 'healing this home forward')"
 for m in "${MIGS[@]}"; do
   id="$(basename "$m" .sh)"
   if is_applied "$id"; then skipped=$((skipped+1)); continue; fi
@@ -80,14 +84,15 @@ for m in "${MIGS[@]}"; do
   fi
   bash "$m"; rc=$?
   case "$rc" in
-    0) printf '%s\n' "$id" >>"$APPLIED"; ran=$((ran+1)) ;;
+    0) printf '%s\n' "$id" >>"$APPLIED"; ran=$((ran+1)); style_line ok "$id" "applied" ;;
     # 3 = DEFERRED: the migration is legitimate but this machine cannot run it yet
     # (a destination nobody has named, a service that must be stopped first). It is
     # NOT applied — recording it would silence it forever — and it is NOT a failure,
     # because nothing is broken. It says why, and the next apply asks again.
-    3) deferred=$((deferred+1)) ;;
-    *) printf 'error: migration %s failed — stopping; fix and re-run\n' "$id" >&2; exit 1 ;;
+    3) deferred=$((deferred+1)); style_line warn "$id" "deferred — this machine cannot run it yet" ;;
+    *) style_line fail "$id" "failed (exit $rc)"; printf 'error: migration %s failed — stopping; fix and re-run\n' "$id" >&2; exit 1 ;;
   esac
 done
+style_line ok "migrate" "$ran applied, $skipped already in place, $deferred deferred"
 printf 'ymir-migrate[1]{action,applied,pending}:\n  "%s",%s,%s\n' "$([ "$DRY" = 1 ] && echo dry-run || echo apply)" "$ran" "$skipped"
 [ "$deferred" -eq 0 ] || printf 'ymir-migrate[1]{deferred,note}:\n  %s,"not applied and not failed — the reason is printed above"\n' "$deferred"

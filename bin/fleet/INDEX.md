@@ -21,14 +21,16 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[18]{file,does,kind,verdict,disposition,callers,lines}:
+bin[21]{file,does,kind,verdict,disposition,callers,lines}:
   "agents-config.sh","agents-config.sh — one YAML for the Allfather's agent/harness/model combination.","tool","wired","keep",16,310
-  "arm-send.sh","arm-send.sh — the wire between the fleet's arm holders (plan 253 phase 3 'the wire'; plan 234; RULES/49).","tool","wired","keep",8,64
+  "arm-holder-pane.sh","arm-holder-pane.sh — which herdr pane holds this machine's arm?","tool","wired","keep",2,27
+  "arm-send.sh","arm-send.sh — the wire between the fleet's arm holders (plan 253 phase 3 'the wire'; plan 234; RULES/49).","tool","wired","keep",9,64
   "dispatch-profile.sh","dispatch-profile.sh — decide which Eindri dispatch profile is ACTIVE, and","tool","tested","keep",2,277
   "fleet-apply.sh","fleet-apply.sh — apply fleet-wide preferences to every registered Eindri-home.","tool","wired","keep",1,83
   "fleet-deploy.sh","fleet-deploy.sh — refresh the machine's fleet services from THIS package.","tool","wired","keep",0,113
   "fleet-ensure.sh","fleet-ensure.sh — the role-gated RAISE (plan 42's fleet services, plan 51's","tool","wired","keep",8,727
   "fleet-status.sh","fleet-status.sh — the fleet, in one answer: every machine, the road that reached it, and its state (plan 232 R6,","tool","wired","keep",1,83
+  "fleet-tell.sh","fleet-tell.sh — ONE road for talking to, and steering, any agent on any machine of the fleet.","tool","wired","keep",4,230
   "fleet-version.sh","fleet-version.sh — is the fleet on ONE version?","tool","tested","keep",1,99
   "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on.","tool","wired","keep",1,247
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",0,136
@@ -36,11 +38,12 @@ bin[18]{file,does,kind,verdict,disposition,callers,lines}:
   "registry-check.sh","registry-check.sh — is the fleet's registry coherent with itself, with the machine folders, and with reality?","tool","wired","keep",0,76
   "roads.sh","Fleet roads — OUTPUT of the registry (hodd/data/fleet.json).","tool","wired","keep",1,131
   "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","wired","keep",0,207
+  "test_fleet_tell.sh","test_fleet_tell.sh — the one road for talking to and steering any agent (fleet-tell.sh).","tool","wired","keep",0,103
   "test_public_surfaces.py","'''test_surfaces.py — the surfaces come from the operator's home, and a missing one is said, never invented.","tool","wired","keep",1,84
-  "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",7,139
+  "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",8,139
   "ymir-fleet.sh","ymir-fleet.sh — FLEET MODE, one command for npm users.","tool","wired","keep",0,19
   "ymir-platform.sh","ymir-platform.sh — the portability layer.","tool","tested","keep",48,370
 
-**Tally.** verdict: wired=14, tested=4
+**Tally.** verdict: wired=17, tested=4
 
-**Tally.** disposition: keep=18
+**Tally.** disposition: keep=21
