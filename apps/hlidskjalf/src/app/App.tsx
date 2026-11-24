@@ -49,7 +49,9 @@ export default function App() {
     if (!session) return;
     const id = window.setInterval(() => { void useYmir.getState().refreshSmidja(); void useYmir.getState().refreshAgents(); void useYmir.getState().refreshA2A(); void useYmir.getState().refreshDoors(); }, 5000);
     const reviewsId = window.setInterval(() => { void useYmir.getState().refreshReviews(); }, 30_000);
-    return () => { window.clearInterval(id); window.clearInterval(reviewsId); };
+    // The well beats on its own too, so a cold first read warms without a reload (plan 369 item 3).
+    const wellId = window.setInterval(() => { void useYmir.getState().refreshWell(); }, 30_000);
+    return () => { window.clearInterval(id); window.clearInterval(reviewsId); window.clearInterval(wellId); };
   }, [session]);
 
   useEffect(() => {
