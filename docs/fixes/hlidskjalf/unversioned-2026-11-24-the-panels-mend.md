@@ -27,5 +27,5 @@ header badge read "ho / un / d" at 390.
 
 Two jobs are really FAILED and are not changed here. `learn-home` on heimdall exits 4 because `home-sync` refuses
 to merge a dirty home (a file overlaps the incoming change); the home needs cleaning, not the script.
-`daily-briefing` on the heart exits 1 because two Atlas drafts are older than two days, which is the briefing
+`daily-briefing` on the heart exits 1 because two drafts are older than two days, which is the briefing
 doing its job; the drafts need sending or closing.
