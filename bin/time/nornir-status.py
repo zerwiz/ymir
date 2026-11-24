@@ -3,13 +3,13 @@
 
 ONE resolver for the Hlidskjalf Cron panel, `ymir nornir` and Eir. A job is never "DOWN" because it is
 not this seat's job: its role names an owning seat (fleet registry), the seat's own scheduler log says what
-happened (read over the ssh ring, cached 60 s, 4 s timeout), and the verdict is one of nine words:
+happened (read over the ssh ring, cached 60 s, 4 s timeout), and the verdict is one of ten words:
 
   RAN       last run ok, within its schedule            ELSEWHERE  not this seat's job, ran fine on its seat
   DUE       not run yet, its time has not come          LATE       its time passed and no run is on record
   FAILED    ran, exit != 0                              DOWN       the owning seat's scheduler is not running
   DARK      the owning seat is unreachable              MOVED      the owner is dark, the heart ran it
-  IDLE      ran, nothing to do / not configured
+  IDLE      ran, nothing to do / not configured         UNREAD     the owning seat's runtime is too old to report (not counted)
 
 The headline counts LATE + FAILED + DOWN + DARK. Every non-green row ends with its next step.
   nornir-status.py [--json] [--no-ssh] [--config F] [--registry F] [--state D]
@@ -141,7 +141,7 @@ def judge(job, seat, name, hosts):
             pass
         return "DARK", f"{name} dark{days} · ran last {since}", f"bring {name} up, or wait: nothing runs for it until then"
     if seat["old"]:
-        return "LATE", f"{name}'s runtime cannot report runs yet", f"update {name}: ymir groa (it needs nornir-cron-start.sh --last)"
+        return "UNREAD", f"{name} cannot report: update it", f"update {name}: ymir groa (it needs nornir-cron-start.sh --last)"
     if not seat["running"]:
         return "DOWN", f"{name}'s scheduler is not running", f"on {name}: systemctl --user restart nornir  (or bash bin/time/nornir-cron-start.sh)"
     now, tz = seat["now"], seat["tz"]

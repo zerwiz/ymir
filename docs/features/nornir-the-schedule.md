@@ -70,3 +70,10 @@ ward with the `chmod` in the message.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## If the scheduler was down
+
+A clock-time job (`HH:MM`) whose time passed while the scheduler was stopped or restarted runs once when the
+scheduler is back, as long as it is within 14 hours of its time (`BROKK_CRON_CATCHUP_HOURS`) and has no run stamped
+today. A seat whose runtime is too old to report its runs shows `UNREAD` ("cannot report: update it"); it is not
+counted in the needs total.

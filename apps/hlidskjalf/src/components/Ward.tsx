@@ -70,6 +70,7 @@ export function Ward() {
           padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
           border: '1px solid var(--ymir-line, #333)', background: 'transparent',
           color: 'inherit', fontSize: 12, letterSpacing: '0.04em',
+          whiteSpace: 'nowrap', flexShrink: 0,
         }}
       >
         <span aria-hidden>ᛉ</span>
