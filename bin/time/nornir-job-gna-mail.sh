@@ -51,7 +51,7 @@ fi
 if [ "$MODE" = "import" ]; then
   . "$ROOT/bin/forge/warden-lib.sh"
   warden_begin gna-mail || { say "FAIL this machine cannot be named from the fleet registry"; exit 1; }
-  warden_require_door || exit 3
+  warden_require_door || exit "${WARDEN_RC_NOT_HERE:-78}"
   warden_require_identity || exit 3
 fi
 

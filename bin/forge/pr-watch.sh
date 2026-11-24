@@ -48,7 +48,7 @@ fi
 command -v gh >/dev/null 2>&1 || { printf 'pr-watch: gh missing\n' >&2; exit 1; }
 # 2 · own repositories only · 3 · the machine's own identity (plan 290)
 WARDEN_REPOS="$REPO"
-warden_require_door || exit 3
+warden_require_door || exit "${WARDEN_RC_NOT_HERE:-78}"
 warden_require_repos "$REPO" || exit 3
 warden_require_identity || exit 3
 NOW=$(date +%s)

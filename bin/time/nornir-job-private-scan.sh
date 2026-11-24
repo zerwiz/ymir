@@ -79,7 +79,7 @@ git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1 || { printf 'private-scan: no
 . "$REPO/bin/forge/warden-lib.sh" 2>/dev/null || true
 if declare -f warden_begin >/dev/null 2>&1; then
   warden_begin private-scan || { printf 'private-scan: this machine cannot be named from the fleet registry\n' >&2; exit 2; }
-  warden_require_door || exit 3
+  warden_require_door || exit "${WARDEN_RC_NOT_HERE:-78}"
 fi
 # A missing ripgrep skips THIS half by name; the engine still runs, because the names are the half that must not go
 # unjudged (RULES/25: a clean skip is a pass, a false clean is not).

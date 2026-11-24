@@ -152,7 +152,7 @@ case "${1:-}" in
   drop)  shift; cmd_drop "${1:-}" ;;
   list)  cmd_list ;;
   tick)  # plan 290: a tick wakes the operator, so this machine must name the door first.
-         warden_require_door >/dev/null || exit 3; cmd_tick ;;
+         warden_require_door >/dev/null || exit "${WARDEN_RC_NOT_HERE:-78}"; cmd_tick ;;
   take)  shift; cmd_take "${1:-}" ;;
   *) usage ;;
 esac
