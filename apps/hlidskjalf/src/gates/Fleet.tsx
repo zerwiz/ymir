@@ -180,7 +180,7 @@ export function Fleet() {
     ];
     openModal({
       variant: 'info',
-      tone: a.status === 'nominal' ? 'ok' : a.status === 'degraded' ? 'warn' : 'danger',
+      tone: a.status === 'nominal' ? 'ok' : a.status === 'idle' ? 'info' : a.status === 'degraded' ? 'warn' : 'danger',
       glyph: 'ᚠ',
       title: `${a.name} — Agent Card`,
       body: a.errandClaim || a.role,
