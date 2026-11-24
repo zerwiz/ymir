@@ -746,3 +746,7 @@ prints the facts without spawning; `--no-agent` forces the direct road.
 - `bin/time/nornir-job-work-intake.sh` (row `@heart @every:10` in `cron.yaml.example`) picks issues labelled `ymir:work` for the repos in `intake.repos`.
 - A fixed-time row stamps `<date> <HH:MM>`, so one script at 06:10 and 18:10 fires twice. A comma role gate (`@heart,forge,dev`) now matches.
 - `bin/time/nornir-status.sh` judges every job on the seat that owns it; `bin/time/forge-dark.sh` lets the heart run `@forge` rows after 24 hours of forge darkness.
+
+## 2026-11-24 — every run leaves a done row, and the brief names the trouble (plan 366)
+
+The scheduler logs `cron done rc=N Ns seat=S: <job>` after each run. The daily briefing carries a `nornir:` line from `bin/time/nornir-status.sh`, written by the machine that writes the brief, naming the seat on each trouble row.
