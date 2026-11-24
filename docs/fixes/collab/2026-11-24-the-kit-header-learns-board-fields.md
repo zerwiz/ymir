@@ -22,3 +22,7 @@ a product renamed mid-flight kept sharing the other's counter.
 
 - `bin/collab/kit/docs/headers.md`
 - `bin/collab/kit/plans/tickets/README.md`
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #929
