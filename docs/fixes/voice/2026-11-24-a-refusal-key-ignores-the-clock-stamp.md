@@ -28,3 +28,7 @@
 
 `bash bin/voice/tests/test_rodd_helm.sh` prints `31 passed, 0 failed`. Before the change it printed
 `24 passed, 7 failed`, and with only the test changed, `both attempts carried the same key` still failed.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #932
