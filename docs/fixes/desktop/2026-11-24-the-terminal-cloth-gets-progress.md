@@ -26,3 +26,7 @@ user-facing scripts, the curl-piped installer and the release road were still pl
 `bash .agents/tests/style-progress.test.sh` (18 checks), `bash bin/gates/tests/test_groa_steps.sh` (17),
 `bash bin/engine/tests/test_release_borrow_closure.sh` (10). A scripted terminal run of `install.sh` against a
 stand-in `npm` ended ✓ on success and ✕ with the log tail on failure.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #923
