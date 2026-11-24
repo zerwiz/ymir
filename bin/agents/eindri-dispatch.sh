@@ -293,6 +293,7 @@ cmd_new() {
     printf '%s\n' "- ask a question: write \`data/$id/questions/q-<n>.md\` — Brokk answers in \`answers/\`"
     printf '%s\n' "- steer arrives in \`data/$id/inbox/\` (acked by your arm)"
     printf '%s\n' "- completion marker: \`state/$id.done\` — your arm files the close hook"
+    printf '\n**Research (plan 365 H1):** ask before you read — research goes through `ymir_research` (Huginn: Firecrawl first, the answer kept). A kept answer is reused before any new fetch; do not read the web raw.\n'
     printf '\n**Expected close (the report contract):** write \`data/%s/result.md\`; the arm files the close hook, a rune is carved, and the Allfather tail + well lesson follow (law 7).\n' "$id"
     printf '\n**History (same wave):**\n\n'
     grep "| $id |" "$BACKLOG" 2>/dev/null | sed 's/^/  /' | head -5

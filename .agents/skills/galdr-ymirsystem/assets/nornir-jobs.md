@@ -740,3 +740,9 @@ prints the facts without spawning; `--no-agent` forces the direct road.
 
 - **2026-11-08** — Appended with the job, its three roads, the model resolved from the home, and the four faults found
   by running it.
+
+## 2026-11-24 — the work road adds an intake row, and Nornir judges jobs on their owning seat (plan 365)
+
+- `bin/time/nornir-job-work-intake.sh` (row `@heart @every:10` in `cron.yaml.example`) picks issues labelled `ymir:work` for the repos in `intake.repos`.
+- A fixed-time row stamps `<date> <HH:MM>`, so one script at 06:10 and 18:10 fires twice. A comma role gate (`@heart,forge,dev`) now matches.
+- `bin/time/nornir-status.sh` judges every job on the seat that owns it; `bin/time/forge-dark.sh` lets the heart run `@forge` rows after 24 hours of forge darkness.

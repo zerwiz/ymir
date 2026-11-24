@@ -12,6 +12,7 @@ Nothing here writes a file into a project.
 """
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import re
@@ -215,12 +216,71 @@ def firecrawl_env(root: Path) -> tuple[str, str]:
     return (url or "https://api.firecrawl.dev").rstrip("/"), key
 
 
+def _research_shelf(root: Path) -> Path | None:
+    env = os.environ.get("YMIR_RESEARCH_ROOT")
+    if env:
+        return Path(env)
+    home = os.environ.get("YMIR_HOME") or str(Path.home() / "Documents" / "ymirhome")
+    shelf = Path(home) / "hodd" / "library" / "research"
+    return shelf if shelf.is_dir() else None
+
+
+def _norm(q: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", q.lower()).strip()
+
+
+def kept_answer(root: Path, question: str, max_age_days: int = 7):
+    """Ask before you read (plan 365 H1): a kept answer to the SAME question, newer than a week, is reused with
+    no web call. Returns (finding, source) or None. A kept negative result is reused too, so a dead end is
+    not walked twice."""
+    shelf = _research_shelf(root)
+    if not shelf:
+        return None
+    want = _norm(question)
+    newest = None
+    for f in shelf.rglob("*.md"):
+        try:
+            head = f.read_text(encoding="utf-8", errors="replace").split("---")
+            meta = dict(ln.split(":", 1) for ln in (head[1] if len(head) > 2 else "").splitlines() if ":" in ln)
+        except OSError:
+            continue
+        if _norm(meta.get("question", "").strip().strip('"')) != want:
+            continue
+        at = meta.get("at", "").strip().strip('"')
+        try:
+            age = (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(at.replace("Z", "+00:00"))).days
+        except ValueError:
+            continue
+        if age <= max_age_days and (newest is None or at > newest[0]):
+            newest = (at, meta.get("finding", "").strip().strip('"'), meta.get("sources", "").strip().strip('[]"'))
+    return newest[1:] if newest else None
+
+
+def record_saving(cache: str, tokens_in: int, tokens_out: int, pages: int, seat_role: str = "") -> None:
+    """Measure, never claim (plan 365 H4): one row per research call — kept-answer hit or miss, the page's tokens
+    read, the tokens handed back. `ymir work` and Andhrimnir's report sum them per role and seat."""
+    home = os.environ.get("YMIR_HOME") or str(Path.home() / "Documents" / "ymirhome")
+    path = Path(os.environ.get("YMIR_RESEARCH_SAVING") or Path(home) / "state" / "research-saving.jsonl")
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a") as fh:
+            fh.write(json.dumps({"at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                 "cache": cache, "tokens_in": tokens_in, "tokens_out": tokens_out, "pages": pages,
+                                 "role": os.environ.get("YMIR_WORK_ROLE", seat_role), "seat": os.uname().nodename.split(".")[0]}) + "\n")
+    except OSError:
+        pass
+
+
 def research(root: Path, question: str, project: str = "", plan: str = "", post=_post, run=None) -> str:
     """Search, then scrape the best hit as markdown with only the main content; KEEP the finding (source, practice,
     which plan uses it) with `library.sh research keep`; answer short. A search with no hit is kept as a negative
     result, so nobody looks the same dead end up twice."""
     if not question.strip():
         return "ymir_research needs a `question`."
+    kept = kept_answer(root, question)
+    if kept:
+        record_saving("hit", 0, len(kept[0]) // 4, 0)
+        return f"{kept[0]}\n\nsource: {kept[1] or 'kept answer'}\nreused from the library (no web call)"
     url, key = firecrawl_env(root)
     if not key and "api.firecrawl.dev" in url:
         return "ymir_research: no Firecrawl key (FIRECRAWL_API_KEY) and no self-hosted FIRECRAWL_API_URL on this seat."
@@ -239,6 +299,7 @@ def research(root: Path, question: str, project: str = "", plan: str = "", post=
     except (urllib.error.URLError, OSError, ValueError) as e:
         return f"ymir_research: Firecrawl did not answer ({e})."
     answer = re.sub(r"\s+", " ", page)[:700]
+    record_saving("miss", len(page) // 4, len(answer) // 4, 1 if page else 0)
     keep = ["bash", str(Path(root) / "bin" / "records" / "library.sh"), "research", "keep", "--question", question,
             "--owner", "huginn", "--tag", "research"] + (["--tag", project] if project else [])
     why = "practice: " + (f"read the page's main content, kept this summary; used by plan {plan}" if plan

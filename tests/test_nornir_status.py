@@ -59,6 +59,11 @@ def main():
     # the headline counts only LATE + FAILED + DOWN + DARK
     assert res["needs"] == sum(1 for j in res["jobs"] if j["status"] in ("LATE", "FAILED", "DOWN", "DARK")), res["counts"]
     assert out.returncode == 1  # something needs him
+    # solo: no registry, no heart — a heart-gated row is idle, never DARK, and nothing waits on a seat
+    json.dump({"hosts": {}}, open(reg, "w"))
+    solo = json.loads(subprocess.run([sys.executable, os.path.join(ROOT, "bin/time/nornir-status.py"), "--json", "--no-ssh", "--config", cfg,
+                                      "--registry", reg, "--state", state], capture_output=True, text=True, env=env).stdout)
+    assert not any(j["status"] in ("DARK", "DOWN") for j in solo["jobs"]), solo["counts"]
     print("ok: nornir-status — %d jobs, counts %s" % (len(got), res["counts"]))
 
 

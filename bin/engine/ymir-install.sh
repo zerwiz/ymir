@@ -606,6 +606,17 @@ step_engines() {
 # Pi has no native MCP/web support), detect the local llama.cpp rail actually
 # here (never assume one), and seed
 # ~/.pi/agent/models.json only when the operator has none.
+# ── 3a2a. The work road (plan 365) ───────────────────────────────────────────
+# Two questions, asked once: where the road runs (solo | fleet | offline) and which models do the work (free
+# hosted models by default). Non-interactive installs take the defaults silently. Written to the ONE dispatch
+# config in the home; `ymir work mode` and `ymir work models` change it later.
+step_work() {
+  [ -f "$SCRIPT_DIR/../fleet/work.py" ] || { add work SKIP "no work.py"; return; }
+  if [ "$CHECK" = 1 ]; then add work OK "would ask mode + models once (defaults: solo, free models)"; return; fi
+  local said yes=""; { [ "$ASSUME_YES" = 1 ] || [ ! -t 0 ]; } && yes="--yes"
+  if said="$(python3 "$SCRIPT_DIR/../fleet/work.py" init $yes 2>&1 | tail -1)"; then add work OK "$said"; else add work WARN "the work road was not seated: $said"; fi
+}
+
 step_models() {
   role_gate models forge,dev "the harness (pi) and its local models" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add models SKIP "--skip-engines"; return; }
@@ -1956,6 +1967,7 @@ run_step step_clients "the client register"
 run_step step_apps "apps"
 run_step step_engines "engines"
 run_step step_models "models"
+run_step step_work "work road"
 run_step step_hnoss "Hnoss, the design door"
 run_step step_local_model "the local model"
 run_step step_hermes "hermes"

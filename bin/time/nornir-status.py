@@ -206,8 +206,11 @@ def main():
             owner = next((h for w in words for h in by_role.get(w, []) if h != me), None)
         row = dict(job, owner=owner or "?")
         if owner is None:
-            row.update(status="DARK", detail=f"no seat in the fleet registry holds role {job['gate']}",
-                       next="add the host to fleet.json or drop the row")
+            if len(hosts) <= 1:  # a fleet of one: the whole road is this machine, and a heart's row has no owner to wait for
+                row.update(status="IDLE", detail=f"no {job['gate']} seat in this fleet — not armed here", next="")
+            else:
+                row.update(status="DARK", detail=f"no seat in the fleet registry holds role {job['gate']}",
+                           next="add the host to fleet.json or drop the row")
             rows.append(row)
             continue
         st, detail, nxt = judge(job, seat_for(owner), owner, hosts)
