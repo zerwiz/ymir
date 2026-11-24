@@ -215,6 +215,10 @@ Deep pages: [`the-seat-name.md`](../features/the-seat-name.md), [`brokk-the-prim
 | **Single machine** (the default) | one computer | nothing to set: a fleet of one. The machine is `dev` and runs every job its role owns |
 | **Fleet** | two or more machines | each machine gets a **role** in `hodd/data/fleet.json`; jobs and services go where their role is |
 
+### The work road: two choices
+
+`ymir install` asks two questions once: **where the work road runs** (`solo`, `fleet`, `offline`) and **which models do the work** (free hosted models by default, or your local rail). Change either later with `ymir work mode` and `ymir work models`. The road, its merge tiers and the release door are on one page: [the work road](../features/the-work-road.md).
+
 ### The roles
 
 | Role | Duty | Typical machine |

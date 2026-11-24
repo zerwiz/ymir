@@ -1518,6 +1518,12 @@ function serverSeats(): { seat: string; host: string }[] {
   return resolveServerSeats(HOARD);
 }
 
+/** Every job judged on the seat that owns it (plan 365) — the ONE resolver the CLI and Eir share. */
+async function cronStatus() {
+  const said = await runAsync(['bash', 'bin/time/nornir-status.sh', '--json'], 20000, 30);
+  try { return JSON.parse(said); } catch { return { needs: 0, counts: {}, jobs: [], seats: {}, error: 'the status resolver gave no answer' }; }
+}
+
 async function cronSeats() {
   const { path } = cronConfigPath();
   const localJobs = parseCronJobs(path ? read(path) : '');
@@ -2908,6 +2914,7 @@ const server = Bun.serve({
       if (p === '/api/cron/start' && req.method === 'POST') return json(await cronAct('start'));
       if (p === '/api/cron/stop' && req.method === 'POST') return json(await cronAct('stop'));
       if (p === '/api/cron/seats') return json(await cronSeats());
+      if (p === '/api/cron/status') return json(await cronStatus());
       if (p === '/api/loaders') return json(await loaders());
       if (p === '/api/checks') return json(await checks());
       if (p === '/api/smidja/health') return json(smidjaHealth());

@@ -1550,3 +1550,7 @@ per-app steps install it exactly as before. Each app's slice moves its install l
 `install.sh` and leaves `step_<app>` a thin `apps.sh install <app>`. Gróa runs `apps.sh update --all` after
 Ymir's update; Eir's `apps` surface runs `apps.sh check`. How-to: `docs/features/apps-install-and-update.md`.
 Fix note: `docs/fixes/apps/2026-11-19-every-app-gets-its-own-home.md`.
+
+## 2026-11-24 — the install asks the work road's two questions (plan 365)
+
+`step_work` runs `bin/fleet/work.py init`: where the road runs (`solo`, `fleet`, `offline`) and which models do the work (free by default). Non-interactive installs take the defaults. The answer is written to the one dispatch config in the home.

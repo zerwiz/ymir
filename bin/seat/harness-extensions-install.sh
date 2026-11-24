@@ -292,6 +292,9 @@ desired = [
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [{"type": "command",
                    "command": 'bash "$HOME/.claude/hooks/nda-write.sh"', "timeout": 10}]}),
+    ("claude-errand-stop", "Stop", "errand-stop.sh", {
+        "hooks": [{"type": "command",
+                   "command": 'bash "$HOME/.claude/hooks/errand-stop.sh"', "timeout": 30}]}),
     ("claude-ymir-arm", "Stop", "ymir-arm.sh", {
         "hooks": [{"type": "command",
                    "command": 'bash "$HOME/.claude/hooks/ymir-arm.sh"',

@@ -209,6 +209,7 @@ SEAT_ROLE=
 ISOLATION=auto
 FORCE=0
 DRY=0
+REPLY_TO=""
 POS=()
 want_value=
 for a in "$@"; do
@@ -225,6 +226,7 @@ for a in "$@"; do
       backend) BACKEND=$a; BACKEND_SET=1 ;;
       isolation) ISOLATION=$a ;;
       role) SEAT_ROLE=$a ;;
+      reply_to) REPLY_TO=$a ;;
       *) echo "error: internal parser state for --$want_value" >&2; exit 1 ;;
     esac
     want_value=
@@ -248,6 +250,8 @@ for a in "$@"; do
     --isolation) want_value=isolation ;;
     --isolation=*) ISOLATION=${a#--isolation=} ;;
     --role) want_value=role ;;
+    --reply-to) want_value=reply_to ;;
+    --reply-to=*) REPLY_TO=${a#--reply-to=} ;;
     --role=*) SEAT_ROLE=${a#--role=} ;;
     --force) FORCE=1 ;;
     --dry-run) DRY=1 ;;
@@ -293,6 +297,16 @@ if [ "$SCOUT" -eq 1 ]; then
   KIND=scout
 fi
 
+# --- the return address (plan 365 R1): no real spawn without one --------------
+# A worker that does not know who to answer ends in silence. The address is --reply-to, else the caller's own identity
+# (bin/agents/reply-to.sh); a dry run, a relaunch (it already has one) and YMIR_REPLY_TO_OPTIONAL=1 (the loud override)
+# are the only ways past. It is kept with the errand, and the worker answers it with bin/agents/answer.sh.
+if [ "$DRY" -eq 0 ] && [ "$RELAUNCH" -eq 0 ] && [ -z "${YMIR_REPLY_TO_OPTIONAL:-}" ]; then
+  REPLY_TO="$(bash "$SCRIPT_DIR/reply-to.sh" resolve ${REPLY_TO:+--reply-to "$REPLY_TO"})" || exit 2
+  bash "$SCRIPT_DIR/reply-to.sh" record "$ID" "$REPLY_TO" || exit 2
+  export YMIR_REPLY_TO="$REPLY_TO" YMIR_ERRAND_ID="$ID"
+fi
+
 # --- explicit harness -------------------------------------------------------
 RAW_LAUNCH=
 HARNESS=
@@ -326,9 +340,21 @@ unset _disp
 # ("is this shell inside herdr?"), not for whether a server can host a worker.
 # A herdr server can host a worker even when the dispatcher sits outside herdr;
 # conflating the two left the backend on tmux while `herdr server` ran.
+# Put herdr on PATH when it is installed in the places an installer puts it (a unit's PATH is minimal).
+seat_herdr_on_path() {
+  command -v herdr >/dev/null 2>&1 && return 0
+  local d
+  for d in "${HOME:-/nonexistent}/.local/bin" "${HOME:-/nonexistent}/.cargo/bin" /usr/local/bin; do
+    [ -x "$d/herdr" ] && { PATH="$d:$PATH"; export PATH; return 0; }
+  done
+  return 1
+}
 herdr_server_present() {
-  pgrep -f 'herdr server' >/dev/null 2>&1 && return 0
+  # A server nobody can drive is not a backend: a systemd unit's PATH has no ~/.local/bin, so the heart saw a running
+  # herdr server, chose herdr, and died on "herdr is not on PATH" — and its proof of main stayed red (2026-11-24).
+  seat_herdr_on_path
   command -v herdr >/dev/null 2>&1 || return 1
+  pgrep -f 'herdr server' >/dev/null 2>&1 && return 0
   herdr status --json 2>/dev/null | grep -qE '"running"[[:space:]]*:[[:space:]]*true' && return 0
   return 1
 }
@@ -354,13 +380,20 @@ else
   elif command -v tmux >/dev/null 2>&1; then
     RESOLVED_BACKEND=tmux
     BACKEND_WHY="no herdr server answering — tmux is the fallback"
+  elif [ "${DRY:-0}" = 1 ]; then
+    # A dry run prints the plan and seats nothing, so it needs no backend (the gate's proof must pass on a machine
+    # with neither herdr nor tmux; the real spawn still refuses below).
+    RESOLVED_BACKEND=tmux
+    BACKEND_WHY="dry run — no backend on this machine, none needed to print the plan"
   else
-    echo "error: no backend available — herdr server is not running and tmux is not on PATH" >&2
+    echo "error: no backend available — herdr is not drivable and tmux is not on PATH" >&2
     exit 1
   fi
 fi
 
-if [ "$RESOLVED_BACKEND" = tmux ]; then
+if [ "${DRY:-0}" = 1 ]; then
+  :
+elif [ "$RESOLVED_BACKEND" = tmux ]; then
   command -v tmux >/dev/null 2>&1 || { echo "error: backend tmux selected but tmux is not on PATH" >&2; exit 1; }
 elif [ "$RESOLVED_BACKEND" = herdr ]; then
   command -v herdr >/dev/null 2>&1 || { echo "error: backend herdr selected but herdr is not on PATH" >&2; exit 1; }
