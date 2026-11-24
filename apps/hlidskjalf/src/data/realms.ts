@@ -249,6 +249,7 @@ export const TASK_STATE_META: Record<
 
 export const STATUS_META: Record<AgentStatus, { glyph: string; label: string; tone: string }> = {
   nominal: { glyph: 'ᛟ', label: 'NOMINAL', tone: 'ok' },
+  idle: { glyph: 'ᛁ', label: 'READY', tone: 'info' },
   degraded: { glyph: 'ᛇ', label: 'DEGRADED', tone: 'warn' },
   down: { glyph: 'ᛪ', label: 'DOWN', tone: 'danger' },
 };
