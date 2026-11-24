@@ -19,3 +19,7 @@ Date: 2026-11-24 · Component: time (Nornir) · Part of plan 365 (the work road)
 - `bin/time/forge-dark.sh` lets the heart run `@forge` rows when the forge has been dark for more than 24 hours. The row is then reported as MOVED.
 
 Proof: `python3 tests/test_nornir_status.py`.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #924
