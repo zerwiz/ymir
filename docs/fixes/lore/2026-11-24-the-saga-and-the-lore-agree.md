@@ -26,3 +26,7 @@ Chapter XXXVII is appended to `docs/lore.md` (RULES/06 — nothing above it rewr
 ## Proved
 
 Checked against the sources: `.agents/agents/` lists the cards named; YmirCode's `README.md` gives its status as design with only a terminal UI prototype in code; its ADR 0012 decides the Rust core and the separate Elixir/OTP plane; ADR 0010 decides the egui desktop.
+
+## CHANGE LOG
+
+- 2026-11-23 — review-mend: added missing heading for #921
