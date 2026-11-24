@@ -23,7 +23,7 @@ try:
 except ImportError:  # pragma: no cover - the one production dependency
     raise SystemExit(
         "ymir-mcp: the MCP SDK is missing. Install it once for this user:\n"
-        "  python3 -m pip install --user mcp\n"
+        "  python3 -m pip install --user 'mcp<2'\n"
         "The door is useless without it, so it refuses rather than half-starts."
     )
 
