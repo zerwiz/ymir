@@ -5,13 +5,16 @@
 #   reply-to.sh record <errand> <address>               keep it with the errand (state/<errand>.replyto)
 #   reply-to.sh get <errand>                            print the recorded address
 #
-# Kinds: hermes:<session> · herdr:<agent|pane> · seat:<machine>/<agent> · telegram:<chat> · issue:<owner/repo>#<n>
+# Kinds: hermes:<session> · herdr:<agent|pane> · arm:<machine> · seat:<machine>/<agent> · telegram:<chat> · issue:<owner/repo>#<n>
+# arm:<machine> is the wake queue of the arm holder on that machine (plan 369 item 8). When the caller HOLDS the arm,
+# its errands answer there, never by typing into its pane: the helm's input box is often in use, and a report typed
+# into it reached nobody (measured 2026-11-24: two reports sat unsent behind the helm's own draft).
 # The address comes from, in order: --reply-to, $YMIR_REPLY_TO, the caller's own identity ($HERMES_SESSION_ID,
 # $HERDR_PANE_ID). With none of them the ask is refused: a worker that cannot say who to answer ends in silence.
 # Works solo: the sender and the worker are on one machine and `herdr:` or `issue:` answer there.
 set -u
 STATE="${YMIR_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
-KINDS='hermes|herdr|seat|telegram|issue'
+KINDS='hermes|herdr|arm|seat|telegram|issue'
 valid() { printf '%s' "$1" | grep -Eq "^($KINDS):.+"; }
 
 case "${1-}" in
@@ -20,12 +23,21 @@ case "${1-}" in
     while [ $# -gt 0 ]; do case "$1" in --reply-to) want="${2-}"; shift ;; --reply-to=*) want=${1#--reply-to=} ;; esac; shift; done
     [ -n "$want" ] || want="${YMIR_REPLY_TO:-}"
     [ -n "$want" ] || { [ -n "${HERMES_SESSION_ID:-}" ] && want="hermes:$HERMES_SESSION_ID"; }
+    # the arm holder is answered through its wake queue (YMIR_REPLY_TO_ARM_HELD=1|0 is the test seam)
+    if [ -z "$want" ]; then
+      held="${YMIR_REPLY_TO_ARM_HELD:-}"
+      if [ -z "$held" ]; then
+        held=0
+        bash "$(dirname "${BASH_SOURCE[0]}")/../records/ymir-state.sh" lock owned --shell-pid "$PPID" >/dev/null 2>&1 && held=1
+      fi
+      [ "$held" = 1 ] && want="arm:$(hostname -s 2>/dev/null || uname -n)"
+    fi
     [ -n "$want" ] || { [ -n "${HERDR_PANE_ID:-}" ] && want="herdr:$HERDR_PANE_ID"; }
     if [ -z "$want" ]; then
       echo "refused: this ask carries no return address — pass --reply-to <kind>:<address> (hermes:<session> · herdr:<agent> · seat:<machine>/<agent> · telegram:<chat> · issue:<repo>#<n>)" >&2
       exit 2
     fi
-    valid "$want" || { echo "refused: '$want' is not a return address (kinds: hermes · herdr · seat · telegram · issue)" >&2; exit 2; }
+    valid "$want" || { echo "refused: '$want' is not a return address (kinds: hermes · herdr · arm · seat · telegram · issue)" >&2; exit 2; }
     printf '%s\n' "$want" ;;
   record)
     [ $# -eq 3 ] || { echo "usage: reply-to.sh record <errand> <address>" >&2; exit 2; }
