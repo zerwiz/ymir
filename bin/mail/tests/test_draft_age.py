@@ -21,6 +21,8 @@ What is proven here, and why each one is a hole worth a test:
                 write to the mailbox, and the door proves it by what it never asked for.
   TheBriefing   `bin/time/nornir-job-daily-briefing.sh` carries the line, and an aged draft
                 makes it publish a brief that is not clean and exit non-zero.
+                (Amended 2026-11-24: since nornir-mend the job exits 0 and puts the aged
+                drafts on the to-do list — the brief still carries the alarm.)
 
 The WEEKLY sweep (plan 305, appended 2026-11-17) is a different job and gets its own proofs:
 
@@ -360,9 +362,12 @@ class TheBriefing(Case):
         self.assertNotIn("Unwritten letters have aged", text)
 
     def test_an_aged_draft_makes_the_brief_not_clean(self):
+        # 2026-11-22 (nornir-mend): aged drafts are the Allfather's decision, not a broken job — the
+        # brief is written, so the job exits 0; the alarm rides in the brief, its stdout and his to-do list.
         self.api.add("r-old", "The letter I never sent", 4 * DAY)
         r = self.brief()
-        self.assertEqual(r.returncode, 1, "the brief published a clean day over an aged draft\n" + r.stdout)
+        self.assertEqual(r.returncode, 0, "a written brief is a job done, aged drafts or not\n" + r.stdout + r.stderr)
+        self.assertIn("drafts aged", r.stdout, "the job must still say the drafts aged")
         text = self.brief_text()
         self.assertIn("Unwritten letters have aged", text, "the published brief must carry the alarm, not hide it")
         self.assertIn("The letter I never sent", text)

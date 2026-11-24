@@ -36,3 +36,4 @@
 ## CHANGE LOG
 
 - 2026-11-22 — review-mend: added missing heading for #906
+- 2026-11-22 — review-mend: added missing heading for #908

@@ -257,7 +257,7 @@ class McpBoard:
         return self._shape(self._call("get_card", {"place": self.place, "card": str(card)}))
 
     def create_card(self, title, description, group, labels, parent=None, fmt=None, source=None, assignees=None,
-                    start=None, priority=None):
+                    start=None, priority=None, done=None):
         a = {"place": self.place, "title": title, "description": description, "state": self.state_name(group),
              "labels": labels}
         if assignees and self._accepts("create_card", "assignees"):
@@ -274,7 +274,24 @@ class McpBoard:
             a["source"] = source
         out = self._write("create_card", a, before_retry=lambda: self._landed(title, parent))
         made = out.get("created") or {}
+        if done and made.get("card") is not None:
+            self._closed(made["card"], done)
         return {"card": made.get("card"), "diagrams": out.get("diagrams")}
+
+    def _closed(self, card, day):
+        """The DONE date: the board stamps its own completed field when the card enters a done state; the date the
+        plan was CLOSED (its status line, not today's sync) is kept as a comment, once."""
+        tag = f"closed {day}"
+        try:
+            if any(tag in (c.get("text") or c.get("comment") or str(c)) for c in
+                   (self._call("get_card", {"place": self.place, "card": str(card)}).get("comments") or [])):
+                return
+        except Exception:  # noqa: BLE001 — a board that lists no comments is written to anyway
+            pass
+        for prop in ("comment", "text", "body"):
+            if self._accepts("add_comment", prop):
+                self._write("add_comment", {"place": self.place, "card": str(card), prop: tag})
+                return
 
     def _landed(self, title, parent):
         """The card a create made although its answer was lost, as the door would have answered it; else None.
@@ -286,7 +303,7 @@ class McpBoard:
         return None
 
     def update_card(self, card, title=None, description=None, group=None, fmt=None, start=None, assignees=None,
-                    labels=None, parent=None, priority=None):
+                    labels=None, parent=None, priority=None, done=None):
         a = {"place": self.place, "card": str(card)}
         if title is not None:
             a["title"] = title
@@ -307,6 +324,8 @@ class McpBoard:
         if assignees and self._accepts("update_card", "assignees"):
             a["assignees"] = list(assignees)
         out = self._write("update_card", a)
+        if done:
+            self._closed(card, done)
         return {"diagrams": out.get("diagrams")}
 
     def can_relate(self):

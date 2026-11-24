@@ -18,11 +18,20 @@
 # Source-safe; functions only. Nothing here writes a byte of data.
 set -u
 
+# The progress primitives (appended below, "the work in progress"):
+#   style_step [--data] "<what>" -- <command…>   one command: rune spinner, one ending line
+#   style_steps <n>                              the next n steps are counted [1/n] … [n/n]
+#   style_download "<what>" <url> <dest>         a byte bar when the size is known, else a spinner
+#   style_bar <done> <total> [label]             the bar itself, for a caller that counts its own work
+# On a human's terminal they move; in a pipe, under NO_COLOR, on a dumb terminal or in CI they
+# print ONE plain line per step and never a control byte. They never swallow an exit code.
+
 # --- the palette, from the tokens (truecolor → 256 → none) ------------------
 style_init() {
   STYLE_ON=0
   # A human must be present: stderr is a terminal and nobody said no.
-  if [ -t 2 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-dumb}" != dumb ] && [ "${YMIR_NO_COLOR:-0}" != 1 ]; then
+  # CI is never a human at a window, even when a runner hands it a pty.
+  if [ -t 2 ] && [ -z "${NO_COLOR:-}" ] && [ -z "${CI:-}" ] && [ "${TERM:-dumb}" != dumb ] && [ "${YMIR_NO_COLOR:-0}" != 1 ]; then
     STYLE_ON=1
   fi
   if [ "$STYLE_ON" = 1 ] && { [ "${COLORTERM:-}" = truecolor ] || [ "${COLORTERM:-}" = 24bit ]; }; then
@@ -154,4 +163,162 @@ style_next() {  # one command per line, as "verb — what it does"
     shift
   done
   printf '\n' >&2
+}
+
+
+# ═══ the work in progress ═════════════════════════════════════════════════════
+# A download, a clone, an install or a build is the long hour of a command line, and
+# npm's and git's own noise says nothing of it in Ymir's voice. These primitives give
+# every such hour the same shape: a bronze rune turning while it runs, and ONE line when
+# it ends — ✓ steel with the time, or ✕ blood with the log's tail and where the log lives.
+# The command's own output is kept in a log (state/log), never thrown away.
+#
+# Contract (tests: bin/desktop/tests/test_style_progress.sh):
+#   · the exit code of the command is the exit code of the step — always
+#   · motion and colour only on a TTY with a human behind it (STYLE_ON=1); otherwise
+#     exactly one plain line per step, no \r, no escape bytes
+#   · the command runs in a subshell: a shell function works, its variables do not persist
+#   · decoration goes to stderr; with --data the command's stdout is replayed on stdout
+#     after the ending line (pass or fail), so a script's data contract survives being wrapped
+#
+# Env: YMIR_LOG_DIR (default ${YMIR_STATE_DIR:-$XDG_STATE_HOME or ~/.local/state/ymir}/log),
+#      YMIR_STEP_KEEP=1 keeps the log of a step that passed too, YMIR_STEP_TAIL (default 15).
+
+STYLE_RUNES="ᛉ ᚠ ᚢ ᚦ ᚨ ᚱ"
+STYLE_STEP_I=0
+STYLE_STEP_N=0
+
+style_steps() {  # <n> — count the next n steps as [1/n] … [n/n]; 0 clears
+  STYLE_STEP_I=0; STYLE_STEP_N="${1:-0}"
+  return 0
+}
+
+_style_ready() { [ -n "${STYLE_ON+x}" ] || style_init; return 0; }
+
+_style_elapsed() {  # <seconds> → 4s · 1m04s
+  local s="${1:-0}"
+  if [ "$s" -lt 1 ]; then printf '<1s'
+  elif [ "$s" -lt 60 ]; then printf '%ss' "$s"
+  else printf '%sm%02ds' "$((s/60))" "$((s%60))"; fi
+}
+
+_style_bytes() {  # <bytes> → 812 KB · 6.8 MB
+  awk -v b="${1:-0}" 'BEGIN{ if (b<1024) printf "%d B", b; else if (b<1048576) printf "%.0f KB", b/1024; else if (b<1073741824) printf "%.1f MB", b/1048576; else printf "%.2f GB", b/1073741824 }'
+}
+
+_style_logfile() {  # <what> → a fresh log path
+  local dir slug
+  dir="${YMIR_LOG_DIR:-${YMIR_STATE_DIR:-${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}/ymir}/log}"
+  mkdir -p "$dir" 2>/dev/null || dir="${TMPDIR:-/tmp}"
+  slug="$(printf '%s' "$1" | tr -c 'A-Za-z0-9' '-' | sed 's/--*/-/g;s/^-//;s/-$//' | cut -c1-40)"
+  printf '%s/%s-%s-%s.log' "$dir" "${slug:-step}" "$(date +%Y%m%d-%H%M%S)" "$$"
+}
+
+# Sets STYLE_PREFIX ("[i/n] " when a count is set). Not a $(…) call: a subshell would lose the increment.
+_style_prefix() {
+  STYLE_PREFIX=""
+  if [ "${STYLE_STEP_N:-0}" -gt 0 ]; then
+    STYLE_STEP_I=$((STYLE_STEP_I+1))
+    STYLE_PREFIX="[$STYLE_STEP_I/$STYLE_STEP_N] "
+  fi
+}
+
+_style_spin_clear() { [ "$STYLE_ON" = 1 ] && printf '\r\033[K' >&2; return 0; }
+
+# The ending of a step, shared by style_step and style_download.
+_style_end() {  # <rc> <label> <seconds> <log>
+  local rc="$1" label="$2" secs="$3" log="$4" t
+  t="$(_style_elapsed "$secs")"
+  if [ "$rc" -eq 0 ]; then
+    printf '  %s%s%s %s %s%s%s\n' "$C_STEEL" "$(style_mark ok)" "$C_OFF" "$label" "$C_FAINT" "$t" "$C_OFF" >&2
+    [ "${YMIR_STEP_KEEP:-0}" = 1 ] || rm -f "$log" 2>/dev/null
+  else
+    printf '  %s%s%s %s %s%s (exit %s)%s\n' "$C_BLOOD" "$(style_mark fail)" "$C_OFF" "$label" "$C_BLOOD" "$t" "$rc" "$C_OFF" >&2
+    if [ -s "$log" ]; then
+      tail -n "${YMIR_STEP_TAIL:-15}" "$log" 2>/dev/null | sed "s/^/      ${C_FAINT}/;s/\$/${C_OFF}/" >&2
+    fi
+    printf '      %slog: %s%s\n' "$C_FAINT" "$log" "$C_OFF" >&2
+  fi
+}
+
+style_step() {  # [--data] <what> -- <command…>
+  _style_ready
+  local data=0
+  [ "${1:-}" = --data ] && { data=1; shift; }
+  local what="${1:-working}"; shift
+  [ "${1:-}" = -- ] && shift
+  [ "$#" -gt 0 ] || { printf 'style_step: no command given for "%s"\n' "$what" >&2; return 2; }
+  local label log out="" pid rc t0 i=0 runes saved_int saved_term
+  _style_prefix; label="$STYLE_PREFIX$what"
+  log="$(_style_logfile "$what")"
+  [ "$data" = 1 ] && out="$log.out"
+  t0=$SECONDS
+  if [ "$data" = 1 ]; then "$@" >"$out" 2>"$log" </dev/null & else "$@" >"$log" 2>&1 </dev/null & fi
+  pid=$!
+  if [ "$STYLE_ON" = 1 ]; then
+    saved_int="$(trap -p INT)"; saved_term="$(trap -p TERM)"
+    trap 'kill "$pid" 2>/dev/null; printf "\r\033[K\033[?25h" >&2; exit 130' INT TERM
+    printf '\033[?25l' >&2
+    # shellcheck disable=SC2206
+    runes=($STYLE_RUNES)
+    while kill -0 "$pid" 2>/dev/null; do
+      printf '\r\033[K  %s%s%s %s %s%s%s' "$C_BRONZE" "${runes[$((i % ${#runes[@]}))]}" "$C_OFF" "$label" "$C_FAINT" "$(_style_elapsed $((SECONDS-t0)))" "$C_OFF" >&2
+      i=$((i+1)); sleep 0.12 2>/dev/null || sleep 1
+    done
+  fi
+  wait "$pid"; rc=$?
+  if [ "$STYLE_ON" = 1 ]; then
+    printf '\r\033[K\033[?25h' >&2
+    trap - INT TERM
+    [ -n "$saved_int" ] && eval "$saved_int"; [ -n "$saved_term" ] && eval "$saved_term"
+  fi
+  _style_end "$rc" "$label" $((SECONDS-t0)) "$log"
+  if [ -n "$out" ]; then
+    cat "$out"     # on a failure too: a caller may parse the rows a failed run still printed
+    rm -f "$out"
+  fi
+  return "$rc"
+}
+
+# The bar: a caller that counts its own work (bytes, files, items) draws it here.
+style_bar() {  # <done> <total> [label] — redraws in place on a TTY; silent otherwise
+  _style_ready
+  [ "$STYLE_ON" = 1 ] || return 0
+  local done="${1:-0}" total="${2:-0}" label="${3:-}" width=24 fill pct bar="" i=0
+  [ "$total" -gt 0 ] 2>/dev/null || return 0
+  [ "$done" -gt "$total" ] && done="$total"
+  pct=$((done*100/total)); fill=$((done*width/total))
+  while [ "$i" -lt "$width" ]; do
+    if [ "$i" -lt "$fill" ]; then bar="$bar█"; else bar="$bar░"; fi
+    i=$((i+1))
+  done
+  printf '\r\033[K  %s%s%s %s%3s%%%s %s%s%s' "$C_BRONZE" "$bar" "$C_OFF" "$C_BONE" "$pct" "$C_OFF" "$C_FAINT" "$label" "$C_OFF" >&2
+}
+
+style_download() {  # <what> <url> <dest> — a byte bar when the size is known, else the spinner
+  _style_ready
+  local what="$1" url="$2" dest="$3" size="" label log pid rc t0 have
+  command -v curl >/dev/null 2>&1 || { printf 'style_download: curl is not on this machine\n' >&2; return 127; }
+  _style_prefix; label="$STYLE_PREFIX$what"
+  size="$(curl -fsSIL --max-time 15 "$url" 2>/dev/null | tr -d '\r' | awk 'tolower($1)=="content-length:"{n=$2} END{print n}')"
+  case "$size" in ''|*[!0-9]*|0) size="" ;; esac
+  if [ "$STYLE_ON" != 1 ] || [ -z "$size" ]; then
+    # unknown size, or nobody to watch a bar: the spinner (or the plain line) tells the truth
+    local keep_n="$STYLE_STEP_N"; STYLE_STEP_N=0
+    style_step "$label" -- curl -fsSL -o "$dest" "$url"; rc=$?
+    STYLE_STEP_N="$keep_n"
+    return "$rc"
+  fi
+  log="$(_style_logfile "$what")"; t0=$SECONDS
+  curl -fsSL -o "$dest" "$url" >"$log" 2>&1 </dev/null & pid=$!
+  printf '\033[?25l' >&2
+  while kill -0 "$pid" 2>/dev/null; do
+    have=0; [ -f "$dest" ] && have="$(wc -c <"$dest" | tr -d ' ')"
+    style_bar "$have" "$size" "$what  $(_style_bytes "$have") / $(_style_bytes "$size")"
+    sleep 0.15 2>/dev/null || sleep 1
+  done
+  wait "$pid"; rc=$?
+  printf '\r\033[K\033[?25h' >&2
+  _style_end "$rc" "$label ($(_style_bytes "$size"))" $((SECONDS-t0)) "$log"
+  return "$rc"
 }

@@ -51,6 +51,8 @@ fail() { printf 'FAIL\t%s\n' "$*" >&2; exit 1; }
 row()  { printf '  "%s","%s","%s"\n' "$1" "$2" "$3"; }
 
 mkdir -p "$REL" "$SHARED" "$LOGDIR"
+# The cloth (bin/desktop/ymir-style.sh): decoration to stderr for a human, data stays on stdout.
+_cloth_u="$-"; . "$SELF/../desktop/ymir-style.sh"; style_init; case "$_cloth_u" in *u*) ;; *) set +u ;; esac
 
 resolve_sha() {  # <dir|sha> → a release dir
   local a="$1"
@@ -181,7 +183,10 @@ build() {
   if [ -f "$d/.release-proved" ]; then say "release	$d	already built and proved"; return 0; fi
   tmp="$REL/.building-$sha-$$"; log="$LOGDIR/build-$sha.log"; rm -rf "$tmp"
   say "build	$sha	from $from ($ref) — log $log"
-  (
+  style_title "release" "building $sha — a release is cut whole, proved, and only then flipped"
+  # the build body runs under the cloth's step: one rune while it works, one line when it ends.
+  # Its own detailed trace (set -x) still goes to $log, which the failure branch below tails.
+  _build_body() (
     # a build must never touch the running machine: no service restart, no launcher or key redrawn from this folder
     export YMIR_FLEET_DEPLOY=off YMIR_SKIP_DESKTOP=1 BILSKIRNIR_DESKTOP=0
     set -x
@@ -233,7 +238,11 @@ build() {
     # the house's git guards, as the installer seats them in a working tree (Eir judges the pin's hooks too)
     for h in "$tmp"/.githooks/*; do [ -f "$h" ] && install -m 755 "$h" "$tmp/.git/hooks/$(basename "$h")"; done
     link_shared "$tmp"
-  ) > "$log" 2>&1
+  )
+  # `blog`, not `log`: style_step keeps its own local `log`, and bash scopes locals dynamically
+  local blog="$log"
+  _build_run() { _build_body > "$blog" 2>&1; }
+  style_step "cloning, installing and building $sha" -- _build_run
   local rc=$?
   if [ "$rc" != 0 ]; then say "FAIL	build stopped at step $rc — the last lines of $log:"; tail -15 "$log"; return 1; fi
   # the house's own per-app setup runs IN the release (the data home links, Rödd's face, the launcher entries)
