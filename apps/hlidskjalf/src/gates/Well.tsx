@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useYmir } from '../state/store';
 import { useUI } from '../state/ui';
 import { RecallPanel } from '../components/RecallPanel';
@@ -16,7 +17,15 @@ const timeOf = (ts: string) => {
 export function Well() {
   const recall = useYmir((s) => s.recall);
   const mimir = useYmir((s) => s.mimir);
+  const refreshWell = useYmir((s) => s.refreshWell);
   const { openModal, toast } = useUI();
+  // Opening the page reads the well now, never a boot-time copy (plan 369 item 3).
+  useEffect(() => {
+    void refreshWell();
+  }, [refreshWell]);
+  // WARM when the bridge answers with episodes, even before the list has arrived; COLD only when
+  // the bridge is down or genuinely empty.
+  const warm = recall.length > 0 || (mimir?.status === 'up' && (mimir?.episodes ?? 0) > 0);
 
   const timeline = recall.slice(0, 6).map((e) => ({
     ts: timeOf(e.ts),
@@ -86,7 +95,7 @@ export function Well() {
       <div className="metric-grid" style={{ marginBottom: 'var(--ymir-space-4)' }}>
         <MetricTile label="Episodes observed" value={mimir?.episodes ?? recall.length} delta="in the engram" />
         <MetricTile label="Recall modes" value="3" delta="hybrid · cosine · spreading" />
-        <MetricTile label="Well state" value={recall.length ? 'WARM' : 'COLD'} tone={recall.length ? 'var(--ymir-ok)' : 'var(--ymir-warn)'} delta="boost, never blocker" />
+        <MetricTile label="Well state" value={warm ? 'WARM' : 'COLD'} tone={warm ? 'var(--ymir-ok)' : 'var(--ymir-warn)'} delta="boost, never blocker" />
         <MetricTile
           label="Bridge"
           value={mimir?.status === 'up' ? 'LIVE' : 'DOWN'}
