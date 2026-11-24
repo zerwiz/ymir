@@ -25,3 +25,7 @@ The operator said: "youre the arm holder. but it dont wake u". Two faults were m
 - `bash bin/voice/rodd-room.sh path` prints the state directory's `rodd/room.jsonl`, not the pin.
 - `bin/voice/tests/test_rodd_arm.sh`: 71 passed, 0 failed.
 - `bin/voice/tests/test_rodd_helm.sh` fails 11 checks both with and without this change. That fault already existed, and it is left for the follow-up.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #926
