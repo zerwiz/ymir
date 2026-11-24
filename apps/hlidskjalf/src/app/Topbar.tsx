@@ -13,18 +13,18 @@ export function Topbar() {
 
   return (
     <header className="topbar">
-      <div className="trace-chip" title="Fleet — nominal agents of connected">
+      <div className="trace-chip" title="Fleet — agents seated in a pane, of the whole roster (the rest are ready, not down)">
         <span className="label">Fleet</span>
         <span
           className="value"
           style={{
             color: !agents.length
               ? undefined
-              : agents.every((a) => a.status === 'nominal')
-                ? 'var(--ymir-ok)'
-                : agents.some((a) => a.status === 'nominal')
+              : agents.some((a) => a.status === 'down')
+                ? 'var(--ymir-danger)'
+                : agents.some((a) => a.status === 'degraded') || !agents.some((a) => a.status === 'nominal')
                   ? 'var(--ymir-warn)'
-                  : 'var(--ymir-danger)',
+                  : 'var(--ymir-ok)',
           }}
         >
           {agents.filter((a) => a.status === 'nominal').length}/{agents.length}
