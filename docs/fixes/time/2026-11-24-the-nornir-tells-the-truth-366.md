@@ -15,3 +15,7 @@ Date: 2026-11-24 · Component: time (Nornir) and engine (release) · Plan 366
 The six jobs said to have no run (`private-scan`, `running-inventory`, `registries-refresh`, `registry-check`, `tunnels-registry`, `brief-watch`) did run on the heart; the log the operator read was the abandoned default one. Their evening or second runs were the stamp bug fixed in plan 365.
 
 Proof: `python3 tests/test_nornir_status.py` and `bash tests/test_release_ref.sh`.
+
+## CHANGE LOG
+
+- 2026-11-24 — review-mend: added missing heading for #928
