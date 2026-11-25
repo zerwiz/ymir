@@ -18,6 +18,14 @@ Plane card per file. It is a dry run unless given `--apply`.
 - It never deletes or moves a card and never writes to a file. The token is read from an environment variable the config names.
 - Configuration is `plans/.board.json` (a template ships as `plans/.board.json.example`): the board's URL and workspace, which product maps to which Plane project, and optional state, priority and person aliases.
 
+## Found when it was run against real boards (same day)
+
+- A board behind a CDN refuses a bare Python agent, so the script sends its own `User-Agent`.
+- Owners are written as names more often than emails; the script matches an email, a `people` alias from the config, a display name, `First Last` or a first name.
+- A status such as `In progress` or `Accepted — first slice built` is matched case-blind on its leading words.
+- A plan with no `id` in its header takes the `PREFIX-NNN` its file name starts with, so older cards are adopted.
+- Documents are never made into cards unless `--only docs` is given.
+
 ## Proof
 
 `bin/collab/tests/test_board_sync.py` runs seven cases against a fake Plane held in memory: a dry run writes nothing, an apply creates cards with dates and parent, a second run is unchanged, a rename updates in place, human text survives, an older card is adopted, and a missing token is refused.

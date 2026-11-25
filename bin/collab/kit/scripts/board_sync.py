@@ -3,11 +3,11 @@
 
   python3 scripts/board_sync.py                 # dry run: print what would be created or changed
   python3 scripts/board_sync.py --apply         # write it
-  python3 scripts/board_sync.py --only plans    # plans | tickets | docs
+  python3 scripts/board_sync.py --only plans    # plans | tickets | docs (documents are never synced unless asked)
   python3 scripts/board_sync.py --json          # machine-readable result
 
-Reads the header of every plan (`plans/**/*.md`), ticket (`plans/tickets/*.md`) and document (`docs/**/*.md`,
-except `docs/fixes/` and `docs/kit/`) with the reader `status.py` already uses, and upserts one Plane card per file.
+Reads the header of every plan (`plans/**/*.md`) and ticket (`plans/tickets/*.md`), and a document
+(`docs/**/*.md`, except `docs/fixes/` and `docs/kit/`) only with `--only docs`, using the reader `status.py` already uses, and upserts one Plane card per file.
 A card is found by its `external_id` (the file's path) and `external_source` (`repo-header`), never by title, so a
 renamed title updates the card and does not duplicate it.
 
@@ -40,7 +40,7 @@ SOURCE = "repo-header"
 OPEN, CLOSE = "<!--repo-header-->", "<!--/repo-header-->"
 DEFAULT_STATES = {"Proposed": "Backlog", "In Review": "Todo", "Validated": "Todo", "In Progress": "In Progress",
                   "Done": "Done", "Rejected": "Cancelled", "Superseded": "Cancelled", "Backlog": "Backlog",
-                  "Open": "Todo", "Accepted": "Todo", "Blocked": "In Progress", "Cancelled": "Cancelled",
+                  "Open": "Todo", "Accepted": "Todo", "Built": "Done", "Blocked": "In Progress", "Cancelled": "Cancelled",
                   "draft": "Backlog", "review": "Todo", "accepted": "Done", "superseded": "Cancelled",
                   "record": "Done"}
 DEFAULT_PRIORITIES = {"Critical": "urgent", "High": "high", "Medium": "medium", "Low": "low"}
@@ -78,7 +78,8 @@ class Plane:
     def call(self, method, path, body=None):
         data = json.dumps(body).encode() if body is not None else None
         req = urllib.request.Request(self.base + path, data=data, method=method,
-                                     headers={"X-API-Key": self.token, "Content-Type": "application/json"})
+                                     headers={"X-API-Key": self.token, "Content-Type": "application/json",
+                                              "User-Agent": "board-sync/1.0"})  # a bare Python agent is refused by CDNs
         for attempt in range(4):
             try:
                 with urllib.request.urlopen(req, timeout=30) as r:
@@ -117,7 +118,7 @@ def scan(only):
         shelf = ROOT / "plans" / "tickets"
         groups.append(("ticket", [p for p in sorted(shelf.glob("*.md")) if p.name not in ("README.md", "TEMPLATE.md")]
                        if shelf.is_dir() else []))
-    if only in (None, "docs"):
+    if only == "docs":  # documents are cards only when asked for; the document tool mirrors them otherwise
         groups.append(("doc", [p for p in sorted((ROOT / "docs").rglob("*.md"))
                                if not any(s in p.relative_to(ROOT).as_posix() + "/" for s in hdr.SKIP_DOCS)
                                ] if (ROOT / "docs").is_dir() else []))
@@ -131,13 +132,23 @@ def scan(only):
 
 def card_id(meta, rel=""):
     """The header's id; else the `PREFIX-NNN` the file name starts with."""
-    m = re.match(r"([A-Za-z][A-Za-z0-9]*-\d+(?:-T\d+)?)", Path(rel).name)
-    return meta.get("id") or meta.get("ticket") or meta.get("ticket_number") or (m.group(1) if m else "")
+    m = re.match(r"([A-Za-z][A-Za-z0-9]*-\d+[a-z]?(?:-T\d+)?)(?=-|\.)", Path(rel).name)
+    return meta.get("id") or meta.get("ticket") or (m.group(1) if m else "") or meta.get("ticket_number") or ""
 
 
 def base_status(value):
     """`Accepted — first slice built` -> `Accepted`: only the word before a dash names the state."""
     return re.split(r"\s+[—–-]\s+", (value or "").strip(), maxsplit=1)[0].strip()
+
+
+def state_for(states, value):
+    """Case-blind; `In progress` and `Built on fixtures` fall back to their first words."""
+    low = {k.lower(): v for k, v in states.items()}
+    words = base_status(value).lower().split()
+    for n in range(len(words), 0, -1):
+        if " ".join(words[:n]) in low:
+            return low[" ".join(words[:n])]
+    return None
 
 
 def who_is(name, members, people):
@@ -216,7 +227,7 @@ def main():
         cid = card_id(meta, rel)
         name = meta["title"] if (not cid or cid in meta["title"]) else f"{cid} — {meta['title']}"
 
-        state_name = cfg["states"].get(base_status(meta.get("status")))
+        state_name = state_for(cfg["states"], meta.get("status"))
         state = pd["states"].get(state_name) if state_name else None
         if meta.get("status") and not state:
             warnings.append(f"{rel}: status `{meta.get('status')}` maps to no state")
