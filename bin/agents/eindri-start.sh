@@ -360,7 +360,7 @@ if [ -x "$SCRIPT_DIR/../seat/herdr-run.sh" ] && [ "$HERDR_INSTALLED" = 1 ]; then
   # "verify the release" -> forseti) travels as --role-guess: it picks the pi role file and the
   # seat's name, and never the Claude permission profile — a guess must not open the merge door.
   if [ -n "$ROLE_GIVEN" ]; then _role_arg=(--role "$ROLE"); else _role_arg=(--role-guess "$ROLE"); fi
-  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $SEAT_MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} "${_role_arg[@]}" "$SEAT_NAME" -- "$REQ" >/dev/null 2>"$herdr_err" || rc=$?
+  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $SEAT_MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} "${_role_arg[@]}" "$SEAT_NAME" -- "$REQ" >"$herdr_err.out" 2>"$herdr_err" || rc=$?
 fi
 if [ "$HERDR_INSTALLED" = 1 ] && [ "$rc" != 0 ] && [ "$rc" != 3 ]; then
   printf 'eindri-start[1]{role,seat,errand}:\n  "%s","none","%s"\n' "$ROLE" "$SEAT_NAME"
@@ -391,7 +391,12 @@ else
   tmux new-window -t "$SESSION" -n "$LABEL" -c "$PWD" bash -lc "$tmux_cmd" 2>/dev/null \
     && seat="tmux:$SESSION:$LABEL"
 fi
-[ "$refuse" = 1 ] && { printf 'eindri-start[1]{role,seat,verdict}:\n  "%s","none","too brief — answer it in hand"\n' "$ROLE"; exit 0; }
+# The refusal names its real cause (a question, too short, a busy local model), as herdr-run said it.
+if [ "$refuse" = 1 ]; then
+  why=$(sed -n 's/^ *"none","\([^"]*\)".*/\1/p' "$herdr_err.out" 2>/dev/null | tail -n 1)
+  printf 'eindri-start[1]{role,seat,verdict}:\n  "%s","none","%s"\n' "$ROLE" "${why:-herdr-run refused the seat (exit 3) and gave no reason}"
+  exit 0
+fi
 [ "$seat" != "none" ] || { printf 'error: could not seat %s\n' "$ROLE" >&2; exit 1; }
 SEATED_OK=1   # the seat stands: its claims stay held (claim.sh releases them when the errand closes or goes stale)
 
