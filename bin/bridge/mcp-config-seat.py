@@ -184,7 +184,51 @@ def canonical(gateway_port: str, source: str) -> dict:
         servers["ymir"] = door_on_pin(servers["ymir"])
     servers.setdefault("firecrawl", {"command": "npx", "args": ["-y", "firecrawl-mcp"],
                                      "env": {"FIRECRAWL_API_URL": "http://localhost:3002"}})
+    fc_url = huginn_firecrawl_url()
+    if fc_url and isinstance(servers.get("firecrawl"), dict):
+        # Huginn's Firecrawl address is configuration, not a literal in a synced file (plan 373, RULES/07).
+        servers["firecrawl"].setdefault("env", {})["FIRECRAWL_API_URL"] = fc_url
+    if "a2abridge" in servers:
+        servers["a2abridge"] = a2a_on_session_wrapper(servers["a2abridge"])
+    # The browser door (plan 373): one headless Playwright for every harness, resolved at run time.
+    servers["playwright"] = {"command": os.path.join(stable_root(), "bin", "seat", "playwright-mcp-launch.sh"),
+                             "args": []}
     return servers
+
+
+def huginn_firecrawl_url() -> str:
+    """YMIR_FIRECRAWL_URL from the environment, else from the home's config/huginn.env (KEY=value lines,
+    read and never sourced). Empty means: leave the source's own address (default http://localhost:3002)."""
+    v = os.environ.get("YMIR_FIRECRAWL_URL", "")
+    if v:
+        return v
+    home = os.environ.get("YMIR_HOME") or os.path.join(HOME, "Documents", "ymirhome")
+    try:
+        for line in open(os.path.join(home, "config", "huginn.env")):
+            m = re.match(r"\s*YMIR_FIRECRAWL_URL\s*=\s*[\"']?([^\"'\s]+)", line)
+            if m:
+                v = m.group(1)
+    except OSError:
+        pass
+    return v
+
+
+def a2a_on_session_wrapper(spec):
+    """A raw ``a2abridge bridge -bind <host>:8391`` entry gives every session the same port, id and
+    state dir, so the second session cannot bind and its MCP child answers CONNECTION_CLOSED
+    (measured 2026-11-25; plan 303 §12.3 step 6 wrote the wrapper, nothing seated it for the other
+    harnesses). Re-point it at ``bin/bridge/a2a-bridge-session.sh``, which gives each session its own
+    identity, free port and inbox. The env (directory, advertise host) is kept."""
+    if not isinstance(spec, dict):
+        return spec
+    cmd = str(spec.get("command") or "")
+    args = [str(a) for a in (spec.get("args") or [])]
+    if os.path.basename(cmd) != "a2abridge" or not args or args[0] != "bridge":
+        return spec
+    out = {k: v for k, v in spec.items() if k not in ("command", "args")}
+    out["command"] = os.path.join(stable_root(), "bin", "bridge", "a2a-bridge-session.sh")
+    out["args"] = []
+    return out
 
 
 def portable(servers: dict, with_ymir: bool) -> tuple[dict, list[str]]:
