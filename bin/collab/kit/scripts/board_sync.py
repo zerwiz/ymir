@@ -11,7 +11,7 @@ Reads the header of every plan (`plans/**/*.md`) and ticket (`plans/tickets/*.md
 A card is found by its `external_id` (the file's path) and `external_source` (`repo-header`), never by title, so a
 renamed title updates the card and does not duplicate it.
 
-What it writes: name, state, priority, assignees, labels, start and target dates, the parent card (a ticket's
+What it writes: name, state, priority, assignees (added, never removed, unless `"assignees": "replace"`), labels, start and target dates, the parent card (a ticket's
 plan), and a small block at the top of the description with `created`, `updated`, `product`, `legacy_id`, the
 source path and the links. Text a person writes below the block's closing marker is kept.
 
@@ -166,11 +166,24 @@ def description_block(kind, rel, meta):
     return f"{OPEN}<ul>{cells}</ul>{CLOSE}"
 
 
+# Plane drops HTML comments and wraps the text in a <div>, so the block is found by its content, not by markers.
+BLOCK_RE = re.compile(
+    r"(?:<div>)?(?:<!--repo-header-->.*?<!--/repo-header-->|<ul>(?:<li><strong>(?:Created|Updated|Product|Was|Reviewer|Source|Links):</strong>[^<]*</li>)+</ul>)",
+    re.S)
+
+
+def _plain(text):
+    return re.sub(r"<!--.*?-->|</?div>|\s+", "", text or "", flags=re.S)
+
+
 def merge_description(existing, block):
     existing = existing or ""
-    if OPEN in existing and CLOSE in existing:
-        return block + existing.split(CLOSE, 1)[1]
-    return block + existing
+    m = BLOCK_RE.search(existing)
+    if m:  # keep Plane's <div> wrapper balanced: it opened before the block and closes after the human text
+        merged = ("<div>" if m.group(0).startswith("<div>") else "") + block + existing[m.end():]
+    else:
+        merged = block + existing
+    return existing if _plain(merged) == _plain(existing) else merged
 
 
 def project_for(cfg, meta):
@@ -262,6 +275,15 @@ def main():
 
         card = pd["issues"].get(rel)
         adopt = False
+        wanted = (cfg.get("adopt") or {}).get(rel)  # a file named in the config is matched to that card, e.g. "ALPHA-12"
+        if not card and wanted:
+            for other in pd["unclaimed"]:
+                if f"{ident}-{other['sequence_id']}" == wanted:
+                    card, adopt = other, True
+                    pd["unclaimed"].remove(other)
+                    break
+            else:
+                warnings.append(f"{rel}: adopt target {wanted} not found or already claimed")
         if not card and cid:  # a card made before this tool existed: adopt it by its id, never duplicate it
             for other in pd["unclaimed"]:
                 n = (other.get("name") or "").strip()
@@ -278,6 +300,8 @@ def main():
                 cur = card.get(k)
                 if k == "assignees":
                     cur = sorted(card.get("assignees") or [])
+                    if cfg.get("assignees", "add") != "replace":  # default: add the header's owners, never remove anyone
+                        v = sorted(set(cur) | set(v))
                 if cur != v:
                     diff[k] = v
             if sorted(card.get("labels") or []) != sorted(label_ids) and not new_labels:

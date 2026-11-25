@@ -32,7 +32,7 @@ files win, the board follows. Run it with no flag first. It prints what it would
 | Card title | `title`, with the `id` in front |
 | Column (state) | `status` |
 | Priority | `priority` |
-| People | `owner`, `assignee`, `co_owners` |
+| People | `owner`, `assignee`, `co_owners`. Added to a card, never removed (set `"assignees": "replace"` in `plans/.board.json` to make the header the whole list) |
 | Labels | `labels` and `type` |
 | Dates | `start`, `due` |
 | Parent card | `parent` |
@@ -92,3 +92,13 @@ project is below admin.
 ## CHANGE LOG
 
 - 2026-11-25 — written with the first release of the sync.
+
+## Matching a file to a card that already exists
+
+A plan with no id in its name or header is not found by the sync, so it would create a second card. Name the card in `plans/.board.json` and the sync adopts it instead:
+
+```json
+"adopt": { "plans/01-the-company.md": "ALPHA-12" }
+```
+
+If the card is missing or already claimed by another file, the run prints a warning and creates nothing.

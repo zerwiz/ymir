@@ -10,5 +10,7 @@
   "states": {
     "In Review": "In Progress"
   },
-  "priorities": {}
+  "priorities": {},
+  "assignees": "add",
+  "adopt": {}
 }
