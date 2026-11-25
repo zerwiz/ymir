@@ -13,3 +13,7 @@ This folder is the one place the gate pack is kept. `bin/gates/pack.sh seat <rep
 > `bin/gates/pack.sh seat` and open one pull request per repository. `bin/gates/pack.sh status` shows which are behind.
 
 The how-to is `docs/features/gate-pack.md`; the plan is the operator's plan 372.
+
+## CHANGE LOG
+
+- **2026-11-25** — written with the gate pack (plan 372).
