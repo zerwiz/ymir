@@ -68,3 +68,7 @@ A seat with no stack and no borrow address reports Firecrawl as `down` with road
 - `status` shows Firecrawl `down`: run `bin/fleet/huginn-web.sh up`.
 - `status` shows the browser `missing`: run `npx playwright install chromium-headless-shell`.
 - `eir-doctor.sh check` has two rows for this, `browser` and `huginn`. `eir-doctor.sh fix browser huginn` re-seats the doors and raises the stack.
+
+## CHANGE LOG
+
+- 2026-11-25 — page opened with plan 373: the browser door and Huginn's status, up and down.

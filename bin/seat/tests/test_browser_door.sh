@@ -28,16 +28,16 @@ grep -q 'playwright/mcp@\$VERSION' "$L" && ! grep -q '@latest' "$L" && ok "the s
 # seat writer: raw a2abridge becomes the session wrapper; the browser door is in the set
 SRC="$TMP/adapter.json"
 cat >"$SRC" <<J
-{"mcpServers":{"a2abridge":{"command":"/x/.a2abridge/bin/a2abridge","args":["bridge","-bind","100.1.1.1:8391"],"env":{"A2A_DIRECTORY":"http://127.0.0.1:7777"}}}}
+{"mcpServers":{"a2abridge":{"command":"/x/.a2abridge/bin/a2abridge","args":["bridge","-bind","127.0.0.1:8391"],"env":{"A2A_DIRECTORY":"http://127.0.0.1:7777"}}}}
 J
-out=$(YMIR_MCP_ADAPTER="$SRC" YMIR_FIRECRAWL_URL=http://example-heart:3002 bash "$ROOT/bin/bridge/mcp-config.sh" harness claude)
+out=$(YMIR_MCP_ADAPTER="$SRC" YMIR_FIRECRAWL_URL=http://127.0.0.1:3999 bash "$ROOT/bin/bridge/mcp-config.sh" harness claude)
 echo "$out" | python3 -c '
 import json,sys
 d=json.load(sys.stdin)["mcpServers"]
 assert d["a2abridge"]["command"].endswith("a2a-bridge-session.sh"), d["a2abridge"]
 assert d["a2abridge"]["args"]==[] and d["a2abridge"]["env"]["A2A_DIRECTORY"], d["a2abridge"]
 assert d["playwright"]["command"].endswith("playwright-mcp-launch.sh"), d["playwright"]
-assert d["firecrawl"]["env"]["FIRECRAWL_API_URL"]=="http://example-heart:3002", d["firecrawl"]
+assert d["firecrawl"]["env"]["FIRECRAWL_API_URL"]=="http://127.0.0.1:3999", d["firecrawl"]
 ' 2>"$TMP/err" && ok "seat set: session-wrapper a2abridge, playwright door, configured Firecrawl address" || bad "seat set" "$(cat "$TMP/err")"
 
 # Huginn's door: down with road none; borrow reported as borrowed; refuses a worktree
