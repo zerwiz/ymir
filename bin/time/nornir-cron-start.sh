@@ -250,6 +250,17 @@ parse_line() { # -> "gate<TAB>at<TAB>dow<TAB>cmd"
 }
 export -f is_role is_dow dow_matches at_valid parse_line
 
+invalid_rows() { # every schedule row Nornir cannot read, as the schedule stands now
+  grep -vE '^[[:space:]]*(#|$)' "$CRON_CONFIG" 2>/dev/null | while IFS= read -r _l; do
+    _p=$(parse_line "$_l")
+    _rest=${_p#*$'\t'}
+    _at=${_rest%%$'\t'*}
+    _rest=${_rest#*$'\t'}
+    _dow=${_rest%%$'\t'*}
+    { at_valid "$_at" && { [ -z "$_dow" ] || is_dow "$_dow"; }; } || printf '%s\n' "$_l"
+  done
+}
+
 scheduler='
   config="$1"; log="$2"; state="$3"; home="$4"; confdir="$5"; root="$6"
   export BROKK_HOME="$home"
@@ -468,8 +479,7 @@ scheduler='
 
 case "${1-}" in
   --status)
-    invalid=0
-    [ -r "$STATE/.cron-invalid" ] && invalid=$(grep -c . "$STATE/.cron-invalid" 2>/dev/null || printf '0')
+    invalid=$(invalid_rows | grep -c .)
     extra=""; [ "${invalid:-0}" != 0 ] && extra=" invalid=$invalid"
     if pid=$(running_pid); then
       printf 'cron: running pid=%s jobs=%s%s\n' "$pid" "$(job_count)" "$extra"
@@ -520,22 +530,16 @@ fi
 # Name every line whose schedule shape the scheduler does not understand, BEFORE the
 # loop starts. A row that cannot be read is a job that will never fire, and this house
 # has already paid once for a declared-but-dead schedule (2026-09-24).
-_bad=$(
-  grep -vE '^[[:space:]]*(#|$)' "$CRON_CONFIG" 2>/dev/null | while IFS= read -r _l; do
-    _p=$(parse_line "$_l")
-    _rest=${_p#*	}
-    _at=${_rest%%	*}
-    _rest=${_rest#*	}
-    _dow=${_rest%%	*}
-    { at_valid "$_at" && { [ -z "$_dow" ] || is_dow "$_dow"; }; } || printf '%s\n' "$_l"
-  done
-)
+_bad=$(invalid_rows)
+# The record the loop keeps starts afresh with each clock: it was append-only, so a row that became
+# readable (or was removed) stayed counted for ever (plan 369 item 12).
+mkdir -p "$STATE"; { [ -n "$_bad" ] && printf '%s\n' "$_bad"; } >"$STATE/.cron-invalid"
 if [ -n "$_bad" ]; then
   printf 'cron: WARNING — %s line(s) carry a schedule shape Nornir does not understand, and will NOT fire:\n' "$(printf '%s\n' "$_bad" | grep -c .)" >&2
   printf '%s\n' "$_bad" | sed 's/^/  /' >&2
   printf 'cron: shapes are HH:MM · @hourly · @hourly:MM · @daily · @every:N · Mon|Mon,Fri HH:MM (after or before the @role gate)\n' >&2
 fi
-unset _bad _l _p _at _dow _rest
+unset _bad
 
 mkdir -p "$STAMP_DIR" "$LOCK_DIR"
 rotate_log
