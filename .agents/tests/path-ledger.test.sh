@@ -32,4 +32,7 @@ mkdir -p "$T/docs/fixes/gate" && printf 'a note about bin/old-thing.sh\n' >"$T/d
 rm "$T/bin/quoted.sh"
 YMIR_GUARD_ROOT="$T" bash "$GUARD" check >/dev/null 2>&1 && ok "history (docs/fixes) is exempt" || bad "the record was flagged"
 
+mkdir -p "$T/docs/contract-history" && printf 'the old contract named bin/old-thing.sh\n' >"$T/docs/contract-history/AGENTS-old.md"
+YMIR_GUARD_ROOT="$T" bash "$GUARD" check >/dev/null 2>&1 && ok "the contract's verbatim history is exempt" || bad "the contract history was flagged"
+
 [ "$fail" = 0 ] && echo "ALL PASS" || echo "FAILURES"; exit "$fail"

@@ -64,3 +64,6 @@ context. the append sections must be involved in the agents.md and not be append
 The verbatim copy quotes the old contract, which still names a retired home path (`hodd/life/`). Editing it would
 break the copy, so `bin/gates/guards/retired-path-guard.sh` now treats `docs/contract-history/` as a record, like
 `docs/fixes/` and `RULES/`. `bin/gates/tests/test_retired_path_guard.sh` checks it.
+
+`bin/gates/guards/path-ledger-guard.sh` treats `docs/contract-history/` the same way, because the old contract names
+paths that have since moved. `.agents/tests/path-ledger.test.sh` checks it.
