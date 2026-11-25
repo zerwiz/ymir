@@ -3,6 +3,7 @@
 ---
 
 <p align="center">
+  <strong>the homepage:</strong> <a href="https://ymir.zerwiz.org">https://ymir.zerwiz.org</a> · <a href="https://ymir.zerwiz.org/how-to/">how to</a> · <a href="https://ymir.zerwiz.org/kvoldvaka/">Kvöldvaka</a><br>
   <strong>created by zerwiz</strong> · <a href="https://zerwiz.org">https://zerwiz.org</a> · whynotproductions<br>
   <em>a hobby project, made for the love of the craft. use it, fork it, enjoy it.</em>
 </p>
