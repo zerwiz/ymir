@@ -24,6 +24,8 @@ class FakePlane(BaseHTTPRequestHandler):
     issues: list = []
     labels: list = []
     writes = 0
+    other: list = []      # issues of the second project BETA
+    comments: dict = {}   # issue id -> list of comments
 
     def log_message(self, *a):
         pass
@@ -45,13 +47,16 @@ class FakePlane(BaseHTTPRequestHandler):
         if p.endswith("/members/"):
             return self._send([{"id": "u1", "email": "ada@example.org"}])
         if p.endswith("/states/"):
-            return self._send({"results": [{"id": "s-" + n, "name": n} for n in ("Backlog", "Todo", "In Progress", "Done", "Cancelled")]})
+            grp = {"Cancelled": "cancelled", "Done": "completed"}
+            return self._send({"results": [{"id": "s-" + n, "name": n, "group": grp.get(n, "")} for n in ("Backlog", "Todo", "In Progress", "Done", "Cancelled")]})
         if p.endswith("/labels/"):
             return self._send({"results": FakePlane.labels})
+        if p.endswith("/comments/"):
+            return self._send({"results": FakePlane.comments.get(p.split("/")[-3], [])})
         if p.endswith("/issues/"):
-            return self._send({"results": FakePlane.issues})
+            return self._send({"results": FakePlane.other if "/p2/" in p else FakePlane.issues})
         if p.endswith("/projects/"):
-            return self._send({"results": [{"id": "p1", "identifier": "ALPHA"}]})
+            return self._send({"results": [{"id": "p1", "identifier": "ALPHA"}, {"id": "p2", "identifier": "BETA"}]})
         self._send({}, 404)
 
     def do_POST(self):
@@ -61,15 +66,19 @@ class FakePlane(BaseHTTPRequestHandler):
             lab = {"id": "l%d" % len(FakePlane.labels), "name": b["name"]}
             FakePlane.labels.append(lab)
             return self._send(lab)
-        issue = {"id": "i%d" % len(FakePlane.issues), "sequence_id": len(FakePlane.issues) + 1, **b}
-        FakePlane.issues.append(issue)
+        if self.path.endswith("/comments/"):
+            FakePlane.comments.setdefault(self.path.split("/")[-3], []).append(b)
+            return self._send(b)
+        pool = FakePlane.other if "/p2/" in self.path else FakePlane.issues
+        issue = {"id": ("o%d" if pool is FakePlane.other else "i%d") % len(pool), "sequence_id": len(pool) + 1, **b}
+        pool.append(issue)
         self._send(issue)
 
     def do_PATCH(self):
         b = self._body()
         FakePlane.writes += 1
         iid = self.path.rstrip("/").split("/")[-1]
-        for i in FakePlane.issues:
+        for i in FakePlane.issues + FakePlane.other:
             if i["id"] == iid:
                 i.update(b)
                 return self._send(i)
@@ -117,6 +126,7 @@ class BoardSync(unittest.TestCase):
 
     def setUp(self):
         FakePlane.issues, FakePlane.labels, FakePlane.writes = [], [], 0
+        FakePlane.other, FakePlane.comments = [], {}
         self.repo = Path(tempfile.mkdtemp())
         (self.repo / "scripts").mkdir()
         for f in ("board_sync.py", "status.py"):
@@ -176,6 +186,25 @@ class BoardSync(unittest.TestCase):
         self.run_sync("--apply")
         self.assertEqual(len(FakePlane.issues), 2)
         self.assertEqual(FakePlane.issues[0]["external_id"], "plans/ALPHA-001-first.md")
+
+    def test_move_copies_to_the_other_project_and_closes_the_original(self):
+        shutil.copy(KIT / "scripts" / "board_move.py", self.repo / "scripts" / "board_move.py")
+        self.run_sync("--apply")
+        src = next(i for i in FakePlane.issues if i["external_id"] == "plans/ALPHA-001-first.md")
+        FakePlane.comments[src["id"]] = [{"comment_html": "<p>hello</p>", "actor_detail": {"display_name": "ada"}}]
+        run = lambda *a: subprocess.run([sys.executable, "-I", str(self.repo / "scripts" / "board_move.py"), *a],
+                                        capture_output=True, text=True, env=self.env)
+        dry = run("ALPHA-1", "--to", "BETA")
+        self.assertEqual((dry.returncode, len(FakePlane.other)), (0, 0), dry.stderr)
+        r = run("ALPHA-1", "--to", "BETA", "--apply")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        new = FakePlane.other[0]
+        self.assertEqual(new["name"], src["name"])
+        self.assertEqual(new["external_id"], "plans/ALPHA-001-first.md")
+        self.assertIn("Moved from ALPHA-1", new["description_html"])
+        self.assertIn("hello", FakePlane.comments[new["id"]][0]["comment_html"])
+        self.assertEqual(src["state"], "s-Cancelled")
+        self.assertIsNone(src["external_id"])
 
     def test_no_token_is_refused(self):
         env = {k: v for k, v in os.environ.items() if k != "PLANE_API_TOKEN"}

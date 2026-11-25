@@ -26,9 +26,13 @@ Plane card per file. It is a dry run unless given `--apply`.
 - A plan with no `id` in its header takes the `PREFIX-NNN` its file name starts with, so older cards are adopted.
 - Documents are never made into cards unless `--only docs` is given.
 
+## Moving a card between projects
+
+Plane Community 1.4 has no move to another project, so `scripts/board_move.py` copies the card (title, description, priority, people, labels, dates, comments) into the target project, notes `Moved to …` on the original and sets it to Cancelled. The new card has a new number. The page `docs/board-sync.md` is the handoff for people and agents, and also says where columns are renamed, added and deleted in Plane.
+
 ## Proof
 
-`bin/collab/tests/test_board_sync.py` runs seven cases against a fake Plane held in memory: a dry run writes nothing, an apply creates cards with dates and parent, a second run is unchanged, a rename updates in place, human text survives, an older card is adopted, and a missing token is refused.
+`bin/collab/tests/test_board_sync.py` runs eight cases against a fake Plane held in memory: a dry run writes nothing, an apply creates cards with dates and parent, a second run is unchanged, a rename updates in place, human text survives, an older card is adopted, a card is moved to another project, and a missing token is refused.
 
 ## References
 
