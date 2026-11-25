@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """board_move.py — move a Plane card to another project (Plane Community cannot do this itself).
 
-  python3 scripts/board_move.py ATLAS-282 --to NOVI            # dry run: say what would happen
-  python3 scripts/board_move.py ATLAS-282 NOVI-5 --to VAULT --apply
+  python3 scripts/board_move.py ALPHA-282 --to BETA            # dry run: say what would happen
+  python3 scripts/board_move.py ALPHA-282 BETA-5 --to GAMMA --apply
 
 Plane Community 1.4 has no "move to project", and a card's number belongs to its project, so a move is a copy
 plus a closing note: the card is created in the target project (same title, description, priority, people,
-labels, dates, and the comments, each marked with its author), the original gets a comment `Moved to NOVI-7`
-and is set to its project's Cancelled state, and the new card's description starts with `Moved from ATLAS-282`.
+labels, dates, and the comments, each marked with its author), the original gets a comment `Moved to BETA-7`
+and is set to its project's Cancelled state, and the new card's description starts with `Moved from ALPHA-282`.
 The new card has a NEW number; links that name the old one must be updated by hand.
 
 A card that a plan file is synced to (see board_sync.py) takes its file link with it: the new card keeps the
@@ -40,8 +40,8 @@ def find_card(plane, projects, ref):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cards", nargs="+", help="card ids such as ATLAS-282")
-    ap.add_argument("--to", required=True, help="target project identifier, e.g. NOVI")
+    ap.add_argument("cards", nargs="+", help="card ids such as ALPHA-282")
+    ap.add_argument("--to", required=True, help="target project identifier, e.g. BETA")
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
     cfg = bs.load_config()

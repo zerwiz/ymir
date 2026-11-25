@@ -18,7 +18,7 @@ Plane itself already does. Read it before you touch the board.
 | I want to… | Do this |
 |---|---|
 | Put my plans and tickets on the board | `python3 scripts/board_sync.py` (dry run), then `--apply` |
-| Move a card to another project | `python3 scripts/board_move.py ATLAS-282 --to NOVI` (dry run), then `--apply` |
+| Move a card to another project | `python3 scripts/board_move.py ALPHA-282 --to BETA` (dry run), then `--apply` |
 | Rename, add or delete a column | In Plane: the project, **Settings**, **States** (see below) |
 | See each plan's status | `python3 scripts/status.py` |
 
@@ -61,8 +61,8 @@ Documents are not cards unless you pass `--only docs`.
 ## Moving a card to another project
 
 Plane Community 1.4 cannot move a card between projects. `board_move.py` copies it instead: the new card gets the title,
-description, priority, people, labels, dates and comments, and starts with `Moved from ATLAS-282`. The old card gets
-`Moved to NOVI-7` and goes to its project's Cancelled column. **The new card has a new number.** Fix links that name the
+description, priority, people, labels, dates and comments, and starts with `Moved from ALPHA-282`. The old card gets
+`Moved to BETA-7` and goes to its project's Cancelled column. **The new card has a new number.** Fix links that name the
 old one. If the card is synced to a plan file, change that file's `product` to the new project so the next sync agrees.
 
 ## Columns, lists and boards in Plane itself
