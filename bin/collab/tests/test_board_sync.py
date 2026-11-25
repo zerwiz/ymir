@@ -206,6 +206,36 @@ class BoardSync(unittest.TestCase):
         self.assertEqual(src["state"], "s-Cancelled")
         self.assertIsNone(src["external_id"])
 
+    def test_assignees_are_added_never_removed(self):
+        self.run_sync("--apply")
+        card = next(i for i in FakePlane.issues if i["external_id"] == "plans/ALPHA-001-first.md")
+        card["assignees"] = ["someone-else"]
+        self.run_sync("--apply")
+        self.assertEqual(sorted(card["assignees"]), ["someone-else", "u1"])
+
+    def test_adopt_map_matches_a_file_to_an_existing_card(self):
+        FakePlane.issues.append({"id": "old9", "sequence_id": 9, "name": "Some old title with no id", "labels": []})
+        cfg = json.loads((self.repo / "plans" / ".board.json").read_text())
+        cfg["adopt"] = {"plans/ALPHA-001-first.md": "ALPHA-9"}
+        (self.repo / "plans" / ".board.json").write_text(json.dumps(cfg))
+        self.run_sync("--apply")
+        self.assertEqual(len(FakePlane.issues), 2)  # the plan took the old card; only the ticket was created
+        old = next(i for i in FakePlane.issues if i["id"] == "old9")
+        self.assertEqual(old["external_id"], "plans/ALPHA-001-first.md")
+
+    def test_a_block_the_board_rewrapped_is_recognised_not_stacked(self):
+        sys.path.insert(0, str(KIT / "scripts"))
+        import board_sync as bs
+        block = bs.description_block("plan", "plans/a.md", {"created": "2026-11-01", "product": "alpha"})
+        stored = "<div>" + block.replace("<!--repo-header-->", "").replace("<!--/repo-header-->", "") + "<p>human text</p></div>"
+        self.assertEqual(bs.merge_description(stored, block), stored)  # nothing to change
+        newer = bs.description_block("plan", "plans/a.md", {"created": "2026-11-01", "updated": "2026-11-09", "product": "alpha"})
+        out = bs.merge_description(stored, newer)
+        self.assertEqual(out.count("<ul>"), 1)
+        self.assertIn("human text", out)
+        self.assertIn("2026-11-09", out)
+        self.assertEqual(out.count("<div>"), out.count("</div>"))
+
     def test_no_token_is_refused(self):
         env = {k: v for k, v in os.environ.items() if k != "PLANE_API_TOKEN"}
         r = self.run_sync(env=env)
