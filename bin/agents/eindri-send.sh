@@ -221,7 +221,7 @@ esac
 # there and judged here, so the door can never judge two boxes by two rules.
 box() {
   if [ "$REMOTE" = 1 ]; then
-    far "herdr pane read $(printf '%q' "$PANE") --lines 40" | python3 "$ROOT/bin/seat/herdr-editor.py" --stdin
+    far "herdr pane read $(printf '%q' "$PANE") --lines 40 --format ansi" | python3 "$ROOT/bin/seat/herdr-editor.py" --stdin
   else
     python3 "$ROOT/bin/seat/herdr-editor.py" "$PANE" 2>&1
   fi
@@ -301,7 +301,7 @@ if [ "$STATE" != working ] && [ "$RESEND" = 1 ] && ! screen_busy; then
     text)
       submit_key || die "the Enter key was refused — the line stands in the box, unsent" 4
       RESENT=enter ;;
-    empty)
+    empty|suggestion)
       send_once || die "the resend failed — the far side refused it" 4
       RESENT=copy ;;
     *)
