@@ -771,6 +771,13 @@ $_coretext"
     fi
     printf 'herdr-run[1]{eindri,injected,attempts}:\n  "%s","%s",%s\n' "$NAME" "$injected" "${_try:-0}" >&2
 
+    # THE SEAT'S RECORD names its pane (plan 369 item 16): eindri-answer.sh sends the answer to it, and a
+    # seat with no pane on file could only be closed with --record-only.
+    _meta="$STATE_DIR/$NAME.meta"
+    mkdir -p "$STATE_DIR" 2>/dev/null
+    [ -f "$_meta" ] || printf 'id=%s\nbackend=herdr\nharness=%s\nwindow=%s\nworktree=%s\n' "$NAME" "$KIND" "$pane" "$SEAT_CWD" >"$_meta" 2>/dev/null
+    printf 'seat_pane=%s\n' "$pane" >>"$_meta" 2>/dev/null
+
     # Arm the handoff (plan 42, the automation law). A when-source beside the
     # smith watches him and, the moment he reports (REPORT.md lands, or herdr
     # shows he left `working`), files the report, marks him done, and wakes
