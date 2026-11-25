@@ -30,3 +30,7 @@ of the 7 fail on the old code. It reaches no network.
 - In `snotra-trello.py`, `die` is defined after the board file is read. A bad `trello.yaml` therefore ends in a
   traceback.
 - `systems/snotra/tests/smoke.sh` reports 10 failures both with and without this change.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #957
