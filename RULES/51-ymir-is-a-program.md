@@ -53,3 +53,15 @@ laws_more[6]{rule,why}:
 ```
 
 The order of work, the measurements and the online reading behind each line are plan 248 in the home ledger.
+
+## Appended 2026-11-25 — Hermes is a root agent (plan 372)
+
+The operator: *"in all places we mention what harness pi works for, we need to add Hermes."* The first table above names
+the roots as pi, Claude, OpenCode, Codex and Cursor. It stays as the record; this corrects it. **Hermes (`~/.hermes`) is
+a root agent with the same weight.** Its seat (`bin/seat/hermes-seat.sh`, run by install and by Gróa's update) carries
+the contract, the MCP doors, the skills shelf and the worker wake from the pinned runtime.
+
+A claim is made only where it holds. Hermes has no Pi-extension surface, so it reaches those tools through the MCP door,
+as the row *ONE CAPABILITY, EVERY HARNESS* above already says. A tell reaches a Hermes session that holds the arm through
+its gateway (plan 369 item 1), but a live end-to-end run is not yet recorded, and the pages that describe Hermes's root
+say so rather than over-claiming.

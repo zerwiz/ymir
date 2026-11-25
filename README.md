@@ -850,7 +850,7 @@ A new capability therefore has three possible homes — a shell script, a skill,
 a **pi package** — and on Omarchy it can also reach the desktop itself. That is the
 freedom of being native to all three rather than portable to none.
 
-Point a harness (OpenCode, Pi, Claude Code, Cursor, Codex) at the repo and it takes
+Point a harness (OpenCode, Pi, Claude Code, Cursor, Codex, Hermes) at the repo and it takes
 the seat as **Brokk**. Read [`AGENTS.md`](AGENTS.md) for the operating laws and
 `$YMIR_HOME/docs/masterplan.md` for the forge orders.
 
