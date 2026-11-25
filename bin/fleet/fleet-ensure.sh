@@ -40,7 +40,12 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || 
 # never find apps/. Export the walked root once, here.
 export YMIR_ROOT_DIR="$ROOT"
 . "$SCRIPT_DIR/../engine/autoboot-lib.sh"
-HOME_ROOT="$AUTOBOOT_HOME_ROOT"
+# The operator's home through the ONE resolver (bin/vault/hoard-lib.sh): smidja.service's CMD_DB and
+# the operator-home lines below are rendered from it. The autoboot value is the fallback when the lib
+# is absent.
+HOME_ROOT=""
+command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_ROOT 2>/dev/null
+HOME_ROOT="${HOME_ROOT:-$AUTOBOOT_HOME_ROOT}"
 DST="$HOME/.fleet"
 # The tree that SHIPS the templates may differ from the seat's platform root
 # (an updater or installer from a source tree against a packed seat). Normally
@@ -310,6 +315,8 @@ materialize_embed() {
 # ── the web stack (A5): dev seats owe the doors as units ────────────────────
 web_app_dirs() {  # resolve the app/viz/env/db roots once, into globals
   local _db=""
+  # SMIDJA_DB is the operator's pin for the smithy's db: read here, beside the default it overrides.
+  [ -n "${SMIDJA_DB:-}" ] && VIZ_DB="$SMIDJA_DB"
   if command -v hoard_local_env >/dev/null 2>&1; then hoard_local_env ENV_FILE 2>/dev/null || true; fi
   ENV_FILE="${ENV_FILE:-$HOME_ROOT/.env.local}"
   if command -v app_dir >/dev/null 2>&1; then app_dir hlidskjalf APP_DIR 2>/dev/null || true; fi
@@ -322,9 +329,8 @@ web_app_dirs() {  # resolve the app/viz/env/db roots once, into globals
   fi
 }
 
-# VIZ_DB may be overridden by the environment (SMIDJA_DB) — the resolved default
-# above wins only when the operator did not pin one.
-VIZ_DB="${SMIDJA_DB:-}"
+# VIZ_DB may be overridden by the environment (SMIDJA_DB) — web_app_dirs reads it first,
+# and the resolved default above wins only when the operator did not pin one.
 
 # ── Gná's desk (plan 193 §14): ARMED ONLY WHERE AN ACCOUNT IS DECLARED ────
 # A desk with nothing to read must never be armed: a seat that answers /health with

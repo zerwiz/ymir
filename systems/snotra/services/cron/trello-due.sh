@@ -13,6 +13,13 @@ VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; s="$d"; while [ "$d" != / ] && { [ ! -d "$d/RULES" ] || [ ! -d "$d/.agents" ]; }; do d="$(dirname "$d")"; done; { [ -d "$d/RULES" ] && [ -d "$d/.agents" ]; } || d="$s"; printf '%s' "$d")"
 
+# The operator's home through the ONE resolver, exported so the Trello module reads the same one
+# (2026-11-25: every run said "ymir_home_root: command not found").
+# shellcheck source=/dev/null
+. "$ROOT/bin/vault/hoard-lib.sh"
+ymir_home_root YMIR_HOME
+export YMIR_HOME
+
 DRY=0; BOARD=""
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -25,7 +32,7 @@ while [ $# -gt 0 ]; do
 done
 
 ROOT_DIR="$ROOT" DRY_Q="$DRY" BOARD_Q="$BOARD" python3 - <<'PY'
-import datetime, importlib.util, json, os, subprocess, sys
+import contextlib, datetime, importlib.util, io, json, os, subprocess, sys
 
 root = os.environ["ROOT_DIR"]
 dry = os.environ["DRY_Q"] == "1"
@@ -34,11 +41,18 @@ want_board = os.environ.get("BOARD_Q") or ""
 spec = importlib.util.spec_from_file_location(
     "snotra_trello", os.path.join(root, "systems", "snotra", "services", "cron", "snotra-trello.py"))
 trello = importlib.util.module_from_spec(spec)
+said = io.StringIO()
 try:
-    spec.loader.exec_module(trello)          # defines CONFIG, token(), api()
-except SystemExit as err:                     # its die() calls sys.exit
-    print(f'trello-due[1]{{state}}: "the trello module refused: {err}"')
+    with contextlib.redirect_stderr(said):
+        spec.loader.exec_module(trello)      # defines CONFIG, token(), api()
+except SystemExit:                            # its die() prints the reason, then calls sys.exit
+    why = said.getvalue().strip().removeprefix("error: ").replace('"', "'") or "no reason given"
+    if "no Trello grant" in why:
+        why = ("no Trello grant in ~/.pi/agent/mcp-auth.json — connect the Trello MCP server, "
+               "then run this again")
+    print(f'trello-due[1]{{state}}: "{why}"')
     sys.exit(1)
+sys.stderr.write(said.getvalue())
 
 try:
     boards = trello.api("GET", "/members/me/boards", {"fields": "name,closed"})
