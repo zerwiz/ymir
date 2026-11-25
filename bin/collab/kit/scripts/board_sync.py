@@ -166,11 +166,24 @@ def description_block(kind, rel, meta):
     return f"{OPEN}<ul>{cells}</ul>{CLOSE}"
 
 
+# Plane drops HTML comments and wraps the text in a <div>, so the block is found by its content, not by markers.
+BLOCK_RE = re.compile(
+    r"(?:<div>)?(?:<!--repo-header-->.*?<!--/repo-header-->|<ul>(?:<li><strong>(?:Created|Updated|Product|Was|Reviewer|Source|Links):</strong>[^<]*</li>)+</ul>)",
+    re.S)
+
+
+def _plain(text):
+    return re.sub(r"<!--.*?-->|</?div>|\s+", "", text or "", flags=re.S)
+
+
 def merge_description(existing, block):
     existing = existing or ""
-    if OPEN in existing and CLOSE in existing:
-        return block + existing.split(CLOSE, 1)[1]
-    return block + existing
+    m = BLOCK_RE.search(existing)
+    if m:  # keep Plane's <div> wrapper balanced: it opened before the block and closes after the human text
+        merged = ("<div>" if m.group(0).startswith("<div>") else "") + block + existing[m.end():]
+    else:
+        merged = block + existing
+    return existing if _plain(merged) == _plain(existing) else merged
 
 
 def project_for(cfg, meta):

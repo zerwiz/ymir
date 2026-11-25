@@ -223,6 +223,19 @@ class BoardSync(unittest.TestCase):
         old = next(i for i in FakePlane.issues if i["id"] == "old9")
         self.assertEqual(old["external_id"], "plans/ALPHA-001-first.md")
 
+    def test_a_block_the_board_rewrapped_is_recognised_not_stacked(self):
+        sys.path.insert(0, str(KIT / "scripts"))
+        import board_sync as bs
+        block = bs.description_block("plan", "plans/a.md", {"created": "2026-11-01", "product": "alpha"})
+        stored = "<div>" + block.replace("<!--repo-header-->", "").replace("<!--/repo-header-->", "") + "<p>human text</p></div>"
+        self.assertEqual(bs.merge_description(stored, block), stored)  # nothing to change
+        newer = bs.description_block("plan", "plans/a.md", {"created": "2026-11-01", "updated": "2026-11-09", "product": "alpha"})
+        out = bs.merge_description(stored, newer)
+        self.assertEqual(out.count("<ul>"), 1)
+        self.assertIn("human text", out)
+        self.assertIn("2026-11-09", out)
+        self.assertEqual(out.count("<div>"), out.count("</div>"))
+
     def test_no_token_is_refused(self):
         env = {k: v for k, v in os.environ.items() if k != "PLANE_API_TOKEN"}
         r = self.run_sync(env=env)
