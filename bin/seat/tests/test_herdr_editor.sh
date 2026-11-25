@@ -56,6 +56,34 @@ $R
 $R
   ⏵⏵ auto mode on (shift+tab to cycle)" text 'fix the thing before you go'
 
+# claude's grey prompt suggestion (plan 369 item 18): the pane is read with ANSI, and a box whose only
+# content is SGR 2 (dim) is a hint, not typed text. Shapes measured 2026-11-25 on four live workers.
+E=$(printf '\033')
+RA="${E}[0m${E}[38;2;136;136;136m${R}${E}[0m"
+verdict 'claude box, a dim suggestion is a suggestion, not text' " some transcript
+$RA
+❯ ${E}[0m${E}[2mmerge it when the pr comes${E}[0m
+$RA
+  ⏵⏵ auto mode on" suggestion 'merge it when the pr comes'
+
+verdict 'claude box, normal-colour text still refuses' " some transcript
+$RA
+❯ ${E}[0m${E}[38;2;255;255;255mfix the thing before you go${E}[0m
+$RA
+  ⏵⏵ auto mode on" text 'fix the thing before you go'
+
+verdict 'claude box, dim hint beside real text is text' " some transcript
+$RA
+❯ typed words ${E}[2mand a hint${E}[0m
+$RA
+  ⏵⏵ auto mode on" text 'typed words'
+
+verdict 'claude box, empty in ansi is empty' " some transcript
+$RA
+❯ ${E}[0m
+$RA
+  ⏵⏵ auto mode on" empty
+
 # Honesty: what cannot be read is `unknown`, never `empty`.
 verdict 'no box at all is unknown, not empty' "just a log line
 and another one" unknown
