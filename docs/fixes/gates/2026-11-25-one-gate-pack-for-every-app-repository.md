@@ -36,3 +36,9 @@ bin/agents/eir-doctor.sh check               # the gatepack row names each repos
 
 The leak audit of each app repository's history, run before the pack was turned on, is written in the operator's
 plan 372.
+
+## Found while seating
+
+The seeded `.gitleaks.toml` anchored its paths with `^`. The working-tree scan (the pre-push hook's `range`) reports
+absolute paths, so those entries never matched there, and a declared fixture refused the push. The template now writes
+paths as `(^|/)…`, and each seated repository's own `.gitleaks.toml` was corrected the same way.

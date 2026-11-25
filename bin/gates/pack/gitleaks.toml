@@ -4,6 +4,9 @@
 # overwrites it. gitleaks' own shapes (`useDefault`), and an allowlist of the files that carry a secret SHAPE on
 # purpose: the vendored wards, which must name the shapes they hunt.
 #
+# Paths are written `(^|/)…`, never `^…`: the working-tree scan reports absolute paths, so an anchor at the start
+# would never match there.
+#
 # A test fixture that looks like a key (a fake token in a unit test) is declared below, one entry per fixture,
 # each with its reason — never a whole folder, and never a real credential.
 #
@@ -15,7 +18,7 @@ useDefault = true
 [[allowlists]]
 description = "the vendored wards name the shapes they hunt; they carry no credential"
 paths = [
-  '''^bin/gates/guards/''',
-  '''^bin/gates/secret-scan\.sh$''',
-  '''^bin/forge/pr-patterns\.sh$''',
+  '''(^|/)bin/gates/guards/''',
+  '''(^|/)bin/gates/secret-scan\.sh$''',
+  '''(^|/)bin/forge/pr-patterns\.sh$''',
 ]
