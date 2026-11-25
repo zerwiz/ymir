@@ -100,12 +100,6 @@ PY
 # ── the key: pi's own credential door, never a copy in a file ─────────────────
 resolve_key() {
   local key=""
-  # `pi auth` always answers from pi's OWN home; when a caller points this door at a
-  # different pi home, that home's files are the truth and a bare `pi` would answer
-  # from someone else's login.
-  if [ "$PI_DIR" = "$HOME/.pi/agent" ] && command -v pi >/dev/null 2>&1; then
-    key="$(pi auth print-api-key --provider "$PROVIDER" 2>/dev/null | head -1 || true)"
-  fi
   if [ -z "$key" ] && [ -r "$PI_DIR/auth.json" ]; then
     key="$(python3 - "$PI_DIR/auth.json" "$PROVIDER" <<'PY' 2>/dev/null || true
 import json, sys
@@ -128,6 +122,12 @@ print(p.get("apiKey") or "")
 PY
 )"
   fi
+  # Last resort only: `pi auth` starts a whole node runtime (about a second idle, many on a loaded
+  # box), and an MCP client waits 30 s for the handshake. It answers from pi's OWN home, so it is
+  # used only for that home, and never past 8 s (plan 373).
+  if [ -z "$key" ] && [ "$PI_DIR" = "$HOME/.pi/agent" ] && command -v pi >/dev/null 2>&1; then
+    key="$(timeout 8 pi auth print-api-key --provider "$PROVIDER" 2>/dev/null | head -1 || true)"
+  fi
   printf '%s' "$key"
 }
 
@@ -138,7 +138,7 @@ PY
 daemon_container() {
   command -v docker >/dev/null 2>&1 || return 0
   local n
-  n="$(docker ps --filter 'name=open-design' --format '{{.Names}}' 2>/dev/null | head -1)"
+  n="$(timeout 5 docker ps --filter 'name=open-design' --format '{{.Names}}' 2>/dev/null | head -1)"
   [ -n "$n" ] && printf '%s' "$n"
 }
 daemon_door() {  # prints "<host> <bind>"

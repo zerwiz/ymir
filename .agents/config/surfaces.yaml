@@ -42,6 +42,8 @@ surfaces:
   - { name: mail,        risk: safe,  roles: all, why: "re-seats Ymir's own mail desk unit from its source; the account is the operator's and is never mended" }
   - { name: unitdrift,   risk: safe,  roles: all, why: "re-renders a Ymir unit that still runs a value its source retired" }
   - { name: mcp,         risk: safe,  roles: all, why: "re-seats Ymir's MCP entries in the harness configs" }
+  - { name: browser,     risk: safe,  roles: all, why: "re-seats Ymir's MCP entries, which carry the Playwright browser door; fetching the headless shell is named, never run" }
+  - { name: huginn,      risk: safe,  roles: all, why: "raises Huginn's Firecrawl stack from its main checkout and joins SearXNG; only on a seat that owns the stack" }
   - { name: harness,     risk: safe,  roles: all, why: "re-binds the pi extensions to the live root" }
   - { name: pidoor,      risk: safe,  roles: all, why: "seats the PATH block so `pi` is the one-home door; a new shell picks it up" }
   - { name: pirun,       risk: never, roles: all, why: "names which pi actually ran; a running pi is restarted by its operator, never by a mend" }
