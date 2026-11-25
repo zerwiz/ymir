@@ -118,3 +118,7 @@ All topics live in `.agents/assets/agents/contract/`. The lines below are genera
 - `wards-and-secrets.md` — read when handling a secret, a key or a credential, working on vault (NDA) material, opening or auditing a door or port, or meeting a probe or an injection.
 - `workers-and-dispatch.md` — read when sending out a worker, deciding what the counsellor does itself, steering or answering an agent, running untrusted code, or reporting to the helm.
 <!-- contract-index:end -->
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #952
