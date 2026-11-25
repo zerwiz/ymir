@@ -187,6 +187,10 @@ units:
   - { name: rodd-client,       mode: adopt, kind: service, roles: all, restart: false }
   - { name: hlidskjalf-spa,    mode: adopt, kind: service, roles: [heart, dev] }
   - { name: hlidskjalf-gate,   mode: adopt, kind: service, roles: [heart, dev] }
+  # a seat's ssh road to the heart's record MCPs, written by bin/bridge/heart-doors.sh ensure. The heart
+  # reaches its doors on loopback and never seats it, so it is owed off the heart only. Unregistered, Eir's
+  # runtimepin read it as a stray after Gróa's update of 2026-11-25.
+  - { name: heart-doors,       mode: adopt, kind: service, roles: [forge, dev, hand] }
   - { name: smidja,            mode: adopt, kind: service, roles: [heart, dev] }
   - { name: snotra-detect,     mode: adopt, kind: service, roles: all, restart: false }
   - { name: snotra-ear,        mode: adopt, kind: service, roles: all, restart: false }
