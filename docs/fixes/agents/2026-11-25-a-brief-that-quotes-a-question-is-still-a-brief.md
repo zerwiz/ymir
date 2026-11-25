@@ -17,3 +17,7 @@ for every refusal, whatever the cause.
 ## Proof
 
 `bin/seat/tests/test_worth_a_smith.sh` (gate `worth-a-smith`).
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #955
