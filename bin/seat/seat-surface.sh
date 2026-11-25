@@ -24,6 +24,18 @@ ROOT="$(cd "$HERE/../.." && pwd)"
 SID="$ROOT/bin/agents/seat-identity.sh"
 HOST="${YMIR_HOST:-$(hostname -s)}"
 SEAT="$HOME/.pi/agent/AGENTS.seat.md"
+# Claude Code follows an @import, so its surface is the header plus an import of the pinned core
+# (plan 369 item 7): one copy of the core, never a pasted second one.
+CLAUDE_SEAT="$HOME/.pi/agent/CLAUDE.seat.md"
+seat_for() {  # <surface> -> the seat file it must resolve to
+  case "$1" in
+    "$HOME/.claude/CLAUDE.md") [ -r "$CLAUDE_SEAT" ] && { printf '%s' "$CLAUDE_SEAT"; return; } ;;
+  esac
+  printf '%s' "$SEAT"
+}
+claude_import() {  # the file CLAUDE.seat.md imports, or nothing
+  sed -n 's/^@\(\/.*\)$/\1/p' "$CLAUDE_SEAT" 2>/dev/null | head -1
+}
 if [ -z "${YMIR_HOME:-}" ]; then
   _hoard="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
   [ -n "$_hoard" ] || { printf 'seat-surface: no home — bin/vault/hodd.sh path answered nothing\n' >&2; exit 1; }
@@ -164,17 +176,18 @@ render() {
 }
 
 link() {
-  local f
+  local f want
   while IFS= read -r f; do
     [ -e "$(dirname "$f")" ] || continue          # the harness is not on this machine
-    if [ -L "$f" ] && [ "$(readlink -f "$f")" = "$(readlink -f "$SEAT")" ]; then continue; fi
+    want="$(seat_for "$f")"
+    if [ -L "$f" ] && [ "$(readlink -f "$f")" = "$(readlink -f "$want")" ]; then continue; fi
     # a real file is never overwritten silently: it is moved aside once, by name
     if [ -e "$f" ] && [ ! -L "$f" ]; then
       mv "$f" "$f.pre-seat-surface-$(date +%Y%m%d)" || return 1
       printf 'seat-surface: set aside %s (a real file, kept)\n' "$f" >&2
     fi
     mkdir -p "$(dirname "$f")"
-    ln -sfn "$SEAT" "$f" && printf 'seat-surface: %s -> %s\n' "$f" "$(basename "$SEAT")"
+    ln -sfn "$want" "$f" && printf 'seat-surface: %s -> %s\n' "$f" "$(basename "$want")"
   done < <(surfaces)
 }
 
@@ -215,10 +228,25 @@ case "${1:-}" in
     else
       printf 'seat-surface: seat file lacks the sentence "load the `ymir` skill and follow its index" (plan 248)\n'; bad=1
     fi
+    if [ -r "$CLAUDE_SEAT" ]; then
+      grep -qF "Name him in every answer" "$CLAUDE_SEAT" \
+        && printf 'seat-surface: the Claude seat file names the operator and the law ✓\n' \
+        || { printf 'seat-surface: the Claude seat file lost "Name him in every answer"\n'; bad=1; }
+      imp="$(claude_import)"
+      if [ -n "$imp" ] && [ -r "$imp" ]; then
+        for _law in 'Clarity outranks the voice whenever the subject is code' 'A label is an instruction, not a riddle'; do
+          grep -qF "$_law" "$imp" || { printf 'seat-surface: the core the Claude seat imports (%s) lost "%s"\n' "$imp" "$_law"; bad=1; }
+        done
+        printf 'seat-surface: the Claude seat file imports the core once (%s) ✓\n' "$imp"
+      else
+        printf 'seat-surface: the Claude seat file imports nothing readable (%s)\n' "${imp:-no @ line}"; bad=1
+      fi
+    fi
     while IFS= read -r f; do
       [ -e "$(dirname "$f")" ] || continue
-      [ -L "$f" ] && [ "$(readlink -f "$f")" = "$(readlink -f "$SEAT")" ] && continue
-      printf 'seat-surface: %s does not resolve to the seat file\n' "$f"; bad=1
+      want="$(seat_for "$f")"
+      [ -L "$f" ] && [ "$(readlink -f "$f")" = "$(readlink -f "$want")" ] && continue
+      printf 'seat-surface: %s does not resolve to %s\n' "$f" "$(basename "$want")"; bad=1
     done < <(surfaces)
     if [ -f "$HOME/.hermes/SOUL.md" ]; then
       grep -q 'ymir-seat:begin' "$HOME/.hermes/SOUL.md" 2>/dev/null && printf 'seat-surface: SOUL.md carries the house identity ✓\n' || { printf 'seat-surface: SOUL.md lacks the ymir-seat block\n'; bad=1; }

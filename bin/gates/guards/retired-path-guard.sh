@@ -21,6 +21,7 @@
 # Not judged — the places that must name the old paths to do their work or keep their record:
 #   .agents/migrations/   the migration that moves them      docs/fixes/          the fix notes (append-only)
 #   hodd/reference/moves/ the home's move records            RULES/               the law (append-only)
+#   docs/contract-history/ the contract's verbatim prior text (plan 369 item 7)
 #   this guard and its test
 # A single line may be waived in writing with `retired-path-ok:` and a reason on the same line.
 #
@@ -44,6 +45,7 @@ RETIRED='hodd/(life|state|workspaces)/'
 exempt() {
   case "$1" in
     .agents/migrations/*|docs/fixes/*|hodd/reference/moves/*|RULES/*) return 0 ;;
+    docs/contract-history/*) return 0 ;;   # the contract's verbatim prior text (RULES/06): a record, never edited
     bin/gates/guards/retired-path-guard.sh|bin/gates/tests/test_retired_path_guard.sh) return 0 ;;
   esac
   return 1
