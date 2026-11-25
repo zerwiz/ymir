@@ -50,3 +50,7 @@ No gate runs this test, which is why it could stay red for eight days. The same 
 
 Wiring the mail and letters proofs into the gate suite is new gate behaviour. So it is left as a separate decision, not
 slipped into this repair.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #945
