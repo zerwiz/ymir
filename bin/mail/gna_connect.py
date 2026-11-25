@@ -110,6 +110,31 @@ def tokeninfo_endpoint() -> str:
     return env_str("YMIR_OAUTH_TOKENINFO_URL", "https://oauth2.googleapis.com/tokeninfo")
 
 
+def calendar_api() -> str:
+    # The same name the letters gate's proofs and calendar-grant.sh read (Rule 07: one setting).
+    return env_str("YMIR_CALENDAR_API_BASE", "https://www.googleapis.com/calendar/v3").rstrip("/")
+
+
+def status_cache_path() -> Path:
+    """The last measurement of every account, for the one status line (plan 375 B5).
+
+    Runtime state, not the record: it lives under the home's state shelf, never hodd/memory/."""
+    base = env_str("YMIR_STATE_DIR", "") or str(Path(env_str("YMIR_HOME", str(Path.home()))) / "state")
+    return Path(base) / "mail" / "connect-status.json"
+
+
+# The console pages the guided setup opens, in order (plan 375 B2). Links, never a value.
+CONSOLE = {
+    "project": "https://console.cloud.google.com/projectcreate",
+    "gmail_api": "https://console.cloud.google.com/apis/library/gmail.googleapis.com",
+    "calendar_api": "https://console.cloud.google.com/apis/library/calendar-json.googleapis.com",
+    "consent": "https://console.cloud.google.com/auth/branding",
+    "audience": "https://console.cloud.google.com/auth/audience",
+    "client": "https://console.cloud.google.com/auth/clients/create",
+    "clients": "https://console.cloud.google.com/auth/clients",
+}
+
+
 # The sign-in's loopback port (plan 276). The fleet's OAuth client is a WEB client, so Google accepts
 # only the exact redirect URIs registered on it — an ephemeral port is refused with
 # redirect_uri_mismatch. :8765 is Kokoro's, the house's voice, and is never a sign-in's default.
@@ -457,6 +482,80 @@ def grant_state(address: str, keys: dict[str, str] | None = None) -> dict:
     return state
 
 
+# --------------------------------------------------------------------------- the setup's measurements
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *_args, **_kwargs):  # noqa: D401 — keep the 302, do not follow it
+        return None
+
+
+def redirect_state(client_id: str, redirect_uri: str) -> tuple[str, str]:
+    """Is `redirect_uri` registered on the OAuth client? Asked of Google without signing anyone in.
+
+    Google answers the consent URL with a 302. A registered address goes on to the sign-in page; an
+    unregistered one goes to /signin/oauth/error with the reason in `authError` (base64). Measured
+    2026-11-25 against the fleet client: :8767 → redirect_uri_mismatch, :8765 → /v3/signin/identifier.
+    Returns (registered | mismatch | bad_client | unmeasured, detail)."""
+    url = auth_endpoint() + "?" + urllib.parse.urlencode({
+        "client_id": client_id, "redirect_uri": redirect_uri, "response_type": "code",
+        "scope": SCOPE_GMAIL_READONLY, "access_type": "offline"})
+    opener = urllib.request.build_opener(_NoRedirect)
+    try:
+        with opener.open(url, timeout=20) as resp:
+            location, body = resp.headers.get("Location", ""), resp.read(4096).decode("utf-8", "replace")
+    except urllib.error.HTTPError as exc:
+        location, body = exc.headers.get("Location", ""), exc.read(4096).decode("utf-8", "replace")
+    except (urllib.error.URLError, OSError) as exc:
+        return "unmeasured", f"Google did not answer: {getattr(exc, 'reason', exc)}"
+    parsed = urllib.parse.urlparse(location)
+    reason = body
+    raw = (urllib.parse.parse_qs(parsed.query).get("authError") or [""])[0]
+    if raw:
+        try:
+            reason += base64.urlsafe_b64decode(raw + "=" * (-len(raw) % 4)).decode("utf-8", "replace")
+        except (ValueError, TypeError):
+            pass
+    if "redirect_uri_mismatch" in reason:
+        return "mismatch", f"{redirect_uri} is not an Authorized redirect URI on this client"
+    if "invalid_client" in reason or "deleted_client" in reason:
+        return "bad_client", "Google does not know this client id (invalid_client)"
+    if location and "/error" not in parsed.path:
+        return "registered", f"{redirect_uri} is registered"
+    return "unmeasured", f"Google answered without a reason the setup knows ({parsed.path or 'no redirect'})"
+
+
+def calendar_state(access_token: str) -> tuple[str, str]:
+    """Is the Calendar API on, and does the grant reach it? One read of the calendar list.
+    Returns (on | off | scope | unmeasured, detail)."""
+    body = _get_json(f"{calendar_api()}/users/me/calendarList?maxResults=1", bearer=access_token)
+    err = body.get("error")
+    if not err:
+        return "on", "the calendar answered"
+    text = json.dumps(err)
+    if "accessNotConfigured" in text or "SERVICE_DISABLED" in text:
+        return "off", "the Google Calendar API is not turned on in this Cloud project"
+    if "insufficient" in text.lower() or "ACCESS_TOKEN_SCOPE_INSUFFICIENT" in text:
+        return "scope", "the grant carries no calendar scope"
+    return "unmeasured", (err.get("message") if isinstance(err, dict) else str(err))[:160]
+
+
+def write_status_cache(rows: list[dict]) -> None:
+    """Keep the last measurement for the one status line. Liveness and detail only — no token."""
+    path = status_cache_path()
+    doc = {"ts": int(time.time()), "at": now_iso(),
+           "accounts": [{"account": r.get("account", ""), "transport": r.get("transport", ""),
+                         "grant": r.get("grant", ""), "detail": str(r.get("detail") or "")[:200]}
+                        for r in rows]}
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(doc, indent=1) + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+    except OSError:
+        pass  # the line then says `unmeasured`; a cache is never worth failing a check over
+
+
 # --------------------------------------------------------------------------- the loopback catcher
 
 
@@ -575,7 +674,7 @@ def q(value) -> str:
 
 
 def cmd_google(address: str = "", port: int | None = None, timeout: float = DEFAULT_TIMEOUT,
-               open_browser: bool = True, consent_url_out: str = "") -> int:
+               open_browser: bool = True, consent_url_out: str = "", print_url_only: bool = False) -> int:
     """The one button. Every step is measured; nothing is assumed about whose grant came back."""
     keys = keys_for(address) if address else {"grant": "", "client": DEFAULT_CLIENT_KEY,
                                               "client_secret": DEFAULT_CLIENT_SECRET_KEY}
@@ -589,6 +688,13 @@ def cmd_google(address: str = "", port: int | None = None, timeout: float = DEFA
               f"help: this is phase C0 of plan 221 — ONE Cloud project, consent screen Internal, "
               f"one OAuth client marked 'Use this client for an AI-powered agent'", file=sys.stderr)
         return 3
+
+    if print_url_only:
+        # The consent URL alone, nothing listening (what `calendar-auth.sh --url` always printed).
+        chosen = port if port is not None else connect_port()
+        print(consent_url(client_id, f"http://{LOOPBACK}:{chosen}{CONNECT_PATH}", scopes(),
+                          secrets.token_urlsafe(24), address))
+        return 0
 
     listener = Loopback(port if port is not None else connect_port())
     state = secrets.token_urlsafe(24)
@@ -675,6 +781,8 @@ def cmd_check(address: str = "") -> int:
         state = grant_state(account)
         rows.append((account, transport, state))
         worst = max(worst, 0 if state["liveness"] == "live" else 1)
+    write_status_cache([{"account": a, "transport": t, "grant": s["liveness"], "detail": s.get("detail", "")}
+                        for a, t, s in rows])
     for account, transport, state in rows:
         if state["liveness"] == "live":
             print(f"account {state.get('address') or account} · grant live · expires "
@@ -880,6 +988,8 @@ def cmd_status(address: str = "", offline: bool = False) -> int:
         if not live:
             worst = max(worst, 1)
 
+    if not offline:
+        write_status_cache(rows)
     print(f"accounts[{len(rows)}]{{account,transport,readable,sendable,deliverable,grant,checked,detail}}:")
     for row in rows:
         print("  " + ",".join(q(row[k]) for k in ("account", "transport", "readable", "sendable",
@@ -938,13 +1048,275 @@ def cmd_revoke(address: str) -> int:
     return 0
 
 
+# --------------------------------------------------------------------------- the one status line (plan 375 B5)
+
+
+DEFAULT_LINE_MAX_AGE = 3600  # older than an hour, the line measures again (unless --cached)
+
+
+def _measure_all() -> list[dict]:
+    rows = []
+    for account in sorted(gna_store.declared_accounts()):
+        transport = transport_of(account)
+        state = imap_state(account) if transport == "imap" else grant_state(account)
+        rows.append({"account": account, "transport": transport, "grant": state["liveness"],
+                     "detail": state.get("detail", "")})
+    write_status_cache(rows)
+    return rows
+
+
+def mail_line(cached_only: bool = False, max_age: int = DEFAULT_LINE_MAX_AGE) -> dict:
+    """One line: is every declared mailbox still readable? Read from the last measurement; measured
+    again when that is older than `max_age` (never, with `cached_only` — the digest must not wait)."""
+    if not gna_store.declared_accounts():
+        return {"state": "absent", "line": "mail: no account connected — run bin/mail/connect.sh setup",
+                "dead": [], "age_s": None}
+    doc: dict = {}
+    try:
+        doc = json.loads(status_cache_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        doc = {}
+    age = int(time.time()) - int(doc.get("ts") or 0) if doc else None
+    # `--max-age 0` always measures: a reading from the same second is still a reading of the past
+    if (age is None or max_age <= 0 or age > max_age) and not cached_only:
+        rows = _measure_all()
+        age = 0
+    elif doc:
+        rows = doc.get("accounts") or []
+    else:
+        return {"state": "unmeasured", "line": "mail: unmeasured — run bin/mail/connect.sh google --check",
+                "dead": [], "age_s": None}
+    dead = [r for r in rows if r.get("grant") != "live"]
+    when = "just now" if not age or age < 60 else (f"{age // 60} min ago" if age < 7200 else f"{age // 3600} h ago")
+    if dead:
+        first = dead[0]
+        why = str(first.get("detail") or first.get("grant") or "dead")[:80]
+        more = f" (+{len(dead) - 1} more)" if len(dead) > 1 else ""
+        return {"state": "RED", "dead": [r.get("account") for r in dead], "age_s": age,
+                "line": f"mail: RED — {first.get('account')} cannot be read: {why}{more} · "
+                        f"measured {when} · fix: bin/mail/connect.sh setup"}
+    return {"state": "ok", "dead": [], "age_s": age,
+            "line": f"mail: ok — {len(rows)} account(s) readable, sending only through the letters gate · "
+                    f"measured {when}"}
+
+
+def cmd_line(cached_only: bool = False, max_age: int = DEFAULT_LINE_MAX_AGE, as_json: bool = False) -> int:
+    result = mail_line(cached_only, max_age)
+    print(json.dumps(result) if as_json else result["line"])
+    return {"ok": 0, "RED": 1}.get(result["state"], 3)
+
+
+# --------------------------------------------------------------------------- the guided setup (plan 375 B2)
+
+
+CLIENT_ID_RE = re.compile(r"^[0-9]+-[A-Za-z0-9_]+\.apps\.googleusercontent\.com$")
+
+
+def _say(mark: str, text: str) -> None:
+    print(f"  {mark} {text}", flush=True)
+
+
+def _open(url: str, enabled: bool) -> None:
+    if not enabled:
+        return
+    try:
+        import webbrowser
+        webbrowser.open(url, new=2, autoraise=True)
+    except Exception:  # noqa: BLE001 — the link is printed; opening it is only a kindness
+        pass
+
+
+def _client_guide(redirect_uri: str) -> None:
+    print("  The house needs one Google OAuth client. It is made once, by the operator, in five pages:")
+    print(f"    1. Create a project inside your Workspace organisation:  {CONSOLE['project']}")
+    print(f"    2. Turn on the Gmail API:                               {CONSOLE['gmail_api']}")
+    print(f"       and the Google Calendar API:                         {CONSOLE['calendar_api']}")
+    print(f"    3. Consent screen (Branding), then Audience → Internal:  {CONSOLE['consent']}")
+    print(f"    4. Create the client: type 'Web application':          {CONSOLE['client']}")
+    print(f"    5. On that client, under 'Authorized redirect URIs', add exactly:  {redirect_uri}")
+    print("  Google then shows a Client ID and a Client secret. Paste them here; they go straight into the vault.")
+
+
+def _read_client(client_stdin: bool) -> tuple[str, str] | None:
+    if client_stdin:
+        lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]
+        return (lines[0], lines[1]) if len(lines) >= 2 else ("", "")
+    if not sys.stdin.isatty():
+        return None
+    cid = input("  Client ID: ").strip()
+    secret = getpass.getpass("  Client secret (not shown): ").strip()
+    return cid, secret
+
+
+def _last_connected_account() -> str:
+    try:
+        lines = connect_log_path().read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ""
+    for raw in reversed(lines):
+        try:
+            ev = json.loads(raw)
+        except ValueError:
+            continue
+        if ev.get("verb") == "google" and ev.get("result") == "ok":
+            return str(ev.get("account") or "")
+    return ""
+
+
+def cmd_setup(address: str = "", port: int | None = None, timeout: float = DEFAULT_TIMEOUT,
+              open_browser: bool = True, client_stdin: bool = False, again: bool = False,
+              check_only: bool = False, new_client: bool = False, consent_url_out: str = "") -> int:
+    """`connect.sh setup` — the first run, guided. Four steps, each one MEASURED before the next:
+    the client in the vault · its redirect address registered · one sign-in · the APIs answering.
+    It automates only what the operator did by hand; it cannot send, and it prints no secret."""
+    chosen = port if port is not None else connect_port()
+    redirect_uri = f"http://{LOOPBACK}:{chosen}{CONNECT_PATH}"
+    failed = False
+    print("mail setup — four steps; each is checked before the next")
+
+    # ── 1. the client ────────────────────────────────────────────────────────────────────────────
+    print("step 1 of 4 · the OAuth client in the vault")
+    env = vault_env()
+    client_id = str(env.get(DEFAULT_CLIENT_KEY) or "")
+    have = bool(client_id and env.get(DEFAULT_CLIENT_SECRET_KEY))
+    if have and not new_client:
+        _say("✔", f"{DEFAULT_CLIENT_KEY} and {DEFAULT_CLIENT_SECRET_KEY} are in the vault")
+    elif check_only:
+        _say("✗", f"the vault holds no {DEFAULT_CLIENT_KEY} / {DEFAULT_CLIENT_SECRET_KEY}")
+        _client_guide(redirect_uri)
+        print("result: NOT READY — run `bin/mail/connect.sh setup` in a terminal to add the client")
+        return 3
+    else:
+        _client_guide(redirect_uri)
+        for page in ("project", "gmail_api", "calendar_api", "consent", "client"):
+            _open(CONSOLE[page], open_browser)
+        got = _read_client(client_stdin)
+        if got is None:
+            print("result: WAITING — no terminal to ask in. Run `bin/mail/connect.sh setup` in a terminal, "
+                  "or pipe the two values: printf '%s\\n%s\\n' ID SECRET | connect.sh setup --client-stdin")
+            return 3
+        new_id, new_secret = got
+        if not CLIENT_ID_RE.match(new_id):
+            print("  ✗ that is not a Google OAuth client id (it ends in .apps.googleusercontent.com) — nothing stored")
+            return 2
+        if not new_secret or re.search(r"\s", new_secret):
+            print("  ✗ the client secret is empty or has spaces in it — nothing stored")
+            return 2
+        vault_put(DEFAULT_CLIENT_KEY, new_id)
+        vault_put(DEFAULT_CLIENT_SECRET_KEY, new_secret)
+        env = vault_env()
+        if env.get(DEFAULT_CLIENT_KEY) != new_id or env.get(DEFAULT_CLIENT_SECRET_KEY) != new_secret:
+            print("  ✗ the vault did not give the client back after storing it — stop and check bin/vault/hodd.sh")
+            return 1
+        client_id = new_id
+        log_event("setup-client", "", "google", "ok", keys=[DEFAULT_CLIENT_KEY, DEFAULT_CLIENT_SECRET_KEY])
+        _say("✔", f"sealed in the vault as {DEFAULT_CLIENT_KEY} and {DEFAULT_CLIENT_SECRET_KEY} (read back, not printed)")
+
+    # ── 2. the redirect address ──────────────────────────────────────────────────────────────────
+    print("step 2 of 4 · the sign-in's return address is registered on the client")
+    if chosen == 0:
+        _say("–", "ephemeral port: a Desktop-app client accepts any loopback address, nothing to register")
+    else:
+        verdict, detail = redirect_state(client_id, redirect_uri)
+        if verdict == "registered":
+            _say("✔", detail)
+        elif verdict == "mismatch":
+            _say("✗", f"Google answers redirect_uri_mismatch: {detail}")
+            print(f"  fix: open {CONSOLE['clients']}, choose the client, add {redirect_uri} under "
+                  "'Authorized redirect URIs', press Save, wait a minute, then run setup again")
+            print("  (or set YMIR_OAUTH_LOOPBACK_PORT to a port that IS registered — never :8765, that is "
+                  "Kokoro, the house's voice)")
+            _open(CONSOLE["clients"], open_browser)
+            print("result: NOT READY — nothing was signed in")
+            return 1
+        elif verdict == "bad_client":
+            _say("✗", detail)
+            print(f"  fix: create a client ({CONSOLE['client']}) and run `bin/mail/connect.sh setup --new-client`")
+            print("result: NOT READY — nothing was signed in")
+            return 1
+        else:
+            _say("?", f"{detail} — going on; the sign-in itself will say so if the address is not registered")
+
+    # ── 3. one sign-in ───────────────────────────────────────────────────────────────────────────
+    print("step 3 of 4 · one sign-in (mail, drafts, the gate's send scope, calendar)")
+    declared = gna_store.declared_accounts()
+    candidates = [address.lower()] if address else sorted(a for a in declared if transport_of(a) == "google")
+    account, state = "", {}
+    for cand in candidates:
+        if cand not in declared:
+            continue
+        st = grant_state(cand)
+        if st["liveness"] == "live":
+            account, state = cand, st
+            break
+    missing = [s for s in DEFAULT_SCOPES if state and s not in (state.get("scopes") or [])]
+    if account and not missing and not again:
+        _say("✔", f"{state.get('address') or account} is signed in · grant live · "
+                  f"expires {state.get('expires_at') or 'unmeasured'} (--again signs in afresh)")
+    elif check_only:
+        why = (f"{account} lacks {', '.join(m.rsplit('/', 1)[-1] for m in missing)}" if account
+               else "no live Google grant is declared")
+        _say("✗", why)
+        failed = True
+    else:
+        if missing and account:
+            _say("…", f"{account} lacks {', '.join(m.rsplit('/', 1)[-1] for m in missing)} — signing in once more "
+                      "(Google keeps what was granted before)")
+        rc = cmd_google(address=address or account, port=port, timeout=timeout, open_browser=open_browser,
+                        consent_url_out=consent_url_out)
+        if rc != 0:
+            print("result: NOT READY — the sign-in did not finish; nothing else was changed")
+            return rc
+        account = (address or account or _last_connected_account()).lower()
+        state = grant_state(account) if account else {}
+        _say("✔" if state.get("liveness") == "live" else "✗", f"{account or 'the account'} signed in")
+        failed = failed or state.get("liveness") != "live"
+
+    # ── 4. the APIs ──────────────────────────────────────────────────────────────────────────────
+    print("step 4 of 4 · Gmail and Calendar answer this grant")
+    if state.get("liveness") == "live" and state.get("access_token"):
+        if state.get("address"):
+            _say("✔", "the Gmail API answers (/users/me/profile names the account)")
+        else:
+            _say("✗", f"the Gmail API did not name the account — turn it on: {CONSOLE['gmail_api']}")
+            failed = True
+        verdict, detail = calendar_state(state["access_token"])
+        if verdict == "on":
+            _say("✔", "the Calendar API answers")
+        elif verdict == "off":
+            _say("✗", f"{detail} — turn it on: {CONSOLE['calendar_api']}")
+            _open(CONSOLE["calendar_api"], open_browser and not check_only)
+            failed = True
+        elif verdict == "scope":
+            _say("✗", f"{detail} — run `bin/mail/connect.sh setup --again`")
+            failed = True
+        else:
+            _say("?", f"the calendar could not be measured: {detail}")
+    else:
+        _say("–", "no live grant to ask with (step 3)")
+
+    _measure_all()
+    print(mail_line(cached_only=True)["line"])
+    print("law: sending happens only at systems/snotra/services/letters/mail-send.sh — setup cannot send")
+    print("result: " + ("NOT READY — fix the ✗ above and run setup again" if failed else "READY"))
+    return 1 if failed else 0
+
+
 # --------------------------------------------------------------------------- help
 
 
 def usage() -> None:
     print("""connect.sh — one button to a signed-in mailbox, and the honest line per account
 
-  connect.sh google [--account ADDR] [--port N] [--no-browser] [--timeout S]
+  connect.sh setup [--account ADDR] [--check] [--again] [--new-client] [--no-browser] [--client-stdin]
+      the first run, guided: the OAuth client into the vault (it opens the five console pages and
+      asks for the two values), its return address registered, one sign-in, Gmail and Calendar
+      answering. Each step is measured before the next. --check measures and changes nothing.
+
+  connect.sh line [--cached] [--max-age S] [--json]
+      one line: is every mailbox still readable. The Sága digest and the trouble panel read it.
+
+  connect.sh google [--account ADDR] [--port N] [--no-browser] [--timeout S] [--print-url]
       the one sign-in: consent URL, loopback redirect, code exchange, the refresh token
       written to the vault BY KEY, proved with one GET /users/me/profile.
       Prints: account <address> · grant live · expires <t>
@@ -999,6 +1371,8 @@ class _FixtureHttp(threading.Thread):
     def __init__(self) -> None:
         super().__init__()
         self.mode = "live"           # live | dead
+        self.calendar = "on"         # on | off  (the Calendar API turned on in the Cloud project, or not)
+        self.registered: set[int] = set()   # the loopback ports registered as redirect URIs
         self.requests: list[dict] = []
         from http.server import BaseHTTPRequestHandler
 
@@ -1044,6 +1418,31 @@ class _FixtureHttp(threading.Thread):
                         self._send(401, {"error": {"message": "no bearer"}})
                     else:
                         self._send(200, {"emailAddress": outer.ADDRESS})
+                elif parsed.path == "/auth":
+                    # Google's consent door, as measured 2026-11-25: always a 302; an unknown client or
+                    # an unregistered redirect goes to /signin/oauth/error with the reason in authError.
+                    qs = urllib.parse.parse_qs(parsed.query)
+                    red = urllib.parse.urlparse((qs.get("redirect_uri") or [""])[0])
+                    if (qs.get("client_id") or [""])[0].startswith("unknown-"):
+                        reason = "Error 401: invalid_client"
+                    elif red.port in outer.registered:
+                        reason = ""
+                    else:
+                        reason = "Error 400: redirect_uri_mismatch"
+                    where = ("/v3/signin/identifier?flowName=GeneralOAuthFlow" if not reason else
+                             "/signin/oauth/error?authError="
+                             + base64.urlsafe_b64encode(reason.encode()).decode().rstrip("="))
+                    self.send_response(302)
+                    self.send_header("Location", f"http://127.0.0.1:{outer.port}{where}")
+                    self.send_header("Content-Length", "0")
+                    self.end_headers()
+                elif parsed.path == "/calendar/v3/users/me/calendarList":
+                    if outer.calendar == "off":
+                        self._send(403, {"error": {"code": 403, "status": "PERMISSION_DENIED",
+                                                   "message": "Google Calendar API has not been used in project 1",
+                                                   "errors": [{"reason": "accessNotConfigured"}]}})
+                    else:
+                        self._send(200, {"items": []})
                 else:
                     self._send(404, {"error": "not_found"})
 
@@ -1179,15 +1578,27 @@ def self_test(only: str = "") -> int:
         "YMIR_OAUTH_TOKEN_URL": base + "/token",
         "YMIR_OAUTH_TOKENINFO_URL": base + "/tokeninfo",
         "YMIR_GMAIL_API_BASE": base + "/gmail/v1",
+        "YMIR_CALENDAR_API_BASE": base + "/calendar/v3",
+        "YMIR_STATE_DIR": str(work / "state"),
         "PYTHONDONTWRITEBYTECODE": "1",
     })
     env.pop("GNA_SECRETS_FILE", None)
     env.pop("GNA_CONNECT_PORT", None)
     env["YMIR_OAUTH_LOOPBACK_PORT"] = "0"        # the fixture's fake Google takes any loopback port
 
-    def run(args: list[str], stdin_data: str = "", timeout: float = 90.0):
+    # One loopback port the fixture's Google treats as REGISTERED on the client, and one it does not.
+    _probe = Loopback(0)
+    registered_port = _probe.port
+    _probe.close()
+    _probe = Loopback(0)
+    unregistered_port = _probe.port
+    _probe.close()
+    http_fixture.registered.add(registered_port)
+
+    def run(args: list[str], stdin_data: str = "", timeout: float = 90.0, extra: dict | None = None):
         return subprocess.run([sys.executable, str(Path(__file__)), *args], input=stdin_data,
-                              capture_output=True, text=True, timeout=timeout, env=env, cwd=str(TREE))
+                              capture_output=True, text=True, timeout=timeout,
+                              env={**env, **(extra or {})}, cwd=str(TREE))
 
     def vault_get(key: str) -> str:
         out = subprocess.run([str(TREE / "bin" / "vault" / "hodd-set.sh"), "--get", key],
@@ -1300,6 +1711,115 @@ def self_test(only: str = "") -> int:
               and "messages" not in dead.stdout and "no mail" not in dead.stdout.lower(),
               dead.stdout.strip().replace("\n", " | ")[:160])
         http_fixture.mode = "live"
+
+        # ── 5b. the guided setup (plan 375 B2) ─────────────────────────────────────────────
+        section[0] = "setup"
+        fresh = work / "fresh"
+        (fresh / "hodd" / "secrets").mkdir(parents=True)
+        (fresh / "hodd" / "memory" / "mail").mkdir(parents=True)
+        fkey = fresh / "hodd" / "secrets" / "age.key"
+        subprocess.run(["age-keygen", "-o", str(fkey)], capture_output=True, check=True)
+        frec = subprocess.run(["age-keygen", "-y", str(fkey)], capture_output=True, text=True,
+                              check=True).stdout.strip()
+        subprocess.run(["age", "-e", "-r", frec, "-o", str(fresh / "hodd" / "secrets" / "platform.env.age")],
+                       input=b"YMIR_FIXTURE_PLACEHOLDER=1\n", check=True)
+        fresh_env = {"YMIR_HOME": str(fresh), "YMIR_STATE_DIR": str(work / "fresh-state"),
+                     "YMIR_OAUTH_LOOPBACK_PORT": str(registered_port)}
+
+        def fresh_get(key: str) -> str:
+            out = subprocess.run([str(TREE / "bin" / "vault" / "hodd-set.sh"), "--get", key],
+                                 capture_output=True, text=True, env={**env, **fresh_env}, timeout=120)
+            return out.stdout.strip()
+
+        guide = run(["setup", "--no-browser"], extra=fresh_env)
+        gtext = guide.stdout + guide.stderr
+        check("setup with no client and no terminal shows the five console pages and the exact redirect, then waits",
+              guide.returncode == 3 and CONSOLE["client"] in gtext and CONSOLE["calendar_api"] in gtext
+              and f"http://127.0.0.1:{registered_port}/callback" in gtext and "WAITING" in gtext,
+              gtext.strip().splitlines()[-1][:140] if gtext.strip() else "no output")
+        bad = run(["setup", "--no-browser", "--client-stdin", "--check"], stdin_data="", extra=fresh_env)
+        check("setup --check with no client changes nothing and says NOT READY",
+              bad.returncode == 3 and "NOT READY" in bad.stdout and fresh_get(DEFAULT_CLIENT_KEY) == "",
+              bad.stdout.strip().splitlines()[-1][:140] if bad.stdout.strip() else "no output")
+        wrong_id = run(["setup", "--no-browser", "--client-stdin"], stdin_data="not-a-client\nsome-secret\n",
+                       extra=fresh_env)
+        check("a value that is not a Google client id is refused and nothing is sealed",
+              wrong_id.returncode == 2 and fresh_get(DEFAULT_CLIENT_KEY) == ""
+              and "some-secret" not in wrong_id.stdout + wrong_id.stderr,
+              (wrong_id.stdout.strip().splitlines() or ["no output"])[-1][:140])
+        sealed = run(["setup", "--no-browser", "--client-stdin", "--timeout", "2"],
+                     stdin_data="123-fixture.apps.googleusercontent.com\nfixture-new-secret\n", extra=fresh_env)
+        check("setup seals the pasted client in the vault by key, reads it back, and prints no secret",
+              fresh_get(DEFAULT_CLIENT_KEY) == "123-fixture.apps.googleusercontent.com"
+              and fresh_get(DEFAULT_CLIENT_SECRET_KEY) == "fixture-new-secret"
+              and "fixture-new-secret" not in sealed.stdout + sealed.stderr
+              and "sealed in the vault" in sealed.stdout,
+              (sealed.stdout.strip().splitlines() or ["no output"])[-1][:140])
+        check("the next step measured the redirect as registered before any sign-in",
+              f"http://127.0.0.1:{registered_port}/callback is registered" in sealed.stdout,
+              next((ln.strip() for ln in sealed.stdout.splitlines() if "step 2" in ln or "registered" in ln), "")[:140])
+        mismatch = run(["setup", "--no-browser", "--check"],
+                       extra={"YMIR_OAUTH_LOOPBACK_PORT": str(unregistered_port)})
+        mtext = mismatch.stdout
+        check("an unregistered redirect is named with the exact address to add, and nothing is signed in",
+              mismatch.returncode == 1 and "redirect_uri_mismatch" in mtext
+              and f"add http://127.0.0.1:{unregistered_port}/callback" in mtext and "nothing was signed in" in mtext,
+              (mtext.strip().splitlines() or ["no output"])[-1][:140])
+        ready = run(["setup", "--no-browser", "--check"], extra={"YMIR_OAUTH_LOOPBACK_PORT": str(registered_port)})
+        check("setup --check on a working road: every step ✔, the mail line ok, READY",
+              ready.returncode == 0 and "result: READY" in ready.stdout and "mail: ok" in ready.stdout
+              and "the Calendar API answers" in ready.stdout,
+              (ready.stdout.strip().splitlines() or ["no output"])[-1][:140])
+        http_fixture.calendar = "off"
+        noapi = run(["setup", "--no-browser", "--check"], extra={"YMIR_OAUTH_LOOPBACK_PORT": str(registered_port)})
+        http_fixture.calendar = "on"
+        check("a Calendar API left off in the Cloud project is named with the page that turns it on",
+              noapi.returncode == 1 and "Google Calendar API is not turned on" in noapi.stdout
+              and CONSOLE["calendar_api"] in noapi.stdout,
+              next((ln.strip() for ln in noapi.stdout.splitlines() if "Calendar" in ln), "")[:140])
+        url_file3 = work / "consent-url-3.txt"
+        proc3 = subprocess.Popen([sys.executable, str(Path(__file__)), "setup", "--again", "--no-browser",
+                                  "--consent-url-out", str(url_file3)],
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                                 env={**env, "YMIR_OAUTH_LOOPBACK_PORT": str(registered_port)}, cwd=str(TREE))
+        signed3 = _await_file(url_file3, 30.0)
+        if signed3:
+            qs3 = urllib.parse.parse_qs(urllib.parse.urlparse(signed3).query)
+            try:
+                urllib.request.urlopen(f"http://127.0.0.1:{registered_port}/callback?code=fixture-code"
+                                       f"&state={qs3['state'][0]}", timeout=20).read()
+            except Exception:  # noqa: BLE001 — the proof below judges the outcome
+                pass
+        out3, err3 = proc3.communicate(timeout=120)
+        check("setup's sign-in is the connect door's ONE sign-in, and it ends READY",
+              proc3.returncode == 0 and "grant live" in out3 and "result: READY" in out3
+              and _FixtureHttp.REFRESH not in out3 + err3,
+              (out3 or err3).strip().splitlines()[-1][:140] if (out3 or err3).strip() else "no output")
+
+        # ── 5c. the one status line (plan 375 B5) ──────────────────────────────────────────
+        section[0] = "line"
+        line_ok = run(["line", "--max-age", "0"])
+        check("the status line says ok when every grant is live",
+              line_ok.returncode == 0 and line_ok.stdout.startswith("mail: ok"), line_ok.stdout.strip()[:140])
+        http_fixture.mode = "dead"
+        line_red = run(["line", "--max-age", "0"])
+        http_fixture.mode = "live"
+        check("the status line turns RED on a dead grant and names the fix",
+              line_red.returncode == 1 and line_red.stdout.startswith("mail: RED")
+              and "guest@example.org" in line_red.stdout and "connect.sh setup" in line_red.stdout,
+              line_red.stdout.strip()[:140])
+        asked_before = len(http_fixture.requests)
+        cached = run(["line", "--cached"])
+        check("--cached reads the last measurement and asks nobody (the digest never waits)",
+              cached.returncode == 1 and cached.stdout.startswith("mail: RED")
+              and len(http_fixture.requests) == asked_before,
+              cached.stdout.strip()[:140])
+        never = run(["line", "--cached"], extra=fresh_env)
+        check("with no account declared the line says so, never an empty ok",
+              never.returncode == 3 and "no account connected" in never.stdout, never.stdout.strip()[:140])
+        live_again = run(["line", "--max-age", "0"])
+        check("the line goes back to ok once the grant is live again",
+              live_again.returncode == 0 and live_again.stdout.startswith("mail: ok"), live_again.stdout.strip()[:140])
 
         # ── 6. the guest road: a real LOGIN and a real EXAMINE ──────────────────────────────
         section[0] = "imap"
@@ -1428,6 +1948,7 @@ def main(argv: list[str]) -> int:
         port_raw = opt("--port")
         timeout = opt("--timeout")
         url_out = opt("--consent-url-out")
+        print_url = flag("--print-url")
         try:
             port = int(port_raw) if port_raw else None
         except ValueError:
@@ -1441,7 +1962,35 @@ def main(argv: list[str]) -> int:
         if check_only:
             return cmd_check(address)
         return cmd_google(address=address, port=port, timeout=wait,
-                          open_browser=not no_browser, consent_url_out=url_out)
+                          open_browser=not no_browser, consent_url_out=url_out, print_url_only=print_url)
+
+    if verb == "setup":
+        if flag("--self-test") or flag("self-test"):
+            return self_test("setup")
+        address = opt("--account")
+        port_raw = opt("--port")
+        timeout = opt("--timeout")
+        try:
+            port = int(port_raw) if port_raw else None
+            wait = float(timeout) if timeout else DEFAULT_TIMEOUT
+        except ValueError:
+            print("connect: --port and --timeout must be numbers", file=sys.stderr)
+            return 2
+        return cmd_setup(address=address, port=port, timeout=wait, open_browser=not flag("--no-browser"),
+                         client_stdin=flag("--client-stdin"), again=flag("--again"),
+                         check_only=flag("--check"), new_client=flag("--new-client"),
+                         consent_url_out=opt("--consent-url-out"))
+
+    if verb == "line":
+        if flag("--self-test") or flag("self-test"):
+            return self_test("line")
+        raw = opt("--max-age")
+        try:
+            max_age = int(raw) if raw else DEFAULT_LINE_MAX_AGE
+        except ValueError:
+            print(f"connect: --max-age must be seconds, not {raw!r}", file=sys.stderr)
+            return 2
+        return cmd_line(cached_only=flag("--cached"), max_age=max_age, as_json=flag("--json"))
 
     if verb == "imap":
         if flag("--self-test") or flag("self-test"):

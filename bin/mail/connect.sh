@@ -8,7 +8,13 @@
 # grant of their own, written to their own vault by KEY. A guest types three fields and their mail
 # works the same afternoon.
 #
-#   connect.sh google [--account ADDR] [--port N] [--no-browser] [--timeout S]
+#   connect.sh setup [--check] [--again] [--new-client] [--no-browser] [--client-stdin]
+#       the first run, guided (plan 375): the client into the vault, its return address registered,
+#       one sign-in, Gmail and Calendar answering — each step measured before the next.
+#   connect.sh line [--cached] [--max-age S] [--json]
+#       one line: is every mailbox still readable (the Sága digest and the trouble panel read it).
+#
+#   connect.sh google [--account ADDR] [--port N] [--no-browser] [--timeout S] [--print-url]
 #       the one sign-in: consent URL → loopback redirect → code exchanged → the refresh token
 #       written to the vault BY KEY → proved with one GET /users/me/profile:
 #       `account <address> · grant live · expires <t>`
@@ -62,7 +68,7 @@ DOOR="$HERE/gna_connect.py"
 
 case "${1:-}" in
   -h|--help|help|"")
-    sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,48p' "$0" | sed 's/^# \{0,1\}//'
     [ -n "${1:-}" ] && exit 0 || exit 2 ;;
   -v|--version) exec "$PY" "$DOOR" --version ;;
 esac

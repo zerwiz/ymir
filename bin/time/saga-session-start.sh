@@ -481,6 +481,12 @@ head_needs() {  # what needs the Allfather: counts first, then the newsiest line
   fi
   printf 'wakes %s · decisions %s · questions %s · %s\n' \
     "${wakes:-0}" "${decisions:-0}" "${questions:-0}" "$(printf '%s' "${todos_line:-todos: unreadable}" | sed 's/^open: /todos: /')"
+  # plan 375 B5: one line on the mail, read from the last measurement (--cached never asks Google, so the
+  # head never waits on the network); the trouble panel measures it hourly and turns red on a dead grant
+  local mail_line=""
+  [ -r "$SCRIPT_DIR/../mail/connect.sh" ] && \
+    mail_line="$(timeout 4 bash "$SCRIPT_DIR/../mail/connect.sh" line --cached 2>/dev/null | head -1)"
+  [ -n "$mail_line" ] && printf '%s\n' "$mail_line"
   if [ "$wakes" -gt 0 ] 2>/dev/null; then
     newest_wake="$([ -s "$wq" ] && tail -n1 "$wq" 2>/dev/null || tail -n1 "$fmq" 2>/dev/null)"
     [ -n "$newest_wake" ] && printf '  newest wake: %s\n' "$(printf '%s' "$newest_wake" | tr '\t' ' ' | cut -c1-150)"

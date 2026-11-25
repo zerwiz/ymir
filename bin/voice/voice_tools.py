@@ -1398,7 +1398,10 @@ async def _execute(name, arguments):
                 if line.startswith(k + "=") or line.startswith("export " + k + "="):
                     return line.split("=", 1)[1].strip().strip('"\'')
             return ""
-        cid, csec, rt = key("GOOGLE_MCP_CLIENT_ID"), key("GOOGLE_MCP_CLIENT_SECRET"), key("MANAGANDR_OAUTH_REFRESH_TOKEN")
+        # The ONE grant the connect door writes carries calendar.events; the older calendar-only
+        # grant is still read when it is the only one in this home (plan 375).
+        cid, csec = key("GOOGLE_MCP_CLIENT_ID"), key("GOOGLE_MCP_CLIENT_SECRET")
+        rt = key(os.environ.get("YMIR_GATE_GRANT_KEY") or "SNOTRA_GOOGLE_REFRESH_TOKEN") or key("MANAGANDR_OAUTH_REFRESH_TOKEN")
         if not (cid and csec and rt):
             return ToolResult("The calendar write grant is missing from the vault; say so plainly.")
         body = _up.urlencode({"client_id": cid, "client_secret": csec, "refresh_token": rt,
