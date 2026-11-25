@@ -39,3 +39,7 @@ Plane Community 1.4 has no move to another project, so `scripts/board_move.py` c
 - `bin/collab/kit/scripts/board_sync.py`
 - `bin/collab/kit/plans/.board.json.example`
 - `bin/collab/kit/docs/headers.md`
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #943
