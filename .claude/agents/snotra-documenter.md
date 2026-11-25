@@ -1,1 +1,0 @@
-../../.agents/agents/snotra-documenter.md
