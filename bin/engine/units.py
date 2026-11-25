@@ -228,6 +228,17 @@ def _expand_unit(written: str) -> str:
     return written.replace("%h", str(HOME)).replace("${HOME}", str(HOME)).replace("$HOME", str(HOME))
 
 
+def _in_home(path: str) -> bool:
+    """True when a path lives in the operator's home ($YMIR_HOME).
+
+    THE MEND, 2026-11-25. The home is not a Ymir tree, even when it carries a `RULES/` shelf and a
+    `bin/engine/ymir-install.sh` of its own. `hlidskjalf-gate.service` reads its settings through
+    `EnvironmentFile=-<home>/.env.local` (Rule 04: settings live in the hoard), and `well-mcp` names
+    the well's db there; both were judged OFF-PIN because the home looked like a checkout.
+    """
+    return _under(path, ymir_home())
+
+
 def stray_roots(text: str, pin: Path, keep: tuple[str, ...] = ()) -> list[str]:
     """Written forms (absolute, %h or $HOME) of every Ymir tree this text names that is not the pin."""
     found: list[str] = []
@@ -240,7 +251,7 @@ def stray_roots(text: str, pin: Path, keep: tuple[str, ...] = ()) -> list[str]:
         for m in TOKEN.finditer(line):
             written = m.group(0)
             expanded = _expand_unit(written)
-            if _under(expanded, pin):
+            if _under(expanded, pin) or _in_home(expanded):
                 continue
             root = ymir_root_of(expanded)
             if not root or _under(root, pin):
@@ -258,7 +269,8 @@ def names_ymir(text: str) -> bool:
         if line.split("=", 1)[0].strip() not in SCAN_KEYS:
             continue
         for m in TOKEN.finditer(line):
-            if ymir_root_of(_expand_unit(m.group(0))):
+            expanded = _expand_unit(m.group(0))
+            if not _in_home(expanded) and ymir_root_of(expanded):
                 return True
     return False
 

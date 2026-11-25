@@ -84,7 +84,8 @@ t "fresh seat: runtime.env records the pin" grep -qE '^YMIR_RUNTIME_DIR="\$HOME/
 t "fresh seat: gna-desk is written, from the pin" grep -q "^ExecStart=/usr/bin/env python3 $PIN/bin/mail/gna_desk.py --port 8494" "$YMIR_UNIT_DIR/gna-desk.service"
 t "fresh seat: the forge clocks are written" [ -f "$YMIR_UNIT_DIR/queue-warden.timer" ] && [ -f "$YMIR_UNIT_DIR/review-loop.timer" ] && [ -f "$YMIR_UNIT_DIR/pr-watch.service" ]
 t "fresh seat: no unit names the tree the seat ran from" bash -c '! grep -rl -e "$0" -e "$1" "$2" >/dev/null' "$ROOT" "$TREE" "$YMIR_UNIT_DIR"
-for l in rodd ymir-bilskirnir ymir-hlidskjalf ymir-odrerir ymir-sessrumnir ymir-smidja; do
+# the launchers THIS tree ships templates for; an app that left for its own repo (2026-11-19) ships its own
+for l in ymir-hlidskjalf ymir-smidja; do
   f="$YMIR_APPLICATIONS_DIR/$l.desktop"
   # plan 275 S11: a launcher runs the one stable command and names no tree at all — not the pin, not a worktree
   t "fresh seat: launcher $l.desktop runs ymir-app and names no tree" bash -c 'grep -q "^Exec=.*/ymir-app " "$1" && ! grep -q "^Exec=.*$0" "$1" && ! grep -q "^Exec=.*$2" "$1"' "$PIN" "$f" "$ROOT"
@@ -159,18 +160,18 @@ t "prefix: a second write changes nothing" [ "$sums1" = "$sums2" ]
 rm -rf "$HOME/ymir"
 
 # 5 — a launcher pointing into an errand worktree
-WT="$T/tree/.yggdrasil/bilskirnir-every-screen"
-cat >"$YMIR_APPLICATIONS_DIR/ymir-bilskirnir.desktop" <<DESK
+WT="$T/tree/.yggdrasil/hlidskjalf-every-screen"
+cat >"$YMIR_APPLICATIONS_DIR/ymir-hlidskjalf.desktop" <<DESK
 [Desktop Entry]
 Type=Application
-Name=Bilskirnir
-Exec=$WT/apps/bilskirnir/start.sh
-Path=$WT/apps/bilskirnir
+Name=Hlidskjalf
+Exec=$WT/apps/hlidskjalf/start.sh
+Path=$WT/apps/hlidskjalf
 DESK
 t "launcher: check fails on a worktree launcher" bash -c '! bash "$0" check >/dev/null 2>&1' "$UNITS"
 bash "$UNITS" write >/dev/null 2>&1
-t "launcher: write turns it into the one stable command" grep -q "^Exec=.*/ymir-app bilskirnir$" "$YMIR_APPLICATIONS_DIR/ymir-bilskirnir.desktop"
-t "launcher: and the worktree is gone from it" bash -c '! grep -q "yggdrasil" "$0"' "$YMIR_APPLICATIONS_DIR/ymir-bilskirnir.desktop"
+t "launcher: write turns it into the one stable command" grep -q "^Exec=.*/ymir-app hlidskjalf$" "$YMIR_APPLICATIONS_DIR/ymir-hlidskjalf.desktop"
+t "launcher: and the worktree is gone from it" bash -c '! grep -q "yggdrasil" "$0"' "$YMIR_APPLICATIONS_DIR/ymir-hlidskjalf.desktop"
 
 # 6 — written by the code in a worktree, a unit still names the pin
 rm -f "$YMIR_UNIT_DIR/gna-desk.service"
@@ -187,6 +188,51 @@ YMIR_RUNTIME_DIR="$PIN" bash "$PIN/bin/engine/units.sh" write >/dev/null 2>&1
 t "discovery: and its launcher is written against the pin" grep -q "^Exec=$PIN/apps/newapp/start.sh" "$YMIR_APPLICATIONS_DIR/ymir-newapp.desktop"
 missing=""; for d in $(ls "$ROOT/apps" | grep -v '\.md$'); do bash "$UNITS" list | sed -n '/^apps\[/,$p' | grep -q "^  \"$d\"," || missing="$missing $d"; done
 t "discovery: every directory under apps/ is accounted for (missing:${missing:- none})" [ -z "$missing" ]
+
+# 7b — the home is not a Ymir tree, even when it carries RULES/ and an installer (2026-11-25)
+mkdir -p "$YMIR_HOME/RULES" "$YMIR_HOME/bin/engine"; touch "$YMIR_HOME/bin/engine/ymir-install.sh"
+cat >"$YMIR_UNIT_DIR/hlidskjalf-gate.service" <<UNIT
+[Service]
+WorkingDirectory=$PIN/apps/hlidskjalf
+EnvironmentFile=-$YMIR_HOME/.env.local
+ExecStart=/usr/bin/env bun run server/index.ts
+UNIT
+out="$(bash "$UNITS" check 2>&1)"
+t "home: an EnvironmentFile in the home is not OFF-PIN" bash -c '! grep -q "\"hlidskjalf-gate\",\"unit\",\"OFF-PIN\"" <<<"$0"' "$out"
+t "home: the unit is judged on the pin and registered" grep -q '"hlidskjalf-gate","unit","ok"' <<<"$out"
+cat >"$YMIR_UNIT_DIR/stray-home.service" <<UNIT
+[Service]
+ExecStart=/usr/bin/env some-tool --db $YMIR_HOME/hodd/memory/x.db
+UNIT
+out="$(bash "$UNITS" check 2>&1)"
+t "home: a unit naming only the home is not a Ymir unit (no row)" bash -c '! grep -q "\"stray-home\"" <<<"$0"' "$out"
+rm -f "$YMIR_UNIT_DIR/hlidskjalf-gate.service" "$YMIR_UNIT_DIR/stray-home.service"
+t "register: heart-doors is registered, off the heart" grep -qE '^  - \{ name: heart-doors, +mode: adopt.*roles: \[forge, dev, hand\]' "$ROOT/config/units.yaml"
+
+# 7c — the WRITE side: `units.sh write` must never rewrite a home path onto the pin. This is what happened on
+#      2026-11-23 and 2026-11-25 (units-replaced.log): the home carried RULES/ and an installer, so every
+#      line naming it (BROKK_ENV_FILE, MCP_GATEWAY_STATE, CMD_DB, the well's db, a drop-in) was retargeted
+H="$HOME/Documents/ymirhome"     # under HOME, so the %h form the well's unit used is exercised too
+mkdir -p "$H/RULES" "$H/bin/engine" "$H/config" "$YMIR_UNIT_DIR/nornir.service.d"; touch "$H/bin/engine/ymir-install.sh"
+cp -r "$YMIR_HOME/config/machines" "$H/config/"
+unit() { local f=$1; shift; { printf '[Service]\n'; printf '%s\n' "$@"; } >"$YMIR_UNIT_DIR/$f"; }   # <file> <line>…
+unit bifrost.service "Environment=BROKK_ENV_FILE=$H/.env.local" "ExecStart=/bin/bash $PIN/bin/ward/x.sh"
+unit mcp-gateway.service "Environment=MCP_GATEWAY_STATE=$H/state" "ExecStart=/bin/bash $PIN/bin/ward/x.sh"
+unit nornir.service "Environment=BROKK_STATE_OVERRIDE=$H/state" "Environment=BROKK_CONFIG_OVERRIDE=$H/config" "ExecStart=/bin/bash $PIN/bin/ward/x.sh"
+unit nornir.service.d/operator-home.conf "Environment=BROKK_CONFIG_OVERRIDE=$H/config"
+unit smidja.service "Environment=CMD_DB=$H/smidja/smidja.db" "ExecStart=/bin/bash $PIN/bin/ward/x.sh"
+unit well-mcp.service "ExecStart=%h/.fleet/mcp-proxy -- engram-mcp --db %h/Documents/ymirhome/hodd/memory/kaia.engram"
+unit gna-desk.service "Environment=YMIR_HOME=$H" "ExecStart=/usr/bin/env python3 $PIN/bin/mail/gna_desk.py --port 8494"
+unit hlidskjalf-gate.service "WorkingDirectory=$TREE" "EnvironmentFile=-$H/.env.local"
+unit stray-home.service "ExecStart=/usr/bin/env some-tool --db $H/hodd/memory/x.db"
+homed="bifrost.service mcp-gateway.service nornir.service nornir.service.d/operator-home.conf smidja.service well-mcp.service gna-desk.service stray-home.service"
+before="$(cd "$YMIR_UNIT_DIR" && sha256sum $homed)"
+YMIR_HOME="$H" bash "$UNITS" write >/dev/null 2>&1
+t "home write: no unit naming only the home and the pin is rewritten" [ "$(cd "$YMIR_UNIT_DIR" && sha256sum $homed)" = "$before" ]
+t "home write: the home's env file stays in the home" grep -qx "EnvironmentFile=-$H/.env.local" "$YMIR_UNIT_DIR/hlidskjalf-gate.service"
+t "home write: a real working tree in the same unit still moves onto the pin" grep -qx "WorkingDirectory=$PIN" "$YMIR_UNIT_DIR/hlidskjalf-gate.service"
+for f in $homed hlidskjalf-gate.service; do rm -f "$YMIR_UNIT_DIR/$f"; done
+rm -rf "$H"
 
 # 8 — the doors agree
 t "Eir carries the runtimepin surface" grep -q 'runtimepin' "$ROOT/bin/agents/eir-doctor.sh"
