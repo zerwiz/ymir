@@ -17,3 +17,7 @@ Plane Community 1.4 has no move to another project, and nothing in the kit said 
 - `bin/collab/kit/scripts/board_move.py`
 - `bin/collab/kit/docs/board-sync.md`
 - `bin/collab/tests/test_board_sync.py`
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #943
