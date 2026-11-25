@@ -25,3 +25,7 @@ Seats raised by `herdr-run.sh` also left no pane on file, so a question could no
 ## Proof
 
 `bin/time/tests/test_wake_seq.sh` (gate `wake-seq`). The pane record has no live seating proof.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #956
