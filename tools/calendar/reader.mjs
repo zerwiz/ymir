@@ -29,8 +29,11 @@
 //   PORT                        the mesh door's port (reserved; this reader binds none)
 //   MANAGANDR_VAULT             the vault root; else YMIR_HOME; else the recorded
 //                               choice (<config>/ymir/home); else ~/Documents/ymirhome
-//   MANAGANDR_OAUTH_KEY         the NAME of the vault key holding the refresh token
-//                               (default MANAGANDR_OAUTH_REFRESH_TOKEN)
+//   MANAGANDR_OAUTH_KEY         the NAME of the vault key holding the refresh token.
+//                               Unset: the ONE grant the connect door writes
+//                               (YMIR_GATE_GRANT_KEY, default SNOTRA_GOOGLE_REFRESH_TOKEN)
+//                               when present, else the older MANAGANDR_OAUTH_REFRESH_TOKEN
+//                               (plan 375: one sign-in serves mail and calendar)
 //   MANAGANDR_CALENDAR_ID       which calendar to read (default "primary")
 //   MANAGANDR_CLIENT_ID/SECRET  the OAuth app credentials (else HEIMDALL_OAUTH_*)
 //   MANAGANDR_CACHE / _CACHE_DIR / _CACHE_TTL_SECONDS
@@ -83,6 +86,16 @@ const DEFAULT_PORT = 8323;
 const DEFAULT_TOKEN_URI = "https://oauth2.googleapis.com/token";
 const DEFAULT_API_BASE = "https://www.googleapis.com/calendar/v3";
 const DEFAULT_REFRESH_TOKEN_KEY = "MANAGANDR_OAUTH_REFRESH_TOKEN";
+const DEFAULT_ONE_GRANT_KEY = "SNOTRA_GOOGLE_REFRESH_TOKEN";
+
+// Which vault key holds the refresh token. A named key wins; otherwise the connect door's one
+// grant, which carries calendar.events; otherwise the older calendar-only grant, so a home that
+// still has only that one keeps reading its day.
+export function refreshKeyOf(env = process.env) {
+  if (env.MANAGANDR_OAUTH_KEY) return env.MANAGANDR_OAUTH_KEY;
+  const one = env.YMIR_GATE_GRANT_KEY || DEFAULT_ONE_GRANT_KEY;
+  return env[one] ? one : DEFAULT_REFRESH_TOKEN_KEY;
+}
 
 // The normalised event — what every door consumes. `start_ms`/`end_ms` are the
 // absolute instants used for busy math; `start`/`end` keep their original form
@@ -150,7 +163,7 @@ export function resolveHome(env = process.env) {
 export function resolveConfig(env = process.env) {
   const home = resolveHome(env);
   const cacheDir = env.MANAGANDR_CACHE_DIR || join(home, "state", "calendar");
-  const refreshTokenKey = env.MANAGANDR_OAUTH_KEY || DEFAULT_REFRESH_TOKEN_KEY;
+  const refreshTokenKey = refreshKeyOf(env);
   return {
     home,
     cacheDir,
@@ -434,7 +447,11 @@ export async function readCalendar(opts = {}) {
   }
 
   const missing = [];
-  if (!cfg.refreshToken) missing.push(cfg.refreshTokenKey);
+  if (!cfg.refreshToken) {
+    missing.push(cfg.refreshTokenKey === DEFAULT_REFRESH_TOKEN_KEY
+      ? `${DEFAULT_ONE_GRANT_KEY} (or ${DEFAULT_REFRESH_TOKEN_KEY}) — sign in once: bin/mail/connect.sh setup`
+      : cfg.refreshTokenKey);
+  }
   if (!cfg.clientId) missing.push("MANAGANDR_CLIENT_ID");
   if (!cfg.clientSecret) missing.push("MANAGANDR_CLIENT_SECRET");
   if (missing.length) {

@@ -150,6 +150,19 @@ printf '/home/u/.config/hypr/hyprland.conf:12: config option <general:bogus> doe
 trouble TROUBLE_DISK_PCT=100 -- read --json --only disk
 [ "$(state_of "$out" disk)" = ok ] && [ "$rc" = 0 ] && ok "a disk under its line is ok and exits 0" || no "disk under line ($out)"
 
+# 2b · the mail line (plan 375 B5): a dead grant is red, a live one is ok, a home with no mailbox is a skip
+for verdict in RED ok absent; do
+  # a stand-in connect door: it answers `line --json` with one fixed verdict
+  printf '{"state":"%s","line":"mail: %s fixture","dead":["a@example.org"]}\n' "$verdict" "$verdict" > "$T/mail-$verdict.json"
+  printf '#!/usr/bin/env bash\ncat "%s"\n' "$T/mail-$verdict.json" > "$T/mail-$verdict.sh"
+done
+trouble TROUBLE_MAIL_DOOR="$T/mail-RED.sh" -- read --json --only mail
+[ "$(state_of "$out" mail)" = RED ] && ok "a dead mail grant is red" || no "mail red ($(note_of "$out" mail))"
+trouble TROUBLE_MAIL_DOOR="$T/mail-ok.sh" -- read --json --only mail
+[ "$(state_of "$out" mail)" = ok ] && ok "a live mail grant is ok" || no "mail ok ($(note_of "$out" mail))"
+trouble TROUBLE_MAIL_DOOR="$T/mail-absent.sh" -- read --json --only mail
+[ "$(state_of "$out" mail)" = SKIP ] && ok "a home with no mailbox is a skip, never a red" || no "mail absent ($(note_of "$out" mail))"
+
 # 3 · a signal turning red is said once; a red that stays red is quiet
 trouble -- check --notify --only questions,tells
 [ "$(grep -c -- '--source ward' "$T/notices.log")" = 2 ] && ok "two signals turned red: two notices" || no "two notices ($(cat "$T/notices.log"))"

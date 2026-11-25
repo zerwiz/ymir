@@ -53,7 +53,8 @@ import time
 from pathlib import Path
 
 GIB = 1024 ** 3
-SIGNALS = ("disk", "guardian", "pin", "unpushed", "questions", "errands", "hyprland", "tells", "loops", "receipts", "contracts")
+SIGNALS = ("disk", "guardian", "pin", "unpushed", "questions", "errands", "hyprland", "tells", "loops", "receipts", "contracts",
+           "mail")
 ENDED = ("done:", "resolved:", "failed:")
 IDLE = {"idle", "done", "waiting", "unknown"}
 
@@ -555,6 +556,28 @@ def sig_contracts(c: Ctx) -> dict:
                + (f" (+{len(reds) - 3} more)" if len(reds) > 3 else ""), count=len(reds))
 
 
+def sig_mail(c: Ctx) -> dict:
+    """Plan 375 B5: a dead mail grant is seen at once, not when the inbox has been quiet for a week.
+
+    The connect door's own line, measured again when its last reading is older than TROUBLE_MAIL_S
+    (an hour). It never sends and prints no secret; a home with no mailbox is a SKIP, never a red."""
+    door = Path(os.environ.get("TROUBLE_MAIL_DOOR", "") or Path(c.root) / "bin/mail/connect.sh")  # a test seam
+    if not door.exists():
+        return row("mail", "SKIP", "the connect door is not in this tree")
+    line = env_int("TROUBLE_MAIL_S", 3600)
+    done = run(["bash", str(door), "line", "--json", "--max-age", str(line)], timeout=90)
+    try:
+        got = json.loads((done.stdout or "").strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        return row("mail", "SKIP", "the connect door did not answer")
+    state = got.get("state")
+    if state == "RED":
+        return row("mail", "RED", got.get("line", "a mail grant is dead")[6:220], count=len(got.get("dead") or []))
+    if state == "ok":
+        return row("mail", "ok", got.get("line", "")[6:220])
+    return row("mail", "SKIP", got.get("line", "no mail measurement")[6:220])
+
+
 def sig_loops(c: Ctx) -> dict:
     clock = _nidhogg_clock(c)
     if clock:
@@ -585,7 +608,7 @@ def sig_loops(c: Ctx) -> dict:
 PROBES = {"disk": sig_disk, "guardian": sig_guardian, "pin": sig_pin, "unpushed": sig_unpushed,
           "questions": sig_questions, "errands": sig_errands, "hyprland": sig_hyprland, "tells": sig_tells,
           "loops": sig_loops, "receipts": sig_receipts,
-          "contracts": sig_contracts}
+          "contracts": sig_contracts, "mail": sig_mail}
 
 
 def reading(c: Ctx, only: list[str]) -> dict:
@@ -611,6 +634,7 @@ BUTTONS = {
     "tells": ["📨 Drain the arm's tells|On {host}, have the arm holder drain its wake queue (saga-session-start.sh --section wake) and answer the oldest tells"],
     "contracts": ["🔍 Show the broken contracts|On {host}, run bin/ward/contracts.sh run and show each red contract with its line"],
     "receipts": ["📬 Answer the waiting reports|On {host}, run bin/agents/veil.sh pending and answer each with bin/agents/veil.sh received <id>"],
+    "mail": ["📧 Sign in to the mail again|On {host}, run bin/mail/connect.sh setup --check, then bin/mail/connect.sh setup to sign in once more, and show the mail line it ends with"],
     "loops": ["🐍 Show the looping branch|On {host}, run bin/gates/nidhogg.sh commits and show which writer repeats the commit, then stop that writer"],
 }
 
