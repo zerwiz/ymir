@@ -1,0 +1,21 @@
+# .gitleaks.toml — what gitleaks reads in this repository (bin/gates/secret-scan.sh, CI).
+#
+# Seated once by Ymir's gate pack and then OWNED BY THIS REPOSITORY: it is not in VENDORED, and a re-seat never
+# overwrites it. gitleaks' own shapes (`useDefault`), and an allowlist of the files that carry a secret SHAPE on
+# purpose: the vendored wards, which must name the shapes they hunt.
+#
+# A test fixture that looks like a key (a fake token in a unit test) is declared below, one entry per fixture,
+# each with its reason — never a whole folder, and never a real credential.
+#
+# The operator's own words are never here. On a seat, secret-scan.sh reads them from the home; a word in this file
+# would be the leak.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "the vendored wards name the shapes they hunt; they carry no credential"
+paths = [
+  '''^bin/gates/guards/''',
+  '''^bin/gates/secret-scan\.sh$''',
+  '''^bin/forge/pr-patterns\.sh$''',
+]
