@@ -46,15 +46,20 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
-MAIL = ROOT / "bin/time/snotra/mail-send.sh"  # allow-superseded-path: the SHIM is the door under test — a caller nobody has repointed must still work
-# …and the file that IMPLEMENTS it, for the proofs that judge the door's own text (plan 231).
-MAIL_REAL = ROOT / "systems/snotra/services/letters/mail-send.sh"
-CAL = ROOT / "bin/time/snotra/calendar-invite.sh"  # allow-superseded-path: as above — the retired shim is what a stale caller still runs
-# The door that IMPLEMENTS the write. `CAL` is a shim: it execs this one. A test that reads the
-# shim to judge the tool's defaults judges a two-line forwarder, and it said FAILED from
-# 2026-10-24 until plan 231 read the file that actually holds the value.
-CAL_REAL = ROOT / "systems/snotra/services/calendar/calendar-invite.sh"
-APPROVE = ROOT / "bin/time/snotra/snotra-approve.sh"  # allow-superseded-path: as above — the shim must exec the moved door
+# The doors under test are the real ones. Until 2026-11-25 these three names pointed at the shims
+# under bin/time/snotra/, which ca6faff37 retired on 2026-11-17; from then on 12 of the 16 proofs
+# ran `bash <missing file>` and failed with exit 127 instead of judging the gate.
+MAIL = ROOT / "systems/snotra/services/letters/mail-send.sh"
+# The proofs that judge the door's own text read the same file (plan 231).
+MAIL_REAL = MAIL
+CAL = ROOT / "systems/snotra/services/calendar/calendar-invite.sh"
+CAL_REAL = CAL
+APPROVE = ROOT / "systems/snotra/services/approve/snotra-approve.sh"
+
+# Since plan 322, `send` refuses a draft whose bytes carry no X-Ymir-Letter line. The door
+# stamps it when it drafts; these stand-in drafts are put in the API by hand, so they carry the
+# stamp the door would have written for a deliberate plain letter.
+LETTER_MARK = "X-Ymir-Letter: undressed · a test note needs no typeface (plan 322)\r\n".encode()
 
 # ── the two APIs, stood in for ───────────────────────────────────────────────────────
 
@@ -286,7 +291,7 @@ class MailGate(Case):
         self.assertIn("REFUSED mail r-1", self.ledger(), "the refusal was not carved into the Runes")
 
     def test_2_an_approved_draft_sends_exactly_once_and_a_second_send_is_refused(self):
-        self.draft("r-2", b"To: partner@example.com\r\nSubject: Example4\r\n\r\nhello\r\n")
+        self.draft("r-2", b"To: partner@example.com\r\nSubject: Example4\r\n" + LETTER_MARK + b"\r\nhello\r\n")
         self.assertEqual(self.approve("r-2").returncode, 0)
 
         first = self.run_script(MAIL, "send", "r-2")
@@ -302,9 +307,9 @@ class MailGate(Case):
         self.assertIn("SPENT mail r-2", self.ledger())
 
     def test_3_a_draft_edited_after_approval_is_refused_as_stale(self):
-        self.draft("r-3", b"To: partner@example.com\r\nSubject: Example4\r\n\r\nhello\r\n")
+        self.draft("r-3", b"To: partner@example.com\r\nSubject: Example4\r\n" + LETTER_MARK + b"\r\nhello\r\n")
         self.assertEqual(self.approve("r-3").returncode, 0)
-        self.draft("r-3", b"To: partner@example.com\r\nSubject: Example4\r\n\r\nhello, and one more thing\r\n")
+        self.draft("r-3", b"To: partner@example.com\r\nSubject: Example4\r\n" + LETTER_MARK + b"\r\nhello, and one more thing\r\n")
 
         r = self.run_script(MAIL, "send", "r-3")
         self.assertNotEqual(r.returncode, 0)
