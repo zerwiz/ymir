@@ -18,7 +18,10 @@
   <a href="https://www.npmjs.com/package/@zerwiz/ymir">npm</a><br>
   <a href="https://www.npmjs.com/package/@zerwiz/ymir"><img alt="npm downloads" src="https://img.shields.io/npm/dy/@zerwiz/ymir?label=downloads%20%C2%B7%20past%20year&color=c9973f"></a>
   <a href="https://www.npmjs.com/package/@zerwiz/ymir"><img alt="npm version" src="https://img.shields.io/npm/v/@zerwiz/ymir?color=c9973f"></a>
-  <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-c9973f"></a>
+  <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-c9973f"></a><br>
+  <a href="https://github.com/zerwiz/ymir/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/zerwiz/ymir?color=c9973f"></a>
+  <a href="https://github.com/zerwiz/ymir/forks"><img alt="GitHub forks" src="https://img.shields.io/github/forks/zerwiz/ymir?color=c9973f"></a>
+  <a href="https://github.com/zerwiz/ymir"><strong>Star on GitHub</strong></a>
 </p>
 
 ```bash
