@@ -1017,3 +1017,13 @@ know what's going on and if it was a correct build."*
   `received <id>`.
 
 The how-to is `docs/features/the-veil.md`.
+
+## 2026-11-25 — Hermes is a root agent too (plan 372)
+
+At the operator's word: *"in all places we mention what harness pi works for, we need to add Hermes."* The RULES/51
+section above lists the root agents as *"pi, Claude Code, OpenCode, Codex, Cursor"*; that list stays as the record and
+is corrected here. **Hermes is one of them.** Install and every update seat it from the pin (`ymir hermes seat`,
+`docs/features/ymir-whole-in-hermes.md`): the contract (`~/.hermes/SOUL.md`, `~/.hermes/AGENTS.md`, `.hermes.md`),
+the MCP doors, the skills shelf, the Sága head on its first turn and the worker wake. When a Hermes session holds the
+arm, a tell is posted into it through its gateway (`bin/voice/hermes-arm-wake.sh`, plan 369 item 1). One thing is still
+owed and is said plainly: a recorded end-to-end run proving the tell shows in a live Hermes chat.

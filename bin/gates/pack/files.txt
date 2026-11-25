@@ -1,0 +1,20 @@
+# files.txt — Ymir's wards that the gate pack copies into an app repository, byte for byte, at the same path.
+# bin/gates/pack.sh reads this list and writes it into the repository's VENDORED (`files:`). The pack's own files
+# are everything under bin/gates/pack/tree/ (VENDORED `pack:`). Add a ward here, then re-seat every repository.
+bin/gates/guards/secret-guard.sh
+bin/gates/guards/secrets-plaintext-guard.sh
+bin/gates/guards/public-guard.sh
+bin/gates/guards/public-guard.py
+bin/gates/guards/public-data-guard.sh
+bin/gates/guards/private-guard.sh
+bin/gates/guards/private-guard.py
+bin/gates/guards/identity-guard.sh
+bin/gates/guards/pr-identity-guard.sh
+bin/gates/guards/vault-guard.sh
+bin/gates/secret-scan.sh
+bin/vault/hoard-lib.sh
+bin/fleet/ymir-platform.sh
+bin/forge/pr-patterns.sh
+bin/forge/maker-names.py
+bin/gates/maker-allow.txt
+bin/gates/maker-words.txt
