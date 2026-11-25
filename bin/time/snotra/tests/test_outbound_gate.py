@@ -47,7 +47,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 # The doors under test are the real ones. Until 2026-11-25 these three names pointed at the shims
-# under bin/time/snotra/, which ca6faff37 retired on 2026-11-17; from then on 12 of the 16 proofs
+# under bin/time/snotra/, which ca6faff37 retired on 2026-11-17; from then on 12 of the 16 proofs  # allow-superseded-path: history, names where the retired shims lived
 # ran `bash <missing file>` and failed with exit 127 instead of judging the gate.
 MAIL = ROOT / "systems/snotra/services/letters/mail-send.sh"
 # The proofs that judge the door's own text read the same file (plan 231).
