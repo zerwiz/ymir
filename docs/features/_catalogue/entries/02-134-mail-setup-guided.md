@@ -2,3 +2,7 @@
 section: agents-work-collaboration
 ---
 | Mail | **Set up the mail once, guided** (`bin/mail/connect.sh setup` · `connect.sh line` · [how-to](docs/features/connect-the-mail-and-calendar-door.md)) | Plan 375 B2 and B5. `connect.sh setup` walks the operator through the Google Cloud pages and **checks each step before the next**: the OAuth client is pasted once and sealed in the vault by key (read back, never printed); Google is asked, without signing anyone in, whether the sign-in's return address is registered (`redirect_uri_mismatch` is named with the exact address to add); one sign-in; then the Gmail and Calendar APIs are asked to answer the grant. `--check` measures and changes nothing. `calendar-auth.sh` now runs the same one sign-in instead of writing a second grant into the vault by hand, and the calendar reader and voice tool read the one grant first (the older grant still works where it is the only one). `connect.sh line` is one line on the mail: the Sága digest shows it from the last measurement, and the trouble panel's `mail` signal measures hourly and turns red on a dead grant. Setup cannot send: mail to anyone but the operator still leaves only through the letters gate | [docs/features/connect-the-mail-and-calendar-door.md](docs/features/connect-the-mail-and-calendar-door.md) |
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #947
