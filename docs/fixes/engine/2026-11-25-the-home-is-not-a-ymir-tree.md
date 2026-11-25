@@ -32,3 +32,7 @@ A read-only `units.sh check` on the dev machine went from 12 problem rows and ex
 - The fix takes effect when the pin carries it. Until then the pinned `units.sh write` can rewrite the lines again.
 - `write` never retargets a path written `EnvironmentFile=-<path>`, while `check` does report one. This change
   leaves that as it was.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #957
