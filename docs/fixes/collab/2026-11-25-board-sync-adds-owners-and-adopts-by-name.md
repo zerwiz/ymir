@@ -17,3 +17,7 @@ Assignees are now added and never removed. A repo that wants the header to be th
 - `bin/collab/kit/scripts/board_sync.py`
 - `bin/collab/kit/docs/board-sync.md`
 - `bin/collab/tests/test_board_sync.py` (two new tests; 10 pass)
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #950
