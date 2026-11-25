@@ -75,3 +75,7 @@ Measured live on the dev machine, read-only:
 - **Optional, once the one grant is proved in daily use:** `connect.sh revoke` cannot darken the old
   `MANAGANDR_OAUTH_REFRESH_TOKEN`, because it is not a register row. Removing it from the vault is the operator's
   choice.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #947
