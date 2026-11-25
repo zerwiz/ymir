@@ -23,6 +23,8 @@ One reading per machine, of the nine things that failed silently on 2026-11-20 �
     contracts  a behaviour contract red on this machine (plan 350 F): bin/ward/contracts.sh check keeps
                <state>/contracts/<host>.json, and this row carries its reds; a reading older than
                TROUBLE_CONTRACTS_S (3600) seconds is red too, because a stopped runner is silent
+    clock      the Nornir scheduler is stopped on a machine that has run one (plan 369 item 17). `check`
+               starts it once first; the row is red only when it is still stopped
     receipts   a Veil report the arm holder has not answered RECEIVED within TROUBLE_RECEIPT_S (600)
                seconds (plan 350 B, the arm contract: bin/agents/veil.sh pending), with the count
 
@@ -54,7 +56,7 @@ from pathlib import Path
 
 GIB = 1024 ** 3
 SIGNALS = ("disk", "guardian", "pin", "unpushed", "questions", "errands", "hyprland", "tells", "loops", "receipts", "contracts",
-           "mail")
+           "mail", "clock")
 ENDED = ("done:", "resolved:", "failed:")
 IDLE = {"idle", "done", "waiting", "unknown"}
 
@@ -495,6 +497,42 @@ def sig_tells(c: Ctx) -> dict:
                count=len(old))
 
 
+def _cron(c: Ctx, *verb: str):
+    door = os.environ.get("TROUBLE_CRON", "") or str(Path(c.root) / "bin/time/nornir-cron-start.sh")  # a test seam
+    return run(["bash", door, *verb], timeout=60, env={**os.environ, "BROKK_STATE_OVERRIDE": str(c.state)})
+
+
+def sig_clock(c: Ctx) -> dict:
+    """The Nornir clock: red when this state dir has had a scheduler (a pid or retirement mark) and none runs."""
+    if not any((c.state / n).exists() for n in ("cron.pid", ".cron-retired")):
+        if "stopped by" not in _tail(c.state / "cron.log"):
+            return row("clock", "SKIP", "no scheduler has run from this state dir")
+    said = (_cron(c, "--status").stdout or "").strip()
+    if said.startswith("cron: running"):
+        return row("clock", "ok", said[:200])
+    retired = c.state / ".cron-retired"
+    why = retired.read_text(errors="replace").strip()[:160] if retired.exists() else "see cron.log"
+    return row("clock", "RED", f"the Nornir clock is stopped ({why})", count=1)
+
+
+def _tail(path: Path, size: int = 4096) -> str:
+    try:
+        with path.open("rb") as f:
+            f.seek(max(0, path.stat().st_size - size))
+            return f.read().decode("utf-8", "replace")
+    except OSError:
+        return ""
+
+
+def mend_clock(c: Ctx) -> None:
+    """Start it again: the unit when this is the home's own clock and the unit exists, else the starter."""
+    if not os.environ.get("TROUBLE_CRON") and c.state == Path(c.home) / "state" \
+            and _unit("nornir.service").get("LoadState") == "loaded":
+        run(["systemctl", "--user", "restart", "nornir.service"], timeout=60)
+    else:
+        _cron(c)
+
+
 def _nidhogg_clock(c: Ctx) -> dict | None:
     """Níðhöggr's own clock: red when his last run is older than the line; None when he runs nowhere here."""
     stamp = c.state / "nidhogg" / "last-run.json"
@@ -608,7 +646,7 @@ def sig_loops(c: Ctx) -> dict:
 PROBES = {"disk": sig_disk, "guardian": sig_guardian, "pin": sig_pin, "unpushed": sig_unpushed,
           "questions": sig_questions, "errands": sig_errands, "hyprland": sig_hyprland, "tells": sig_tells,
           "loops": sig_loops, "receipts": sig_receipts,
-          "contracts": sig_contracts, "mail": sig_mail}
+          "contracts": sig_contracts, "mail": sig_mail, "clock": sig_clock}
 
 
 def reading(c: Ctx, only: list[str]) -> dict:
@@ -635,6 +673,7 @@ BUTTONS = {
     "contracts": ["🔍 Show the broken contracts|On {host}, run bin/ward/contracts.sh run and show each red contract with its line"],
     "receipts": ["📬 Answer the waiting reports|On {host}, run bin/agents/veil.sh pending and answer each with bin/agents/veil.sh received <id>"],
     "mail": ["📧 Sign in to the mail again|On {host}, run bin/mail/connect.sh setup --check, then bin/mail/connect.sh setup to sign in once more, and show the mail line it ends with"],
+    "clock": ["⏰ Show why the clock stops|On {host}, run bin/time/nornir-cron-start.sh --status, show the last cron retired and cron stop lines of the home's state/cron.log and the file state/.lock-path"],
     "loops": ["🐍 Show the looping branch|On {host}, run bin/gates/nidhogg.sh commits and show which writer repeats the commit, then stop that writer"],
 }
 
@@ -703,6 +742,22 @@ def check(c: Ctx, only: list[str], do_notify: bool, dry: bool) -> dict:
     except (OSError, ValueError):
         turns = {}
     now = reading(c, only)
+    # A stopped clock is started once before anyone is told. The mark stays until it has run for
+    # TROUBLE_CLOCK_SETTLE_S, so a clock that stops again straight after is red, never restarted in a loop.
+    tried = c.dir / f"{c.host}.clock-restart"
+    for i, r in enumerate(now["rows"]):
+        if r["signal"] != "clock" or dry:
+            continue
+        if r["state"] == "ok" and tried.exists() and c.now - tried.stat().st_mtime >= env_int("TROUBLE_CLOCK_SETTLE_S", 900):
+            tried.unlink(missing_ok=True)
+        elif r["state"] == "RED" and not tried.exists():
+            tried.write_text(f"{int(c.now)}\n")
+            mend_clock(c)
+            again = sig_clock(c)
+            if again["state"] == "ok":
+                again["note"] = f"restarted once by the panel after: {r['note']}"[:200]
+            now["rows"][i] = again
+            now["red"] = sum(x["state"] == "RED" for x in now["rows"])
     turned = []
     for r in now["rows"]:
         sig = r["signal"]

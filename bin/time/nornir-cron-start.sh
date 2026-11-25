@@ -14,7 +14,7 @@
 # Ported concept from plan 24 (cron schedule) and the upstream stateless-spawn
 # pattern for plan 29.
 #
-# Usage: nornir-cron-start.sh [--status|--stop]
+# Usage: nornir-cron-start.sh [--status|--stop [--why "<reason>"]]
 #
 # Environment (kept from the original interface):
 #   BROKK_ROOT_OVERRIDE, BROKK_HOME, BROKK_STATE_OVERRIDE, BROKK_CONFIG_OVERRIDE
@@ -94,6 +94,28 @@ if [ ! -r "$CRON_CONFIG" ] && [ -r "$BROKK_HOME/config/cron.yaml.example" ]; the
   CRON_CONFIG="$BROKK_HOME/config/cron.yaml.example"
 fi
 PID_FILE="$STATE/cron.pid"
+# Which lock the clock watches (plan 369 item 17). <state>/.lock-path is believed only when it names this
+# machine's primary lock, or a lock inside this state dir with a live owner. Anything else (a test's scratch
+# lock once stood there) is refused in words and the primary lock is watched. Prints "<lock><TAB><refusal>".
+lock_to_watch() { # <state-dir>
+  local st="$1" def p="" owner why=""
+  def="${XDG_STATE_HOME:-$HOME/.local/state}/ymir/brokk.lock"
+  if [ -n "${BROKK_MACHINE_STATE_DIR:-}" ]; then printf '%s\t\n' "$BROKK_MACHINE_STATE_DIR/brokk.lock"; return 0; fi
+  [ -f "$st/.lock-path" ] && p=$(tr -d '[:space:]' <"$st/.lock-path" 2>/dev/null)
+  if [ -n "$p" ] && [ "$p" != "$def" ]; then
+    case "$p" in
+      "$st"/*)
+        owner=$(tr -d '[:space:]' <"$p" 2>/dev/null)
+        case "$owner" in ''|*[!0-9]*) owner="" ;; esac
+        if [ -n "$owner" ] && kill -0 "$owner" 2>/dev/null; then def="$p"
+        else why="$st/.lock-path refused: $p has no live owner"; fi ;;
+      *) why="$st/.lock-path refused: $p is outside $st and is not the primary lock" ;;
+    esac
+  fi
+  printf '%s\t%s\n' "$def" "$why"
+}
+export -f lock_to_watch
+
 # A WORKER SEAT MUST NEVER START, REPLACE OR STOP THE HOUSE CLOCK (2026-11-24). A herdr seat is created with
 # BROKK_MACHINE_STATE_DIR (and BROKK_STATE_OVERRIDE) set to ONE private dir, so a seat never takes the helm's
 # lock. Its Claude session hook still called this door: the scheduler it started bound to the seat's lock
@@ -146,6 +168,23 @@ running_pid() {
     ymir_pid_cmdline "$pid" 2>/dev/null | grep -q "$IDENTITY_MARK" || return 1
   fi
   printf '%s' "$pid"
+}
+
+# The live lock owner this caller does NOT descend from (exit 1: no live owner, or the caller is inside it).
+foreign_owner() {
+  local lock owner p i
+  [ -n "${BROKK_MACHINE_STATE_DIR:-}" ] || [ -f "$STATE/.lock-path" ] || return 1
+  lock=$(lock_to_watch "$STATE"); lock=${lock%%$'\t'*}
+  owner=$(tr -d '[:space:]' <"$lock" 2>/dev/null)
+  case "$owner" in ''|*[!0-9]*) return 1 ;; esac
+  kill -0 "$owner" 2>/dev/null || return 1
+  p=$$
+  for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    [ "$p" = "$owner" ] && return 1
+    p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' ')
+    case "$p" in ''|0|1) break ;; esac
+  done
+  printf '%s' "$owner"
 }
 
 rotate_log() {
@@ -315,6 +354,17 @@ scheduler='
   # schedule parser that can eat a row without saying so is a schedule nobody trusts.
   TAB=$(printf "\t")
   mkdir -p "$stamp_dir" "$lock_dir"
+  # A clock that is killed says so. The nap is a background sleep so the signal is answered at once.
+  nap() { sleep "$1" & _nap=$!; wait "$_nap" 2>/dev/null; }
+  stopped_by_signal() {
+    printf "%s cron stopped by signal %s (pid %s)\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$$" >>"$log"
+    [ -n "${_nap:-}" ] && kill "$_nap" 2>/dev/null
+    [ "$(cat "$state/cron.pid" 2>/dev/null)" = "$$" ] && rm -f "$state/cron.pid"
+    exit 0
+  }
+  trap "stopped_by_signal TERM" TERM
+  trap "stopped_by_signal INT" INT
+  trap "stopped_by_signal HUP" HUP
   while :; do
     today=$(date +%Y-%m-%d)
     # Retire when the session that started this scheduler is gone: a seat that
@@ -329,25 +379,15 @@ scheduler='
     # session: it stays up with no lock and is stopped only by --stop or the
     # unit. (A fake session lock was the rejected alternative — it would refuse a
     # real Brokk seat on the heart.)
-    if [ "${BROKK_NORNIR_PERSIST:-0}" = "1" ]; then
-      : # persistent seat: never retire on a missing session lock
-    elif [ -n "${BROKK_MACHINE_STATE_DIR:-}" ]; then
-      mach="$BROKK_MACHINE_STATE_DIR"
-    elif [ -f "$state/.lock-path" ]; then
-      # Phase 0 (one state dir): the helms location is what the pointer says, never the
-      # raw legacy default. The pointer is the ONE fact (bin/vault/hoard-lib.sh +
-      # src/ymir_runtime/state/lock.py); restating it here is how the cron
-      # retired against a missing lock at the OLD path while a fresh session
-      # stood — 2026-09-27, the install validation caught it.
-      mach="$(dirname "$(cat "$state/.lock-path" 2>/dev/null || true)")"
-      if [ -z "$mach" ] || [ "$mach" = "." ] || [ ! -d "$mach" ]; then
-        mach="${XDG_STATE_HOME:-$HOME/.local/state}/ymir"
-      fi
-    else
-      mach="${XDG_STATE_HOME:-$HOME/.local/state}/ymir"
-    fi
+    # EXCEPTION kept: the persistent seat binds to the machine role, never to a session lock.
     if [ "${BROKK_NORNIR_PERSIST:-0}" != "1" ]; then
-      lockf="$mach/brokk.lock"
+      _watch=$(lock_to_watch "$state")
+      lockf=${_watch%%"$(printf "\t")"*}
+      _refusal=${_watch#*"$(printf "\t")"}
+      if [ -n "$_refusal" ] && [ "$_refusal" != "${_said:-}" ]; then
+        printf "%s cron %s; watching %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$_refusal" "$lockf" >>"$log"
+      fi
+      _said=$_refusal
       # A lock missing for a moment (a runtime flip rewrites it) must not stop the clock: wait a
       # grace period and re-check before retiring (2026-11-22: three retirements around flips).
       _grace=${BROKK_CRON_LOCK_GRACE:-600}; _waited=0
@@ -357,7 +397,7 @@ scheduler='
         if [ -n "$owner" ] && [ "$owner" != "1" ] && [ -d "/proc/$owner" ] \
            && [ "${st#Z}" = "$st" ] && [ "${st#X}" = "$st" ]; then _live=1; break; fi
         [ "$_waited" -ge "$_grace" ] && { _live=0; break; }
-        sleep "${BROKK_CRON_LOCK_RECHECK:-15}"; _waited=$((_waited + ${BROKK_CRON_LOCK_RECHECK:-15}))
+        nap "${BROKK_CRON_LOCK_RECHECK:-15}"; _waited=$((_waited + ${BROKK_CRON_LOCK_RECHECK:-15}))
       done
       if [ "$_live" = 0 ]; then
         printf "%s cron retired - no live session lock at %s (waited %ss)\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$lockf" "$_waited" >>"$log"
@@ -462,12 +502,14 @@ scheduler='
       fi
     done <"$config"
     [ "${BROKK_CRON_ONCE:-0}" = 1 ] && exit 0
-    sleep "${BROKK_CRON_TICK:-45}"
+    nap "${BROKK_CRON_TICK:-45}"
   done
 '
 
 case "${1-}" in
   --status)
+    refused=$(lock_to_watch "$STATE"); refused=${refused#*$'\t'}
+    [ -n "$refused" ] && printf 'cron: WARNING — %s\n' "$refused" >&2
     invalid=0
     [ -r "$STATE/.cron-invalid" ] && invalid=$(grep -c . "$STATE/.cron-invalid" 2>/dev/null || printf '0')
     extra=""; [ "${invalid:-0}" != 0 ] && extra=" invalid=$invalid"
@@ -494,7 +536,18 @@ case "${1-}" in
     exit 0
     ;;
   --stop)
+    why=""; [ "${2-}" = "--why" ] && why="${3-}"
     if pid=$(running_pid); then
+      who="pid=$PPID ($(ps -o command= -p "$PPID" 2>/dev/null | cut -c1-120))"
+      # While a session holds the lock, only that session, the unit's own ExecStop (a child of the systemd
+      # manager) or a caller that states why may stop the clock. Every stop and refusal is logged.
+      if [ -z "$why" ] && [ "$(ps -o comm= -p "$PPID" 2>/dev/null)" != systemd ] && foreign_owner >/dev/null; then
+        printf '%s cron stop REFUSED for %s: session pid %s holds the lock\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$who" "$(foreign_owner)" >>"$LOG_FILE"
+        printf 'cron[1]{state,why}:\n  "refused","session pid %s holds the lock; to stop the clock anyway: %s --stop --why \\"<reason>\\""\n' "$(foreign_owner)" "$0" >&2
+        exit 1
+      fi
+      [ -n "$why" ] || why=$([ "$(ps -o comm= -p "$PPID" 2>/dev/null)" = systemd ] && echo "unit stop" || echo "session or no live lock")
+      printf '%s cron stop of pid %s by %s: %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$pid" "$who" "$why" >>"$LOG_FILE"
       kill "$pid" 2>/dev/null || true
       rm -f "$PID_FILE"
       printf 'cron: stopped pid=%s\n' "$pid"

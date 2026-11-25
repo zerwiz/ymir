@@ -750,3 +750,10 @@ prints the facts without spawning; `--no-agent` forces the direct road.
 ## 2026-11-24 — every run leaves a done row, and the brief names the trouble (plan 366)
 
 The scheduler logs `cron done rc=N Ns seat=S: <job>` after each run. The daily briefing carries a `nornir:` line from `bin/time/nornir-status.sh`, written by the machine that writes the brief, naming the seat on each trouble row.
+
+## 2026-11-25 — which lock the clock watches, and who may stop it (plan 369 item 17)
+
+- The clock believes `state/.lock-path` only when it names the machine's primary lock, or a lock inside that state dir with a live owner. Anything else is refused in `cron.log` and by `--status`, and the primary lock is watched.
+- A private `BROKK_MACHINE_STATE_DIR` without a `BROKK_STATE_OVERRIDE` never writes the home's pointer, and a pointer to a live lock is not repointed.
+- While a session holds the lock, `--stop` is for that session, the unit's own stop, or `--stop --why "<reason>"`. Every stop, refusal and signal is logged.
+- The trouble panel's `clock` row starts a stopped clock once (`bin/ward/trouble.sh check`) and is red only if it stays down.

@@ -26,6 +26,15 @@ reason, never a guess and never a red.
 | `tells` | a tell in the arm's wake queue is still waiting | 3600 s (`TROUBLE_TELL_S`) |
 | `loops` | one branch took the same commit subject more than twice in an hour. Níðhöggr judges it (`bin/gates/nidhogg.sh commits`) | `LOOP_COMMIT_MAX` (2) · `LOOP_COMMIT_WINDOW` (3600) |
 
+Plan 369 added one more:
+
+| Signal | Red when | The line, and the variable that moves it |
+|---|---|---|
+| `clock` | the Nornir scheduler is stopped on a machine that has run one, and one restart by `check` did not keep it up | a second stop within 900 s is red (`TROUBLE_CLOCK_SETTLE_S`) |
+
+`check` is the one verb that mends: it starts a stopped clock once (the `nornir` unit where it is seated).
+`read` and `--dry-run` start nothing.
+
 The lines are counsel until the Allfather seals them. Set your own in `$YMIR_HOME/config/trouble.env`
 (for example `TROUBLE_DISK_PCT=80`); never in the code.
 
@@ -82,4 +91,5 @@ signal first went bad). The home's `state/` is not committed.
 
 ## CHANGE LOG
 
+- 2026-11-25 — the `clock` row, restarted once by `check` before it is red (plan 369 item 17).
 - 2026-11-20 — first page: nine signals, the notice on the turn to red, the fleet row (plan 339.5, 339.6, 341.4).

@@ -306,11 +306,43 @@ def lock_owned(env: Mapping[str, str] | None = None, *, shell_pid: int | str | N
 
 def write_pointer(lock: Path, env: Mapping[str, str] | None = None) -> None:
     pointer = pointer_path(env)
+    if _private_lock_over_home_state(env):
+        print(f"gleipnir: pointer not written: {lock} is a private machine dir's lock and {pointer} is the home's", file=sys.stderr)
+        return
+    held = _pointer_held_elsewhere(pointer, lock)
+    if held:
+        # A second lock never repoints a state dir while the lock it names is alive: a test or seat with a
+        # private machine dir and the home's state dir moved the house clock onto its scratch lock.
+        print(f"gleipnir: pointer kept at {held[0]} (live pid {held[1]}); not repointed to {lock}", file=sys.stderr)
+        return
     try:
         pointer.parent.mkdir(parents=True, exist_ok=True)
         pointer.write_text(f"{lock}\n", encoding="utf-8")
     except OSError:
         pass
+
+
+def _private_lock_over_home_state(env: Mapping[str, str] | None = None) -> bool:
+    """A seat or test that moved its machine dir but not its state dir would write the HOME's pointer."""
+    e = _env(env)
+    if not e.get("BROKK_MACHINE_STATE_DIR") or e.get("BROKK_STATE_OVERRIDE") or is_eindri_home(e):
+        return False
+    primary = {k: v for k, v in e.items() if k != "BROKK_MACHINE_STATE_DIR"}
+    return machine_state_dir(e) != machine_state_dir(primary)
+
+
+def _pointer_held_elsewhere(pointer: Path, lock: Path) -> tuple[Path, str] | None:
+    """(path, pid) when the pointer names ANOTHER lock whose owner is alive, else None."""
+    try:
+        named = pointer.read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    if not named or Path(named) == lock:
+        return None
+    owner = _read_pid(Path(named))
+    if owner and pid_alive(owner, _read_pid(Path(named + ".starttime"))):
+        return Path(named), owner
+    return None
 
 
 def drop_legacy(want: str, env: Mapping[str, str] | None = None) -> None:
