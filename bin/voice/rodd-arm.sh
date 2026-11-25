@@ -233,9 +233,24 @@ cmd_tell() {
   payload="$(flatten "$from") to the arm holder: $(flatten "$text")"
   "$STATE_DOOR" queue append signal "$key" "$payload" --queue "$QUEUE" --epoch "$epoch" --class "$wclass" >/dev/null 2>&1 \
     || die "the queue write to $QUEUE failed — nothing was handed over, and nothing claims it was"
-  printf 'rodd-arm-tell[1]{verb,delivered,key,state_dir,queue,epoch,chars,class}:\n'
-  printf '  "tell","yes","%s","%s","%s","%s","%s","%s"\n' \
-    "$key" "$LIVESTATE" "$QUEUE" "$epoch" "${#payload}" "$wclass"
+  # The road to the holder's eyes (plan 369 item 1). `delivered` only means the line is in the queue;
+  # `road` says how the holder's harness is woken to SEE it, and `shown` never claims more than is
+  # known: `hook` = its own wake hook will raise it, `posted` = the gateway took it, `no` = no road.
+  local road shown="no"
+  case "${ROLE:-unknown}" in
+    claude) road="claude Stop hook (asyncRewake) shows the wakes on the next turn boundary"; shown="hook" ;;
+    pi|counsellor) road="pi watcher extension (gna-pi-watch) steers or follows up"; shown="hook" ;;
+    hermes)
+      local hw; hw="$(bash "$SCRIPT_DIR/hermes-arm-wake.sh" --state "$LIVESTATE" 2>&1 | awk 'NR==2' | cut -d'"' -f2)"
+      case "$hw" in
+        posted|none) road="hermes gateway post (hermes-arm-wake.sh): $hw"; shown="posted" ;;
+        *) road="hermes gateway post failed — the line is queued, not seen"; shown="no" ;;
+      esac ;;
+    *) road="no wake road for harness '${ROLE:-unknown}' — queued, nobody was woken" ;;
+  esac
+  printf 'rodd-arm-tell[1]{verb,delivered,key,state_dir,queue,epoch,chars,class,shown,road}:\n'
+  printf '  "tell","yes","%s","%s","%s","%s","%s","%s","%s","%s"\n' \
+    "$key" "$LIVESTATE" "$QUEUE" "$epoch" "${#payload}" "$wclass" "$shown" "$road"
   return 0
 }
 

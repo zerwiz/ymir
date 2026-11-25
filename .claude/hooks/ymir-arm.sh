@@ -47,5 +47,17 @@ fi
 client=""
 [ -r "$root/bin/pi/arm-pin-lib.sh" ] && . "$root/bin/pi/arm-pin-lib.sh" && arm_pin_client client
 out=$("${client:-$root/bin/pi/syn-watch-arm.sh}" --restart --attach-only); rc=$?
-case "$out" in *signal:*|*stale:*|*check:*|*heartbeat:*) printf '%s\n' "$out" >&2; exit 2;; esac
+case "$out" in
+  *signal:*)
+    # A bare "signal: wake queue" told a Claude seat nothing: it was woken, saw no message and
+    # no instruction, and the wake sat until the next session start (2026-11-24, at the
+    # Allfather's word: "youre the arm holder. but it dont wake u"). The seat is now handed the
+    # wakes themselves and the two commands that answer them.
+    { printf '%s\n' "$out"
+      printf 'YOU HOLD THE ARM. These wakes are owed an answer now:\n'
+      bash "$root/bin/time/saga-wake-drain.sh" drain 2>&1 | head -40
+      printf 'Act on each, answer Rödd with: bash %s/bin/voice/rodd-room.sh reply "<text>"\n' "$root"
+      printf 'then drop them with: bash %s/bin/time/saga-wake-drain.sh ack\n' "$root"
+    } >&2; exit 2 ;;
+  *stale:*|*check:*|*heartbeat:*) printf '%s\n' "$out" >&2; exit 2;; esac
 exit $rc
