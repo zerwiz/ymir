@@ -136,3 +136,46 @@ YMIR_OAUTH_LOOPBACK_PORT=8768 bash bin/mail/connect.sh google ...     # another 
 - **2026-11-08 (appended)** — Added how to read the one mail record (`ledger.sh tail` now folds the connect
   events in) and the CalDAV answer, so the page never leaves a guest expecting a calendar it cannot have.
 - **2026-11-12** — Appended: one sign-in port off Kokoro's 8765; a busy port is named; the mismatch explained (plan 276).
+
+## Setting it up the first time: `connect.sh setup` (2026-11-25)
+
+The road above still starts with five pages in Google Cloud, and until now nothing told you whether you had done them
+right. **One command now walks you through them and checks each step before the next.**
+
+```bash
+bin/mail/connect.sh setup            # the first run: guided, opens each page, asks for the two values
+bin/mail/connect.sh setup --check    # measure every step and change nothing
+bin/mail/connect.sh setup --again    # sign in afresh (for example after a revoke)
+```
+
+| Step | What it checks | What it tells you when it fails |
+|---|---|---|
+| 1. The OAuth client | `GOOGLE_MCP_CLIENT_ID` and `GOOGLE_MCP_CLIENT_SECRET` are in the vault | It opens the five console pages and asks for the Client ID and secret. They go straight into the vault through `hodd-set.sh`, are read back, and are never printed |
+| 2. The return address | Google is asked whether `http://127.0.0.1:<port>/callback` is registered on the client. Nobody is signed in to ask | `redirect_uri_mismatch`, with the exact address to add and the page to add it on |
+| 3. One sign-in | A live grant with mail, drafts, the gate's send scope and calendar | It runs `connect.sh google` once. Google keeps whatever was granted before |
+| 4. The APIs | The Gmail and Calendar APIs both answer the grant | The API that is off, and the page that turns it on |
+
+It ends with the mail line and `result: READY` or `NOT READY`. Setup cannot send; sending still happens only at
+the letters gate.
+
+**One sign-in now serves mail and calendar.** `calendar-auth.sh` used to run a second sign-in and write a second grant,
+`MANAGANDR_OAUTH_REFRESH_TOKEN`, into the vault by hand. It now runs the connect door's sign-in, so there is one grant
+for one person. The calendar reader (`tools/calendar/reader.mjs`) and the voice tool's calendar answer read that grant
+first. They still read the older grant when it is the only one in a home, so nothing that works today stops working.
+
+**One line tells you the mail is alive.** The Sága digest shows `mail: ok — …` or `mail: RED — … cannot be read: …`
+under *NEEDS THE ALLFATHER*. It reads the last measurement and never waits on Google. The trouble panel has a `mail`
+signal that measures again every hour and turns red, with a button, the moment a grant dies.
+
+```bash
+bin/mail/connect.sh line             # the line, measured again if older than an hour
+bin/mail/connect.sh line --cached    # the last measurement only, no network (what the digest runs)
+```
+
+> [!IMPORTANT]
+> Measured 2026-11-25 on the fleet client: only `http://127.0.0.1:8765/callback` is registered, and 8765 is Kokoro's
+> port. So `connect.sh google` on the default 8767 fails with `redirect_uri_mismatch` until
+> `http://127.0.0.1:8767/callback` is added to the client. `connect.sh setup --check` names this, step 2.
+
+- **2026-11-25** — Appended: the guided setup, one sign-in for mail and calendar, the mail line in the digest and the
+  trouble panel (plan 375 B2 and B5).
