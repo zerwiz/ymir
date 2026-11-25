@@ -26,3 +26,7 @@ settle checks fail with the old `units.py` and pass with the fix.
 
 A machine that carries the stop-gap drop-in `smidja.service.d/10-home-db.conf` can remove it once its pin carries
 this change.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #957
