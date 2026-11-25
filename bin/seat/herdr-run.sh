@@ -132,11 +132,14 @@ worth_a_smith() {
   local text; text="$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')"
   [ -n "$text" ] || { printf 'worth[1]{verdict,why}:\n  "no","empty"\n'; return 1; }
   local words; words="$(printf '%s' "$text" | wc -w | tr -d ' ')"
-  # Interrogative and lookup shapes are answered in hand.
-  case "$text" in
-    *\?*|what\ *|why\ *|when\ *|where\ *|who\ *|how\ many*|how\ much*|show\ me*|tell\ me*|explain\ *|whats\ *|what\'s\ *)
-      printf 'worth[1]{verdict,why}:\n  "no","a question — answer it in hand"\n'; return 1 ;;
-  esac
+  # A question or a lookup is answered in hand only when it is SHORT and reads as one: it opens like one or
+  # ends in "?". A long brief that quotes a question is still a brief (plan 369 item 15).
+  if [ "$words" -lt 25 ]; then
+    case "${text%"${text##*[![:space:]]}"}" in
+      *\?|what\ *|why\ *|when\ *|where\ *|who\ *|how\ many*|how\ much*|show\ me*|tell\ me*|explain\ *|whats\ *|what\'s\ *)
+        printf 'worth[1]{verdict,why,words}:\n  "no","a question — answer it in hand",%s\n' "$words"; return 1 ;;
+    esac
+  fi
   # A task names an artifact or an act of making.
   case "$text" in
     *build*|*fix*|*implement*|*refactor*|*write*|*create*|*add*|*migrate*|*port*|*test*|*review*|*research*|*audit*|*plan*|*design*|*document*|*investigate*|*compare*|*draft*|*forge*|*set\ up*|*install*)
@@ -403,8 +406,9 @@ $_coretext"
     [ -n "$PROMPT" ] || { printf 'error: eindri needs a task after --\n' >&2; exit 2; }
 
     # The first law: short errands are done in hand.
-    if ! worth_a_smith "$PROMPT" >/dev/null 2>&1; then
-      printf 'herdr-run[1]{eindri,verdict}:\n  "none","short errand — answer it in hand"\n'
+    if ! _worth=$(worth_a_smith "$PROMPT" 2>/dev/null); then
+      _why=$(printf '%s\n' "$_worth" | sed -n '2s/^ *"no","\([^"]*\)".*/\1/p')
+      printf 'herdr-run[1]{eindri,verdict}:\n  "none","%s"\n' "${_why:-not worth a smith}"
       exit 3
     fi
 
@@ -530,6 +534,7 @@ $_coretext"
     if ! local_model_guard "${MODEL_ARGS[*]:-}"; then
       "$SCRIPT_DIR/../model/local-model-lock.sh" check >&2
       printf 'help: a local seat already runs on this machine — wait, or use a remote/online model\n' >&2
+      printf 'herdr-run[1]{eindri,verdict}:\n  "none","the local model is busy — wait, or use an online model"\n'
       exit 3
     fi
 
