@@ -33,8 +33,13 @@ Prints one TOON row:
   editor[1]{pane,verdict,text}:
     "w39:pW","text","have you done all we have been talking about"
 
-verdict is `empty`, `text` or `unknown`. `unknown` is said out loud rather than guessed: a
+verdict is `empty`, `suggestion`, `text` or `unknown`. `unknown` is said out loud rather than guessed: a
 box that could not be found is not an empty box, and the door prints it.
+
+`suggestion` is claude's grey prompt suggestion: the box line is ESC[2m<words>ESC[0m, SGR 2
+(dim), drawn as a hint and never typed (measured 2026-11-25 on four live workers). A box whose
+only content is dim is `suggestion`, and a door treats it as empty; any text in normal colour
+is still `text` and still refuses. A dim hint beside real text is `text`.
 Exit: 0 judged (whatever the verdict) · 2 usage · 3 the pane could not be read.
 """
 import json
@@ -59,36 +64,82 @@ def _clean(line: str) -> str:
     return BORDER_TAIL.sub('', line).strip()
 
 
+ANSI = re.compile(r'\x1b\[([0-9;:]*)m')
+OTHER_ESC = re.compile(r'\x1b\[[0-9;?]*[A-Za-ln-z]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)')
+
+
+def _scan(line: str) -> tuple:
+    """-> (plain, dim): the line without escape sequences, and one flag per character that is
+    True when SGR 2 (dim) was in force for it. SGR 0 and 22 end dim; 38/48 take their colour
+    arguments with them so a colour number is never mistaken for a dim code."""
+    line = OTHER_ESC.sub('', line)
+    plain, dim, on, pos = [], [], False, 0
+    for m in ANSI.finditer(line):
+        seg = line[pos:m.start()]
+        plain.append(seg); dim.extend([on] * len(seg)); pos = m.end()
+        params = [p for p in re.split(r'[;:]', m.group(1))]
+        if not m.group(1):
+            on = False
+            continue
+        i = 0
+        while i < len(params):
+            p = params[i] or '0'
+            if p in ('38', '48', '58'):
+                i += 3 if (i + 1 < len(params) and params[i + 1] == '5') else 5
+                continue
+            if p == '0' or p == '22':
+                on = False
+            elif p == '2':
+                on = True
+            i += 1
+    seg = line[pos:]
+    plain.append(seg); dim.extend([on] * len(seg))
+    return ''.join(plain), dim
+
+
+def _all_dim(plain: str, dim: list, start: int = 0) -> bool:
+    """True when every visible character from `start` on (not a space, not a box border) is dim."""
+    seen = False
+    for ch, d in zip(plain[start:], dim[start:]):
+        if ch.isspace() or ch in '│┃|':
+            continue
+        if not d:
+            return False
+        seen = True
+    return seen
+
+
 def judge(text: str) -> tuple:
-    """→ (verdict, snippet). verdict ∈ empty · text · unknown."""
-    lines = text.splitlines()
+    """-> (verdict, snippet). verdict is one of empty, suggestion, text, unknown."""
+    scanned = [_scan(l) for l in text.splitlines()]
+    lines = [p for p, _ in scanned]
     bottom = max((i for i, l in enumerate(lines) if RULE.match(l)), default=-1)
     if bottom < 0:
         return 'unknown', ''
     top = max((i for i in range(bottom) if SEPARATOR.match(lines[i])), default=-1)
     if top < 0:
         return 'unknown', ''
-    box = lines[top + 1:bottom]
+    box = list(range(top + 1, bottom))
     if len(box) > MAX_BOX_LINES:
         return 'unknown', ''
-    kept = []
-    for line in box:
+    kept, dim_flags = [], []
+    for i in box:
+        line = lines[i]
         m = MARKER.match(line)
-        kept.append(_clean(m.group(2)) if m else _clean(line))
-    while kept and not kept[0]:
-        kept.pop(0)
-    while kept and not kept[-1]:
-        kept.pop()
-    kept = [l for l in kept if l and not FOOTER.match(l)]
+        body = _clean(m.group(2)) if m else _clean(line)
+        if not body or FOOTER.match(body):
+            continue
+        kept.append(body)
+        dim_flags.append(_all_dim(line, scanned[i][1], m.start(2) if m else 0))
     if not kept:
         return 'empty', ''
     snippet = ' '.join(kept).strip()
-    return ('text', snippet)
+    return ('suggestion' if all(dim_flags) else 'text', snippet)
 
 
 def read_pane(pane: str, lines: int) -> str:
     try:
-        raw = subprocess.run(['herdr', 'pane', 'read', pane, '--lines', str(lines)],
+        raw = subprocess.run(['herdr', 'pane', 'read', pane, '--lines', str(lines), '--format', 'ansi'],
                              capture_output=True, text=True, timeout=20)
     except Exception as exc:  # noqa: BLE001
         print(f'herdr-editor: cannot read {pane} ({exc})', file=sys.stderr)
