@@ -23,3 +23,7 @@ plus a no-break space before normal text (`text`) and before nothing (`empty`).
 
 Check which copy ran. `bin/agents/eindri-send.sh` uses the reader beside itself, so an old checkout
 uses an old reader. Run it from the pinned runtime, or bring that checkout up to `main`.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #951
