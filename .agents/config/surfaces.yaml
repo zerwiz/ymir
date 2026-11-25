@@ -56,6 +56,7 @@ surfaces:
   - { name: roddhelm,    risk: never, roles: all, why: "the holder of the arm is a declaration, never invented" }
   - { name: lock,        risk: safe,  roles: all, why: "removes a lock file whose process is dead" }
   - { name: gates,       risk: safe,  roles: all, why: "re-seats the pre-push hook from its installer" }
+  - { name: gatepack,    risk: never, roles: [heart, dev], why: "reports whether every app repository carries Ymir's current gate pack; re-seating is a pull request per repository (bin/gates/pack.sh seat), the operator's to merge" }
   - { name: migrations,  risk: safe,  roles: all, why: "applies the numbered, idempotent home migrations" }
   - { name: hoard,       risk: ask,   roles: all, why: "moves and removes directories in the home" }
   - { name: autoboot,    risk: ask,   roles: all, why: "re-materialises and re-enables the boot units of every program the role owes" }

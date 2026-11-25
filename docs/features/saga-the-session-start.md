@@ -27,7 +27,7 @@ bin/time/saga-session-start.sh --check      # measure the head; exit 1 over budg
 bin/time/saga-session-start.sh --full       # a human wants the whole truth
 ```
 
-Most harnesses do this for you: OpenCode, Pi, Claude Code, Codex and Cursor each own a
+Most harnesses do this for you: OpenCode, Pi, Claude Code, Codex, Cursor and Hermes each own a
 session-start surface that speaks the head. Run it by hand when you want the truth again
 mid-session.
 
@@ -114,3 +114,4 @@ The rows are printed by `bin/time/saga-land-warnings.sh`, which you can run by h
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history
   (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-14** — a LANDING section was added: the digest names worker branches pushed with no PR and commits that exist on no remote (plan 293 part 3).
+- **2026-11-25** — Hermes is named among the harnesses that speak the head (its session hook, `bin/seat/hermes-session-hook.sh`, plan 372).
