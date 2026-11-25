@@ -1,0 +1,14 @@
+{
+  "url": "https://board.example.org",
+  "workspace": "acme",
+  "token_env": "PLANE_API_TOKEN",
+  "products": {
+    "alpha": "ALPHA",
+    "beta": "BETA"
+  },
+  "default_product": "alpha",
+  "states": {
+    "In Review": "In Progress"
+  },
+  "priorities": {}
+}
