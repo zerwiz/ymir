@@ -13,7 +13,8 @@
 # *"are all agent cards true … cant we show more information about them"*):
 #
 #   NOMINAL means ALIVE — a herdr pane holds an agent. There is no other meaning,
-#   and an unseated figure is `down`, never nominal. (All 24 role cards read
+#   and an unseated figure is `idle` (READY), never nominal and never `down` (2026-11-24,
+#   plan 369 item 4: red DOWN on every figure not in a pane read as a broken forge). (All 24 role cards read
 #   NOMINAL while nine agents lived, because the roster's status was invented.)
 #   model      the one its launch recorded (state/<id>.meta model=), else the one
 #              the operator configured for it (config/agents.yaml), else empty —
@@ -343,7 +344,9 @@ def build(*, ident, name, role, domain, pane, harness, state, model, model_sourc
         "role": role,
         "realm": "work",
         "domain": domain,
-        "status": "nominal" if alive else "down",
+        # unseated is IDLE (READY on the board), not DOWN: a roster figure with no pane is waiting
+        # for an errand, not broken (plan 369 item 4: all 25 Eindri read a red DOWN).
+        "status": "nominal" if alive else "idle",
         "alive": alive,
         "capabilities": capabilities,
         "skills": [],

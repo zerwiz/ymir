@@ -27,8 +27,19 @@ WOVEN="FEATURES.md bin/README.md .agents/backend/README.md .agents/assets/agents
 WOVEN_DIRS="bin .agents/assets/agents/capabilities"
 wov_hash() { git hash-object -- "$root/$1" 2>/dev/null || printf 'absent'; }
 weave_woven_files() {
-  local f was now pre=""
+  local f was now pre="" why
   [ -f "$root/bin/records/weave.sh" ] || return 0
+  # ONLY WHEN SOMETHING IT READS IS STAGED (plan 369 item 9). The weave rebuilds the inventory and the
+  # capabilities register from the whole tree (about seven minutes, measured 2026-11-24), and most
+  # commits touch nothing a register is built from. bin/records/weave-needed.sh names the inputs;
+  # YMIR_WEAVE=1 forces the weave. The ward and CI still judge drift, so a skip here is never a pass.
+  if [ -x "$root/bin/records/weave-needed.sh" ]; then
+    if ! why="$(cd "$root" && bash bin/records/weave-needed.sh 2>/dev/null)"; then
+      printf '%s\n' "${why:-weave-needed: no}"
+      return 0
+    fi
+    printf '%s\n' "$why"
+  fi
   for f in $WOVEN; do pre="$pre$(printf '%s=%s\n' "$f" "$(wov_hash "$f")")"; done
   bash "$root/bin/records/weave.sh" >/dev/null 2>&1 || true
   for f in $WOVEN; do

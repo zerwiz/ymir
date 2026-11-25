@@ -18,6 +18,29 @@ function useIndex<T>(path: string, key: string, fleet: boolean) {
   return { rows, err };
 }
 
+type U = { project: string; session: string; action: string; text: string; tool: string; seat: string };
+
+/** The next updates per project, each naming the session it came from (plan 368). */
+function NextUpdates() {
+  const { rows } = useIndex<U>('/api/sessions/updates', 'updates', false);
+  if (rows.length === 0) return null;
+  const by: Record<string, U[]> = {};
+  rows.forEach((u) => { (by[u.project || '—'] ??= []).push(u); });
+  return (
+    <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--ymir-line, #333)', fontSize: 13 }}>
+      <b>Next updates</b>
+      {Object.entries(by).slice(0, 12).map(([proj, us]) => (
+        <div key={proj} style={{ marginTop: 6 }}>
+          <span style={{ fontWeight: 600 }}>{proj}</span>
+          {us.slice(0, 3).map((u) => (
+            <div key={u.session + u.text} className="dim" style={{ paddingLeft: 10 }}>{u.action} — {u.text} <span style={{ opacity: 0.6 }}>({u.tool})</span></div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const when = (t: number) => (t ? new Date(t * 1000).toISOString().slice(0, 16).replace('T', ' ') : '—');
 
 /** Every agent session on this machine, from every tool (plan 368). Fleet is an opt-in filter. */
@@ -28,9 +51,9 @@ export function AllSessions() {
   const tools = [...new Set(rows.map((r) => r.tool))].sort();
   const shown = rows.filter((r) => !tool || r.tool === tool);
   return (
-    <section className="panel" style={{ marginTop: 'var(--ymir-space-4)' }}>
+    <section className="panel" style={{ marginTop: 0 }}>
       <div className="panel-head">
-        <div className="panel-title"><span className="glyph" aria-hidden="true">ᛋ</span> All sessions · every tool</div>
+        <div className="panel-title"><span className="glyph" aria-hidden="true">ᛋ</span> Sessions · every tool (Claude Code, pi, Codex, Hermes, opencode)</div>
         <div className="row" style={{ gap: 8, fontSize: 13 }}>
           <select aria-label="tool" value={tool} onChange={(e) => setTool(e.target.value)}>
             <option value="">all tools</option>{tools.map((t) => <option key={t}>{t}</option>)}
@@ -39,6 +62,7 @@ export function AllSessions() {
         </div>
       </div>
       <div className="panel-body flush" style={{ overflowX: 'auto' }}>
+        <NextUpdates />
         {err && <p className="dim" style={{ padding: 12 }}>{err}</p>}
         {shown.length === 0 && !err && <div className="empty" style={{ padding: 24 }}><p>No sessions indexed yet. Run <code>ymir sessions scan</code>.</p></div>}
         {shown.length > 0 && (

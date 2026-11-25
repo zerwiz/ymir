@@ -87,6 +87,13 @@ def clone_here(p: dict, seat: str) -> str:
             cands.append(p[key])
     repo = p.get("repo") or ""
     if repo == ".":
+        # The code that RUNS (a pinned release) is not the checkout the work happens in: prefer the dev clone
+        # that shares this tree's remote, so the count covers every worktree of it, not one release dir.
+        want = run(["git", "config", "--get", "remote.origin.url"], str(ROOT))[1].strip()
+        for d in (os.environ.get("YMIR_DEV_CLONE", ""), str(Path.home() / "ymir"), str(Path.home() / "Ymir")):
+            if d and os.path.isdir(d) and want and run(["git", "config", "--get", "remote.origin.url"], d)[1].strip() == want:
+                cands.append(d)
+                break
         cands.append(str(ROOT))
     elif repo:
         cands.append(repo if os.path.isabs(repo) else str(home() / repo))
@@ -367,6 +374,7 @@ def build(a) -> dict:
                "where": [], "prs": [], "pr_count": 0, "ci": "none", "health": [], "next": []}
         clone = clone_here(p, here)
         if clone:
+            clone = main_checkout(clone)   # from a worktree, still report the whole clone
             row["where"].append(seat_entry(p, clone, here, gmap))
         rows[pid] = row
     if a.fleet and not a.here_only:

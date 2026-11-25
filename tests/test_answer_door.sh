@@ -4,6 +4,7 @@
 set -u
 ROOT="$(CDPATH='' command cd -- "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 S="$(mktemp -d)"; export YMIR_STATE_DIR="$S"; unset YMIR_REPLY_TO HERMES_SESSION_ID HERDR_PANE_ID
+export YMIR_REPLY_TO_ARM_HELD=0   # the caller does not hold the arm, unless a check says so
 fail=0; ok() { printf 'ok   %s\n' "$1"; }; bad() { printf 'FAIL %s\n' "$1"; fail=$((fail + 1)); }
 RT="$ROOT/bin/agents/reply-to.sh"; AN="$ROOT/bin/agents/answer.sh"; RP="$ROOT/bin/agents/report.sh"
 
@@ -13,6 +14,13 @@ bash "$RT" resolve >/dev/null 2>&1 && bad "an ask with no address was accepted" 
 [ "$(HERMES_SESSION_ID=s9 bash "$RT" resolve)" = "hermes:s9" ] && ok "the caller's own session is the address" || bad "own identity"
 bash "$RT" resolve --reply-to nonsense:x >/dev/null 2>&1 && bad "a made-up kind was accepted" || ok "a made-up kind is refused"
 bash "$RT" record job1 hermes:abc && [ "$(bash "$RT" get job1)" = "hermes:abc" ] && ok "the address is kept with the errand" || bad "record"
+# plan 369 item 8 — the arm holder is answered through its wake queue, never by typing into its pane
+host="$(hostname -s 2>/dev/null || uname -n)"
+[ "$(YMIR_REPLY_TO_ARM_HELD=1 bash "$RT" resolve)" = "arm:$host" ] && ok "the arm holder's errands answer to its wake queue" || bad "arm holder address"
+[ "$(YMIR_REPLY_TO_ARM_HELD=1 HERDR_PANE_ID=w1:p1 bash "$RT" resolve)" = "arm:$host" ] && ok "a holder in a pane is still answered by the queue" || bad "holder in a pane"
+[ "$(HERDR_PANE_ID=w1:p1 bash "$RT" resolve)" = "herdr:w1:p1" ] && ok "a sender that does not hold the arm keeps its pane" || bad "non-holder pane"
+[ "$(YMIR_REPLY_TO_ARM_HELD=1 bash "$RT" resolve --reply-to herdr:w9:p9)" = "herdr:w9:p9" ] && ok "an explicit address still wins" || bad "explicit over arm"
+bash "$RT" record job0 "arm:$host" && ok "arm: is a valid return address" || bad "arm: refused by record"
 
 # R2 — no handoff, no answer; a busy sender queues; a retry lands it once; a sent answer is never resent
 bash "$AN" job1 >/dev/null 2>&1 && bad "answered with no handoff" || ok "no answer without the handoff"

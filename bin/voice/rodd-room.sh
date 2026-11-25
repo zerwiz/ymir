@@ -17,9 +17,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 verb="${1:-}"; shift || true
 # The room is resolved exactly as rodd-arm.sh resolves it: from the `state=` the arm lease
-# names. `rodd-arm.sh who` TOON row names role at column 5 and state_dir at column 7
-# (the who header: verb,holder_pid,gen,mode,role,session,state_dir,...).
-state="$(bash "$SCRIPT_DIR/rodd-arm.sh" who 2>/dev/null | awk -F'","' 'NR==2{print $7}')"
+# names. The column is found by its NAME in the who header, never by position: the header
+# grew (seat,role,charter,host,…) and a fixed $7 read the pin as the state dir, so every
+# reply landed in a stray `<pin>/rodd/room.jsonl` under the caller's directory (2026-11-24).
+state="$(bash "$SCRIPT_DIR/rodd-arm.sh" who 2>/dev/null | awk '
+  NR==1 { h=$0; sub(/^[^{]*\{/,"",h); sub(/\}.*$/,"",h); n=split(h,c,","); for(i=1;i<=n;i++) if(c[i]=="state_dir") k=i; next }
+  NR==2 && k { r=$0; sub(/^[ \t]*"/,"",r); sub(/"[ \t]*$/,"",r); split(r,v,"\",\""); print v[k] }')"
+case "$state" in /*) ;; *) state="" ;; esac
 [ -n "$state" ] || { echo "rodd-room: no arm is held — the room has no writer" >&2; exit 3; }
 room="$state/rodd/room.jsonl"
 case "$verb" in
