@@ -129,3 +129,8 @@ isolated subagents. `bin/engine/hermes-ensure.sh` provisions it for any user who
   shell (law 8). Never rebuild a subsystem that already exists on the machine.
 - **Þjazi:** sub-agents in terminal panes use the Þjazi backend (protocol 14+). Presentation spaces require Þjazi
   0.8.0+; opt out with `config/herdr-presentation-spaces`.
+
+## CHANGE LOG
+
+- **2026-11-25** — written when the contract was split by topic (plan 369 item 7); its text is folded from the
+  sections of the prior `AGENTS.md`, kept verbatim in `docs/contract-history/AGENTS-2026-11-24.md`.

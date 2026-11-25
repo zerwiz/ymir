@@ -75,3 +75,8 @@ the apps folder anymore if installed they need their own places"*, *"we can not 
   - `00:00` `bin/time/nornir-job-git-sync.sh`, which keeps the Yggdrasil world-tree in sync with its remotes.
 - **Hlidskjalf is the portal**, the single control plane. Its UI guide is
   `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md`.
+
+## CHANGE LOG
+
+- **2026-11-25** — written when the contract was split by topic (plan 369 item 7); its text is folded from the
+  sections of the prior `AGENTS.md`, kept verbatim in `docs/contract-history/AGENTS-2026-11-24.md`.

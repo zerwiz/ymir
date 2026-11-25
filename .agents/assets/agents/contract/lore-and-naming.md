@@ -62,3 +62,8 @@ The eight Labs are **domains**, not houses; **WayOf** is the house (RULES/01, RU
 | **Kádlín** | The broad slice — many files in one pass, when the work is wide rather than deep |
 | **Brimir** | The hall of Allfathers — a federated room across operators (planned, plan 74) |
 | **Gladsheim** | The fleet room — one durable room where the whole fleet talks (planned, plan 73) |
+
+## CHANGE LOG
+
+- **2026-11-25** — written when the contract was split by topic (plan 369 item 7); its text is folded from the
+  sections of the prior `AGENTS.md`, kept verbatim in `docs/contract-history/AGENTS-2026-11-24.md`.

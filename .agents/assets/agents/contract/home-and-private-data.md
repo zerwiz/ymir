@@ -116,3 +116,8 @@ The repo contains only public artifacts (source code, public docs, `*.example` s
   `bin/agents/agent-run.sh <agent> "<task>"`. Local models go to **pi**, hosted ones to **opencode**.
 - **Skills:** one galdr-style skill per figure (a `SKILL.md` router + `assets/`); same-figure split pairs are
   consolidated (`ymir · urdh · saga · nornir · nsr`). The registry is `.agents/skills/README.md`.
+
+## CHANGE LOG
+
+- **2026-11-25** — written when the contract was split by topic (plan 369 item 7); its text is folded from the
+  sections of the prior `AGENTS.md`, kept verbatim in `docs/contract-history/AGENTS-2026-11-24.md`.

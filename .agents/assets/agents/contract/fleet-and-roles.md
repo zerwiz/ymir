@@ -75,3 +75,8 @@ change verified because one platform's install passed. The law is `RULES/05-plat
 ## Configuration is never hardcoded (RULES/07)
 
 Ports, hosts, paths and credentials resolve from env or config with one documented default.
+
+## CHANGE LOG
+
+- **2026-11-25** — written when the contract was split by topic (plan 369 item 7); its text is folded from the
+  sections of the prior `AGENTS.md`, kept verbatim in `docs/contract-history/AGENTS-2026-11-24.md`.

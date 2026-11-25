@@ -67,3 +67,8 @@ break the copy, so `bin/gates/guards/retired-path-guard.sh` now treats `docs/con
 
 `bin/gates/guards/path-ledger-guard.sh` treats `docs/contract-history/` the same way, because the old contract names
 paths that have since moved. `.agents/tests/path-ledger.test.sh` checks it.
+
+## CHANGE LOG
+
+- **2026-11-25** — written when the contract was split by topic (plan 369 item 7); its text is folded from the
+  sections of the prior `AGENTS.md`, kept verbatim in `docs/contract-history/AGENTS-2026-11-24.md`.

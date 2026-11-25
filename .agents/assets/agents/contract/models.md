@@ -37,3 +37,8 @@ The audit and its evidence are in the home: `hodd/docs/audits/2026-10-24-the-mod
   about 21.7 GB, so it and a coding model cannot both sit resident.
 - Local models run in **pi**; hosted models run in **opencode** (`config/agents.yaml`). pi.dev is the primary agent
   harness and drives both online models and the local rail.
+
+## CHANGE LOG
+
+- **2026-11-25** — written when the contract was split by topic (plan 369 item 7); its text is folded from the
+  sections of the prior `AGENTS.md`, kept verbatim in `docs/contract-history/AGENTS-2026-11-24.md`.

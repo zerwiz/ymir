@@ -96,3 +96,8 @@ the rule first (append-only). These are the rules a task most often needs; `RULE
 | `RULES/23-no-code-in-app-folders.md` | an application lives in apps/; bin/ holds function-named machine tools — never an application's name in a path |
 | `RULES/43-two-tongues.md` | the tongue: English for the work, Old Norse for the names — nothing else inside Ymir; a native project keeps its tongue in its own scope |
 | `RULES/44-no-agent-is-brokk.md` | no agent is Brokk — every machine names its own agents, and every agent declares house · fleet · machine · Allfather; unsealed means unnamed |
+
+## CHANGE LOG
+
+- **2026-11-25** — written when the contract was split by topic (plan 369 item 7); its text is folded from the
+  sections of the prior `AGENTS.md`, kept verbatim in `docs/contract-history/AGENTS-2026-11-24.md`.

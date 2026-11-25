@@ -96,3 +96,8 @@ The deep reference stays where the code lives (the Galdr assets under `.agents/s
 - Never remove a feature, only the parts the task names.
 - Output over process: always produce a tangible artifact (a file, a PR, a report, a commit), and log every significant
   action to Runes.
+
+## CHANGE LOG
+
+- **2026-11-25** — written when the contract was split by topic (plan 369 item 7); its text is folded from the
+  sections of the prior `AGENTS.md`, kept verbatim in `docs/contract-history/AGENTS-2026-11-24.md`.
