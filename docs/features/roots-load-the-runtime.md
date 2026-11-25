@@ -2,7 +2,7 @@
 
 Ymir is a program. It is meant to work wherever you open an agent: in your home folder, in a client project, or
 anywhere else. It should not only work when you happen to be inside the Ymir checkout. Each harness (pi,
-Claude Code, OpenCode, Cursor, Codex) has a **root**, the global config in your home that every session reads.
+Claude Code, OpenCode, Cursor, Codex, Hermes) has a **root**, the global config in your home that every session reads.
 The installer writes Ymir into those roots.
 
 Those roots must load the **pinned runtime**. That is the checkout named in `$YMIR_HOME/config/runtime.env`,
@@ -20,6 +20,11 @@ of them.
 - **Every harness root** points at the runtime. That covers pi's settings and MCP doors, the `.ymir-root` record,
   Claude Code's user-scope MCP doors, OpenCode, Cursor and Codex. If a root names a working tree, install and
   update point it at the runtime's copy of the same file. A check refuses it and tells you the fix.
+- **Hermes** gets the same from the runtime through its own seat (`ymir hermes seat`): the contract
+  (`~/.hermes/SOUL.md` and `AGENTS.md`), the tool servers, the skills shelf and the worker-wake script. When a Hermes
+  session holds the arm, a tell is posted into it through its gateway (`bin/voice/hermes-arm-wake.sh`); a recorded
+  run proving it shows in a live Hermes chat is still owed (plan 369). See
+  [ymir-whole-in-hermes.md](ymir-whole-in-hermes.md).
 - If no runtime is pinned, the checkout serves instead, and every command says so. It does not fall back
   silently.
 
@@ -67,3 +72,4 @@ before 2026-11-11 is fixed by migration `0022-roots-load-the-runtime`. `bin/agen
 ## CHANGE LOG
 
 - **2026-11-11** — written with the feature (plan 248 P2 + P3).
+- **2026-11-25** — Hermes is named with the harnesses, with what its root gets and what is not yet proven (plan 372).

@@ -16,6 +16,11 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 | The outbound gate (nothing leaves until you have read it) | [the-outbound-gate.md](the-outbound-gate.md) |
 | The collaboration doors (who is with us, and how far) | [the-collaboration-doors.md](the-collaboration-doors.md) |
 
+**Built 2026-11-25:**
+
+- The gate pack — every app repository carries Ymir's own secret, personal-data, identity and vault gates, and Eir
+  shows which are current: [gate-pack.md](gate-pack.md)
+
 **Built 2026-11-20:**
 
 - The board contract — Ymir talks to any board through one contract, and Plane lives with Gimlé:

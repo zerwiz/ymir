@@ -131,7 +131,8 @@ Do this on every machine, starting with the one that will be always on.
 5. **Harnesses:** Pi is the default for local models and OpenCode for hosted ones. Claude Code runs as a full seat when
    started from the checkout (`cd ~/ymir && claude`). The repo's `.claude/settings.json` gives it the session digest,
    the safety check before shell commands, and the arm on its Stop hook. Check the tool servers with `claude mcp list`;
-   `bash bin/bridge/mcp-config.sh claude` repairs them.
+   `bash bin/bridge/mcp-config.sh claude` repairs them. Hermes, where it is installed, is seated by install and update
+   (`ymir hermes seat --check` proves it; see `docs/features/ymir-whole-in-hermes.md`).
 6. **Models:** a machine with a GPU serves one llama.cpp router (one model loaded, swapped on demand). Other machines
    point at it over the tailnet. `bin/model/catalog.sh` is the one source of truth for which models a machine can serve.
 7. **Keep it current:** `bash bin/agents/groa-update.sh` fast-forwards Ymir and mends forward (`/updateymir` in a seat).
@@ -226,3 +227,4 @@ answers by knocking back. **Acceptance:** the first knock appears in the other q
 ## CHANGE LOG
 
 - **2026-11-11** — written (Hœnir, arm holder on the counsellor seat) at the operator's word: a partner fleet needs one guide from zero.
+- **2026-11-25** — Hermes is named in the harness step, where install and update seat it (plan 372).

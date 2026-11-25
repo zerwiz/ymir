@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# pre-push — refuse a push to the default branch, and judge what the push adds (bin/gates/run-gates.sh range).
+# Part of Ymir's gate pack; seated by bin/gates/install-hooks.sh.
+root="$(git rev-parse --show-toplevel)"
+zero=0000000000000000000000000000000000000000
+while read -r _lref lsha rref rsha; do
+  [ "$lsha" = "$zero" ] && continue                       # a deletion carries nothing to judge
+  case "$rref" in refs/heads/main|refs/heads/master)
+    [ -n "${YMIR_GATES_ALLOW_MAIN_PUSH:-}" ] || {
+      printf 'pre-push: main is changed by pull request only — push a branch and open one\n' >&2; exit 1; } ;;
+  esac
+  if [ "$rsha" = "$zero" ]; then
+    base="$(git merge-base "$lsha" origin/main 2>/dev/null || git merge-base "$lsha" origin/master 2>/dev/null \
+            || git rev-list --max-parents=0 "$lsha" | tail -1)"
+  else
+    base="$rsha"
+  fi
+  bash "$root/bin/gates/run-gates.sh" range "$base" "$lsha" || exit 1
+done
+exit 0

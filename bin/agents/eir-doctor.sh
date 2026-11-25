@@ -155,7 +155,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks renewal packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault vaultkeys ward seats seatreap models nornir)
+SURFACES=(floors seatpaths hooks renewal packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates gatepack migrations hoard autoboot vault vaultkeys ward seats seatreap models nornir)
 
 # ── the register (plan 278): config/surfaces.yaml names the surfaces, their roles and their risk class ──
 # The array above is the FALLBACK, kept until every seat carries the register. Without the register every
@@ -922,6 +922,13 @@ gates_detail() {
   if s_gates; then printf 'a pre-push hook in another hooks directory is seated (%s) and still runs the wards' "${h#"$ROOT"/}"; return 0; fi
   printf 'the installed hook at %s has drifted from .githooks/pre-push — bin/gates/guards/fixes-guard.sh --install' "${h#"$ROOT"/}"
 }
+# The gate pack (plan 372): every app repository carries Ymir's gates, byte for byte, at a revision Ymir's HEAD has
+# not moved past. Read-only: re-seating is a pull request per repository (bin/gates/pack.sh seat), never a mend here.
+s_gatepack() { timeout 120 bash "$SCRIPT_DIR/../gates/pack.sh" status --quiet >/dev/null 2>&1; }
+gatepack_detail() {
+  timeout 120 bash "$SCRIPT_DIR/../gates/pack.sh" status 2>/dev/null \
+    | awk -F'"' '/^  "/ && $4 != "current" {printf "%s%s %s", sep, $2, $4; sep="; "} /^verdict:/ {v=$0} END {if (sep) printf " — bin/gates/pack.sh status"; else print v}'
+}
 f_migrations(){ [ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1; }
 # Hoard: private data sits under the hoard, and .ymir-layout.yaml tells the truth.
 # Two failures this catches: (1) a declared layout path that does not exist — a
@@ -1131,6 +1138,7 @@ detail() { # <name> -> the command that prints one short fact
     runtimepin) printf '%s\n' runtimepin_detail ;;
     roddhelm)  printf '%s\n' "$SCRIPT_DIR/../voice/rodd-helm.sh --check 2>&1 | head -1 || echo 'rodd-helm door missing'" ;;
     gates)     printf '%s\n' gates_detail ;;
+    gatepack)  printf '%s\n' gatepack_detail ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)printf '%s\n' "echo 'structure'" ;;
     shells)    printf '%s\n' 'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;

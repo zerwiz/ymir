@@ -1,0 +1,58 @@
+name: gates
+
+# Ymir's gate pack (see VENDORED; never edit this file here — it is seated from Ymir by bin/gates/pack.sh).
+# Every pull request and every push to main meets the same gates a commit meets on a seat
+# (bin/gates/run-gates.sh): secrets, personal data, identity and the vault. A refusal fails the run.
+#
+# The operator's deny list is never in this repository and never given to CI, not even as a secret: here the
+# shapes are judged (keys, private addresses, personal mailboxes, a commit's identity), and the operator's own
+# words are judged by the hooks on a seat and by the home's audit.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # the whole history: gitleaks judges every commit, not only the last
+
+      - name: Install gitleaks (pinned, checksum-verified)
+        env:
+          GITLEAKS_VERSION: "8.30.1"
+          GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          curl -sSL -o "$tmp/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  $tmp/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf "$tmp/gitleaks.tar.gz" -C "$tmp" gitleaks
+          install -m 0755 "$tmp/gitleaks" /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: The borrowed gates match Ymir's at the recorded commit
+        run: bash bin/gates/vendor-sync.sh --check
+
+      - name: The borrowed gates have not fallen behind Ymir's main
+        run: bash bin/gates/vendor-sync.sh --behind main
+
+      - name: Every gate refuses its planted fault
+        run: bash tests/gates.test.sh
+
+      - name: The tree and its whole history
+        run: bash bin/gates/run-gates.sh tree
+
+      - name: What this pull request adds (its files, and its commits' author and committer)
+        if: github.event_name == 'pull_request'
+        run: bash bin/gates/run-gates.sh range "origin/${{ github.base_ref }}" HEAD
+
+      - name: The pull request's own title and body
+        if: github.event_name == 'pull_request'
+        run: bash bin/gates/guards/pr-identity-guard.sh --ci
