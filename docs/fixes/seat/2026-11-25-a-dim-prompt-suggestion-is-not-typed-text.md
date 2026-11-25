@@ -23,3 +23,7 @@ panes on 2026-11-25.
 ## Proof
 
 Live pane `wBA:p3P` read `text` ("ok, keep going") before and reads `suggestion` after.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #942
