@@ -11,7 +11,7 @@ Reads the header of every plan (`plans/**/*.md`) and ticket (`plans/tickets/*.md
 A card is found by its `external_id` (the file's path) and `external_source` (`repo-header`), never by title, so a
 renamed title updates the card and does not duplicate it.
 
-What it writes: name, state, priority, assignees, labels, start and target dates, the parent card (a ticket's
+What it writes: name, state, priority, assignees (added, never removed, unless `"assignees": "replace"`), labels, start and target dates, the parent card (a ticket's
 plan), and a small block at the top of the description with `created`, `updated`, `product`, `legacy_id`, the
 source path and the links. Text a person writes below the block's closing marker is kept.
 
@@ -262,6 +262,15 @@ def main():
 
         card = pd["issues"].get(rel)
         adopt = False
+        wanted = (cfg.get("adopt") or {}).get(rel)  # a file named in the config is matched to that card, e.g. "ALPHA-12"
+        if not card and wanted:
+            for other in pd["unclaimed"]:
+                if f"{ident}-{other['sequence_id']}" == wanted:
+                    card, adopt = other, True
+                    pd["unclaimed"].remove(other)
+                    break
+            else:
+                warnings.append(f"{rel}: adopt target {wanted} not found or already claimed")
         if not card and cid:  # a card made before this tool existed: adopt it by its id, never duplicate it
             for other in pd["unclaimed"]:
                 n = (other.get("name") or "").strip()
@@ -278,6 +287,8 @@ def main():
                 cur = card.get(k)
                 if k == "assignees":
                     cur = sorted(card.get("assignees") or [])
+                    if cfg.get("assignees", "add") != "replace":  # default: add the header's owners, never remove anyone
+                        v = sorted(set(cur) | set(v))
                 if cur != v:
                     diff[k] = v
             if sorted(card.get("labels") or []) != sorted(label_ids) and not new_labels:
