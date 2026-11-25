@@ -19,3 +19,7 @@ The `today: unbound variable` error in the same item was already fixed on `main`
 
 `bin/time/tests/test_cron_invalid.sh` (gate `cron-invalid`) covers a stale record, a really bad row, and a
 retirement with no shell error.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #954
