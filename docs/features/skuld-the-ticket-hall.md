@@ -36,8 +36,8 @@ skuld_sync                 push this body's journal to the heart; refresh link
 On the shell side, the seat's ticket/role doors live under `bin/skuld/`:
 
 ```bash
-bin/skuld/role.sh            # this machine's role (heart | forge | dev | hand)
-bin/skuld/role-lib.sh        # the role resolution used by the installer
+bin/fleet/role.sh            # this machine's role (heart | forge | dev | hand)
+bin/fleet/role-lib.sh        # the role resolution used by the installer
 ```
 
 ## Notes and limits

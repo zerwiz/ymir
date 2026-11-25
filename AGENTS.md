@@ -1018,12 +1018,37 @@ know what's going on and if it was a correct build."*
 
 The how-to is `docs/features/the-veil.md`.
 
-## 2026-11-25 — Hermes is a root agent too (plan 372)
+## 2026-11-25 — one name everywhere (plan 374, the Allfather's choices D1–D10)
 
-At the operator's word: *"in all places we mention what harness pi works for, we need to add Hermes."* The RULES/51
-section above lists the root agents as *"pi, Claude Code, OpenCode, Codex, Cursor"*; that list stays as the record and
-is corrected here. **Hermes is one of them.** Install and every update seat it from the pin (`ymir hermes seat`,
-`docs/features/ymir-whole-in-hermes.md`): the contract (`~/.hermes/SOUL.md`, `~/.hermes/AGENTS.md`, `.hermes.md`),
-the MCP doors, the skills shelf, the Sága head on its first turn and the worker wake. When a Hermes session holds the
-arm, a tell is posted into it through its gateway (`bin/voice/hermes-arm-wake.sh`, plan 369 item 1). One thing is still
-owed and is said plainly: a recorded end-to-end run proving the tell shows in a live Hermes chat.
+At the Allfather's word, after a naming audit compared the lore, the component map, the homepage and the code:
+*"Who are missing their tools? What have we not mapped out, and what service carries the wrong name? It must be the
+same as on the homepage and lore.md."* He accepted all ten recommendations. The lore table and the lines above stay as
+the record of what was believed; this section corrects them. The full map is `.agents/assets/agents/naming.md`.
+
+| The line above says | What is true now |
+|---|---|
+| **Völundr** has two rows (*"the eye that remembers"* and *"Wayland the Smith"*) | **one figure**, the master of the smiths, who leads Smíðja, dispatches its smiths, and drinks from the well before he does (the Kaia rename of 2026-11-14) |
+| **Þjazi** — *"terminal backend, protocol 14+"*, and *"the Þjazi backend"* under Open-source-first | **retired as a name.** The seat backend is **Herdr**, the program that runs; an adopted engine keeps its own name (D5) |
+| **Heimdall** — *"OAuth/security guard"*, and *"auth via Heimdall through Bifrost"* | **he admits by key**: the SSH-key ward (`bin/host/heimdall-*.sh`). The OAuth login was removed on 2026-11-14; signing each agent's rune of introduction is owed (D4) |
+| **Mjollnir** | written **Mjölnir** in prose; the door keeps its ASCII path, `bin/forge/mjollnir.sh` |
+| **Gungnir**, **Gunnlöð**, **Kádlín** as built | **planned**: none has a door yet (D9) |
+| **Vörðr** and **Himinbjörg** *"(planned, plan 81)"* | **built**: the warden's mends (`bin/ward/harden.sh`) and the watchtower panel in Hlidskjalf |
+| **Gladsheim** *"(planned, plan 73)"* | **built** (`bin/room/gladsheim.sh`) |
+| *"the Smiðja visualizer"* | **Smíðja** (í, not ð) |
+| `bin/skuld/role.sh resolve` under *"the fleet is the test"* | **`bin/fleet/role.sh resolve`**. Which machine plays which role is a fleet fact; Skuld keeps what shall be. The old path is a forwarding stub for one release cycle (D3) |
+| the governed path `bin/time/snotra/calendar-write.sh` | **`bin/time/managandr/calendar-write.sh`**, and its read door `calendar-ask.sh` beside it. The calendar is **Mánagandr**'s; the old path forwards (A6) |
+
+**New in the table, each already running:** **Mímir** (the voice of the well), **Snotra** (the meeting ear; the
+documenter's craft is now **Bragi**'s, D2), **Skuld** (what shall be: tickets, plans owed, the to-do, each branch's
+outcome), **Hermóðr** (the gateway, the body's one MCP door, D7), **Bölþorn** (the skills door), **Dellingr**
+(document freshness), **Týr** (the tool judge, D8), and **Élivágar** (every app in its own home; **Hvergelmir** is the
+news app, D1). The hoard's secrets and the model rail keep their function names (D10).
+
+**The fleet:** the counsellor and eight specialists — **Sindri, Bragi, Huginn, Mímir, Kvasir, Forseti, Snotra and
+Galdr**. Every other card is a keeper or a craft, named for its own job.
+
+**Spelling:** prose uses the Old Norse form (Hliðskjálf, Mjölnir, Mímir, Útgarðr, Bifröst, Heimdallr, Smíðja);
+identifiers stay ASCII and are never renamed for spelling.
+
+The fix notes are under `docs/fixes/lore/`, `docs/fixes/runtime/`, `docs/fixes/fleet/`, `docs/fixes/time/` and
+`docs/fixes/agents/`, all dated 2026-11-25.

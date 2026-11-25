@@ -13,17 +13,17 @@ Galdr	keeps the house's rules and its craft	.agents/skills/galdr-ymirsystem/SKIL
 Gjallarhorn	the tunnel that carries a signal out, never to a hall	bin/forge/gjallarhorn-tunnel.sh	timeout 30 bash bin/forge/gjallarhorn-tunnel.sh check 2>&1 | tail -2	^(ok|clean|PASS)
 Gladsheim	the room where every agent on every machine and the Allfather speak	bin/room/gladsheim.sh	timeout 20 bash bin/room/gladsheim.sh status 2>&1 | head -3	gladsheim: (up|open|seated at)
 Gleipnir	the session lock: one hand holds the reins	bin/vault/gleipnir-lock-lib.sh	timeout 20 bash bin/agents/eindri-notify.sh --status 2>&1 | tail -1	"yes"
-Gungnir	the skill forge: a new skill made, tested inside Utgard, written to the well	-	true	rc0
-Gunnlöð	refines a finished run into a sharper skill	-	true	rc0
-Heimdall	signs every agent's rune of introduction; nothing crosses unvouched	bin/host/heimdall-ensure.sh	grep -l -e 'rune of introduction' -e 'agent identity' bin/agents/*.sh 2>/dev/null | head -2	.
-Hermóðr	delegation, sideways to agents and downward to tools	-	true	rc0
-Himinbjörg	the watchtower the warden looks out from	apps/hlidskjalf/src/components/Ward.tsx	ls bin/ward/himinbjorg* 2>/dev/null	.	planned
+Gungnir	the skill forge: a new skill made, tested inside Utgard, written to the well	-	true	rc0	planned
+Gunnlöð	refines a finished run into a sharper skill	-	true	rc0	planned
+Heimdall	admits an entrant only by the key it carries (signing each agent's rune is still owed)	bin/host/heimdall-ssh-keys.sh	systemctl --user is-active heimdall-ssh-keys.timer 2>&1	^active
+Hermóðr	the gateway: delegation, sideways to agents and downward to tools (the body's one MCP door)	bin/bridge/mcp-gateway.sh	timeout 20 bash bin/bridge/mcp-gateway.sh status 2>&1 | head -3	mcp_gateway
+Himinbjörg	the watchtower the warden looks out from	apps/hlidskjalf/src/components/Ward.tsx	grep -c 'HIMINBJÖRG' apps/hlidskjalf/src/components/Ward.tsx	^[1-9]
 Hlidskjalf	the control plane: the Allfather's view of the fleet	apps/hlidskjalf	curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:3888/	^[23]
 Hnitbjörg	the vault: sealed by default, opened only by its keeper	bin/vault/hnitbjorg.sh	timeout 20 bash bin/vault/hnitbjorg.sh status 2>&1 | head -2	rc0
 Huginn	researches and flies out each day to see	bin/time/nornir-job-observer.sh	grep -c 'nornir-job-observer' "$YMIR_HOME/config/cron.yaml" 2>/dev/null	^[1-9]
 Hófvarpnir	the one road every system takes when it has something to say	bin/notify/send.sh	timeout 20 bash bin/notify/send.sh --help 2>&1 | head -2	rc0
-Kvasir	scouts the ground before anyone builds	.agents/agents/kvasir-scout.md	grep -c 'kvasir' bin/agents/eindri-role.sh	^[1-9]
-Kádlín	takes the broad slice, many files at once	-	true	rc0
+Kvasir	scouts the ground before anyone builds	.agents/agents/kvasir-scout.md	bash bin/agents/eindri-role.sh for kvasir 2>&1	scout
+Kádlín	takes the broad slice, many files at once	-	true	rc0	planned
 Mimirsbrunn	the well: recalled before work, written after it	bin/records/mimir.sh	timeout 20 bash bin/records/mimir.sh recall house --k 1 2>&1 | head -1	^recall\[[1-9]
 Mánagandr	keeps the calendar and warns before a meeting	bin/time/calendar-watch.sh	timeout 20 bash bin/time/calendar-watch.sh --help 2>&1 | head -2	rc0
 Níðhöggr	the loop-breaker: names the endless loop and stops it	bin/gates/nidhogg.sh	ls "$YMIR_STATE"/nidhogg/last-run.json 2>/dev/null	last-run
@@ -38,7 +38,7 @@ Sága	the seeress: the seat taken before the first blow	bin/time/saga-session-st
 Utgard	the sealed sandbox every untrusted forging runs in	bin/forge/utgard-box.sh	grep -h '^isolation=' "$YMIR_STATE"/*.meta 2>/dev/null | grep -c 'isolation=on'	^[1-9]
 Vingólf	keeps the fleet in step across its machines	.agents/skills/vingolf/SKILL.md	test -x bin/collab/collab.sh && echo collab	collab
 Völundr	drinks from the well and passes every plan through the Veil before dispatch	.agents/agents/volundr-smith.md	test -x bin/agents/veil.sh && grep -c 'well-brief' bin/agents/einherjar-spawn.sh	^[1-9]
-Vörðr	the warden: no door open without a credential	bin/ward/harden.sh	ls bin/ward/vordr* 2>/dev/null	.	planned
+Vörðr	the warden: no door open without a credential	bin/ward/harden.sh	timeout 20 bash bin/ward/harden.sh plan 2>&1 | head -2	warden-plan
 Yggdrasil	every piece of parallel work on its own worktree	bin/forge/yggdrasil.sh	git worktree list 2>/dev/null | wc -l	^[1-9]
 Óðrerir	the hall board, rewritten every night from what the house measured	bin/time/nornir-job-hall-snapshot.sh	find "$HOME/.local/state/odrerir" -maxdepth 2 -mtime -2 -type f 2>/dev/null | head -1	.
 the Veil	the gate that asks: is this grounded, or invented?	bin/agents/veil.sh	test -x bin/agents/veil.sh && echo veil	veil
@@ -48,3 +48,10 @@ Mjölnir	the road from an issue to a pull request	bin/forge/mjollnir.sh	timeout 
 Valhalla	keeps every process alive and watched	bin/agents/valhalla.sh	timeout 20 bash bin/agents/valhalla.sh status systemd:ymir.target 2>&1 | head -2	(active|running|up)
 Garmr	watches the machine and writes what ran, listened and reached out	bin/ward/garmr.sh	systemctl --user is-active garmr-hound.service 2>&1	^active
 Víðarr	closes the door an intruder opened, and keeps the evidence	bin/ward/vidarr.sh	timeout 20 bash bin/ward/vidarr.sh --help 2>&1 | head -1	rc0
+Bölþorn	the skills door: whose son taught Odin nine songs	tools/skills-mcp/skills-mcp.py	grep -c '"bolthorn"' bin/bridge/mcp-gateway.sh	^[1-9]
+Dellingr	grades how fresh a document is, from measurable signals only	bin/records/grade.sh	timeout 30 bash bin/records/grade.sh docs/lore.md 2>&1 | head -1	^(nýr|eldri|forn|safn)
+Týr	judges the tools and skills against the ten Galdr principles	.agents/agents/tyr-check.md	test -r .agents/agents/tyr-check.md && echo card	card
+Snotra	the meeting ear: hears, keeps the record, writes the minutes	bin/records/snotra-what.sh	timeout 20 bash bin/records/snotra-what.sh now --brief 2>&1 | head -1	^ear:
+Skuld	keeps what shall be: the tickets, the plans owed, and each branch's outcome	tools/tickets-mcp/server.mjs	test -r tools/tickets-mcp/server.mjs && test -x bin/skuld/skuld-branch-outcome.sh && echo tickets-and-verdict	tickets-and-verdict
+Élivágar	every app in its own home, each its own river from the one spring	bin/apps/apps.sh	timeout 30 bash bin/apps/apps.sh list 2>/dev/null | grep -c '"home"'	^[1-9]
+Mánagandr (the door)	the calendar is read through Mánagandr's own door	bin/time/managandr/calendar-ask.sh	test -x bin/time/managandr/calendar-ask.sh && test -x bin/time/managandr/calendar-write.sh && echo doors	doors

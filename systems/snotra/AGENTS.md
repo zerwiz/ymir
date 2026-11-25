@@ -39,3 +39,9 @@ same change — code, plan and declaration must agree.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## 2026-11-25 — the keeper's card is `snotra-ear.md` (plan 374 D2)
+
+The line above names the keeper's card as `.agents/agents/snotra-documenter.md`. That stays as the record. At the
+Allfather's choice the name Snotra belongs to the meeting ear alone: the card is now `.agents/agents/snotra-ear.md`,
+and the documenter's craft is Bragi's. The calendar's doors are Mánagandr's, at `bin/time/managandr/`.

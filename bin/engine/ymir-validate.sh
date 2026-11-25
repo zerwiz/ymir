@@ -70,9 +70,9 @@ port_open() { (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
 # does not hold. Resolved the same way the installer does (env → registry/card by
 # hostname → the safe body, dev).
 ROLE_SET="${YMIR_ROLE:-}"
-if [ -z "$ROLE_SET" ] && [ -x "$ROOT/bin/skuld/role.sh" ]; then
+if [ -z "$ROLE_SET" ] && [ -x "$ROOT/bin/fleet/role.sh" ]; then
   _t="$(printf '\t')"
-  _rv="$(bash "$ROOT/bin/skuld/role.sh" resolve --host "${YMIR_HOST:-$(hostname -s 2>/dev/null)}" 2>/dev/null | head -1 || true)"
+  _rv="$(bash "$ROOT/bin/fleet/role.sh" resolve --host "${YMIR_HOST:-$(hostname -s 2>/dev/null)}" 2>/dev/null | head -1 || true)"
   case "$_rv" in
     *"$_t"registry|*"$_t"card|*"$_t"env) ROLE_SET="${_rv%%"$_t"*}" ;;
   esac

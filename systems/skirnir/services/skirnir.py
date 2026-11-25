@@ -696,7 +696,7 @@ ASK_TTL = 1800          # a clarification older than half an hour is stale; ask 
 
 def schedule_now() -> dict:
     """Where he is, read from Mánagandr at the moment of asking — never stored, never a fact."""
-    door = os.path.join(ROOT, "bin", "time", "snotra", "calendar-ask.sh")
+    door = os.path.join(ROOT, "bin", "time", "managandr", "calendar-ask.sh")
     if not os.path.isfile(door):
         return {"ok": False, "reason": "no calendar door on this seat"}
     now = time.time()

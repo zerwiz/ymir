@@ -166,3 +166,23 @@ moves:
     migration: "0015-systems-skirnir"
     partial: true
     still_current: "INDEX.md adapter-test.sh approve-fact.sh ask.sh asks.sh ban.sh ear.sh escalate.sh escalation-timer.sh group-add.sh group-allow.sh kb-export.sh learn-home.sh learn-house.sh learn-site.sh learn.sh mouth.sh prune.sh query.sh research-smoke.sh room-squad.sh room-wall-test.sh room.sh smoke.sh telegram.sh voice-handler.sh voice.sh walls-test.sh"
+
+  # 2026-11-25 — plan 374 (D3): which machine plays which role is a fleet fact, not Skuld's. Skuld keeps what shall
+  # be (tickets, plans owed, the to-do, each branch's outcome). The two files moved with git mv (history kept); the
+  # old spellings are forwarding stubs for one release cycle, so a home's cron row or script keeps working.
+  - old: "bin/skuld/role"
+    new: "bin/fleet/role"
+    date: "2026-11-25"
+    why: "plan 374 D3 — one name, one job: the role resolver is the fleet's, Skuld keeps what shall be"
+    superseded: true
+    still_current: "role.sh role-lib.sh"
+
+  # 2026-11-25 — plan 374 (A6): the calendar is Mánagandr's. His doors are bin/time/managandr/; the engine still
+  # lives in systems/snotra/services/calendar/ (moving the service is a later errand). The one door at the old
+  # spelling forwards to his.
+  - old: "bin/time/snotra/calendar-write.sh"
+    new: "bin/time/managandr/calendar-write.sh"
+    date: "2026-11-25"
+    why: "plan 374 A6 — the calendar door lived in Snotra's folder; Snotra keeps the meeting ear"
+    superseded: true
+    still_current: "calendar-write.sh"

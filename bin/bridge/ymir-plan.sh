@@ -139,8 +139,8 @@ resolve_phase() {
   # role and where it came from — the preview can no longer read as one shape
   # everywhere on every host.
   local rline="" rroles="" rsrc=""
-  if [ -x "$ROOT/bin/skuld/role.sh" ]; then
-    rline="$(bash "$ROOT/bin/skuld/role.sh" resolve --why 2>/dev/null | head -1)"
+  if [ -x "$ROOT/bin/fleet/role.sh" ]; then
+    rline="$(bash "$ROOT/bin/fleet/role.sh" resolve --why 2>/dev/null | head -1)"
     rroles="${rline%%$'\t'*}"; rsrc="${rline##*$'\t'}"
   fi
   if [ -n "$rroles" ]; then

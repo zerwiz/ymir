@@ -37,7 +37,7 @@
 # because those are prose to a person and this reader normalises them either way.
 #
 # THE MERGE RULE. `merge: on` is honoured only on the machine that the fleet registry names as the
-# heart (bin/skuld/role.sh resolve). Every other machine's file says `off`, and so does this template.
+# heart (bin/fleet/role.sh resolve). Every other machine's file says `off`, and so does this template.
 # An absent key is `off`: a merge road that opens by omission is how a laptop's clock came to decide
 # what reached main.
 

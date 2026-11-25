@@ -5,7 +5,7 @@
 #
 # One owner for three things the installer must not re-decide:
 #
-#   the resolution chain   --role / $YMIR_ROLE → the fleet registry (bin/skuld/role.sh)
+#   the resolution chain   --role / $YMIR_ROLE → the fleet registry (bin/fleet/role.sh)
 #                          → this machine's card row in hodd/data/machines.md
 #                          → ASK (a real interactive run) → the safe body
 #   the component table    which parts each role owes (heart · forge · dev · hand)
@@ -24,7 +24,7 @@
 #   machine_card_write <host> <roles> <components> <source>
 #                                          -> "written" | "unchanged" | "unwritten"
 #
-# Depends on: bin/vault/hoard-lib.sh (the home), bin/skuld/role.sh + bin/fleet/topology.sh (reads).
+# Depends on: bin/vault/hoard-lib.sh (the home), bin/fleet/role.sh + bin/fleet/topology.sh (reads).
 set -u
 
 ROLE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -118,7 +118,7 @@ machine_card_write() {  # <host> <roles> <components> <source>
     printf -- '- host: %s · %s\n' "$host" "$os_name"
     printf -- '- platform: %s\n' "$platform"
     if [ -n "$link" ]; then printf -- '- link: %s%s\n' "$link" "${heart:+ · heart: $heart}"; fi
-    printf -- '- re-declare: `bin/skuld/role.sh set %s heart|forge|dev|hand`\n' "$host"
+    printf -- '- re-declare: `bin/fleet/role.sh set %s heart|forge|dev|hand`\n' "$host"
   } >>"$machines" 2>/dev/null || { printf 'unwritten'; return 1; }
   printf 'written'
 }

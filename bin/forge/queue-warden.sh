@@ -6,7 +6,7 @@
 # THE MERGE ROAD IS CLOSED EXCEPT ON THE HEART (the Allfather, 2026-11-14: "the heart handles the
 # merging of the PRs … config/machines/<heart>/wardens.yaml is the only file that may say
 # merge: on … every other machine's says merge: off, and the template ships merge: off"), where the
-# heart is the machine `bin/skuld/role.sh` names heart — this file never spells a machine's name.
+# heart is the machine `bin/fleet/role.sh` names heart — this file never spells a machine's name.
 # Where the road is open, its ONLY door is bin/forge/merge-verdict.sh — one sha, one verdict, main
 # green, branch current, no unexplained bypass (PR #747). Where it is closed, the door says so and
 # never reaches a merge call.
@@ -109,7 +109,7 @@ ENABLED="$(policy_get enabled)"; [ -n "$ENABLED" ] || ENABLED="off"     # opt-in
 MERGE_POLICY="$(policy_get merge)"; [ -n "$MERGE_POLICY" ] || MERGE_POLICY="off"
 
 # ── the machine's role, from the fleet registry (never a hostname written in this tree) ───────
-ROLES="$(bash "$ROOT/bin/skuld/role.sh" resolve 2>/dev/null | head -1 || true)"
+ROLES="$(bash "$ROOT/bin/fleet/role.sh" resolve 2>/dev/null | head -1 || true)"
 [ -n "$ROLES" ] || ROLES="unknown"
 
 # ── the identity (plan 290 rule 4) ───────────────────────────────────────────────────────────

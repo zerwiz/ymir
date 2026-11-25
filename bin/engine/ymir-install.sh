@@ -56,8 +56,8 @@ hoard_local_env YMIR_ENV_FILE
 . "$SCRIPT_DIR/../vault/hoard-lib.sh"
 # The role lib — what this machine IS, and the components its roles owe (plan 51
 # P1). It resolves the home through hoard-lib, so it loads right after it.
-if [ -z "${YMIR_ROLE_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/../skuld/role-lib.sh" ]; then
-  . "$SCRIPT_DIR/../skuld/role-lib.sh"; YMIR_ROLE_LIB_LOADED=1
+if [ -z "${YMIR_ROLE_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/../fleet/role-lib.sh" ]; then
+  . "$SCRIPT_DIR/../fleet/role-lib.sh"; YMIR_ROLE_LIB_LOADED=1
 fi
 # shellcheck source=bin/desktop/app-lib.sh
 . "$SCRIPT_DIR/../desktop/app-lib.sh"
@@ -106,7 +106,7 @@ done
 # A role named on the command line is the strongest statement of what this
 # machine IS. An unknown name is REFUSED here, before anything changes — never
 # mapped to a guessed set. (The resolved role is exported so every child —
-# bin/skuld/role.sh, bin/fleet/topology.sh, the plan — reads the same fact.)
+# bin/fleet/role.sh, bin/fleet/topology.sh, the plan — reads the same fact.)
 if [ -n "$ROLE_FLAG" ]; then
   for _r in ${ROLE_FLAG//,/ }; do
     case " heart forge dev hand " in *" $_r "*) ;; *)
@@ -136,12 +136,12 @@ TOON="install[0]{step,status,detail}:"
 
 # The step chain below is gated on exactly this; nothing else selects components.
 # The resolution chain, the component table, and the machine-card writer live in
-# bin/skuld/role-lib.sh (functions only), so a test drives them without an install.
+# bin/fleet/role-lib.sh (functions only), so a test drives them without an install.
 ROLE_SET=""; ROLE_SRC="none"; ROLE_HOST=""; ROLE_COMPONENTS="core"; ROLE_DEFAULTED=0
 
 role_gate() {  # <id> <role|r,r> <what> — a step runs only when this machine holds one
   local id="$1" need="$2" what="$3" r
-  [ -n "$ROLE_SET" ] || { add "$id" SKIP "no role declared — pass --role <r> or bin/skuld/role.sh set <host> heart|forge|dev|hand"; return 1; }
+  [ -n "$ROLE_SET" ] || { add "$id" SKIP "no role declared — pass --role <r> or bin/fleet/role.sh set <host> heart|forge|dev|hand"; return 1; }
   for r in ${need//,/ }; do role_has "$r" && return 0; done
   add "$id" SKIP "not this machine's role ($need only) — $what"
   return 1
@@ -1067,7 +1067,7 @@ step_identity() {
 # body (dev) — never silence, and never the union of every role's parts.
 step_role() {
   local host="$ROLE_HOST" roles="$ROLE_SET" link="" card="" detail=""
-  if [ ! -x "$SCRIPT_DIR/../skuld/role.sh" ]; then add role SKIP "no role.sh"; return 0; fi
+  if [ ! -x "$SCRIPT_DIR/../fleet/role.sh" ]; then add role SKIP "no role.sh"; return 0; fi
   case "$ROLE_SRC" in
     env|registry|card|declared) detail="role: $roles (source: $ROLE_SRC)" ;;
     *) detail="no role declared — the safe body '$ROLE_SET'" ;;
@@ -1078,13 +1078,13 @@ step_role() {
   # Record the declared role where the rest of the fleet reads it — a real run
   # only; --check writes nothing. The registry already has it when it answered.
   if [ "$CHECK" = 0 ] && [ "$ROLE_SRC" != registry ]; then
-    "$SCRIPT_DIR/../skuld/role.sh" set "$host" "$ROLE_SET" >/dev/null 2>&1 || true
+    "$SCRIPT_DIR/../fleet/role.sh" set "$host" "$ROLE_SET" >/dev/null 2>&1 || true
   fi
   if [ "$CHECK" = 0 ]; then card="$(machine_card_write "$host" "$ROLE_SET" "$ROLE_COMPONENTS" "$ROLE_SRC")"; fi
   detail="$detail${link:+ · link: $link} · components: $ROLE_COMPONENTS${card:+ · card: $card}"
   case "$ROLE_SRC" in
     env|registry|card|declared) add role OK "$detail" ;;
-    *) add role WARN "$detail — declare it: --role <r>, or bin/skuld/role.sh set $host heart|forge|dev|hand" ;;
+    *) add role WARN "$detail — declare it: --role <r>, or bin/fleet/role.sh set $host heart|forge|dev|hand" ;;
   esac
 }
 

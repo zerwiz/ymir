@@ -1,6 +1,6 @@
 # Termux / Android — the phone as a `hand`
 
-A phone is not a small `dev`. `bin/skuld/role-lib.sh` names the shape plainly:
+A phone is not a small `dev`. `bin/fleet/role-lib.sh` names the shape plainly:
 
 ```
 h = heart (the record) · f = forge (models/GPU) · d = dev (a full body) · n = hand (phone)
@@ -112,7 +112,7 @@ and verify `python3 -c 'import engram'`.
 ## Verify
 
 ```sh
-bin/skuld/role.sh resolve --host "$(hostname -s)" --why   # hand  registry
+bin/fleet/role.sh resolve --host "$(hostname -s)" --why   # hand  registry
 bash bin/engine/ymir-install.sh --role hand --check       # no bun / docker WARN
 pi mcp list                                               # the doors
 git -C "$YMIR_HOME" status -sb                            # the hoard syncs

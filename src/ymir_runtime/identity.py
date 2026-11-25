@@ -14,7 +14,7 @@ So every field here is resolved ONCE, at take, and written into `.arm.lease`:
     charter=   what the house's main agent is FOR — the Allfather's own definition
     host=      `.ymir-seat` `host=`, else the machine's own name
     machine=   the seat key in the fleet registry for this host
-    fleetrole= `bin/skuld/role.sh resolve` — heart · forge · dev · hand
+    fleetrole= `bin/fleet/role.sh resolve` — heart · forge · dev · hand
     fleet=     the fleet this seat belongs to, from the seat registry
     pin=       the PINNED runtime's sha at YMIR_RUNTIME_DIR
     pin_behind= `git rev-list --count HEAD..origin/main` for that pin
@@ -211,10 +211,10 @@ def _hostname(env: Mapping[str, str]) -> str:
 
 
 def _fleetrole(roots: paths_mod.Roots, env: Mapping[str, str], runner: proc.Runner) -> str:
-    """`bin/skuld/role.sh resolve` — the role the fleet registry gives this host."""
+    """`bin/fleet/role.sh resolve` — the role the fleet registry gives this host."""
     if env.get("YMIR_ROLE"):
         return _token((env.get("YMIR_ROLE") or "").split(",")[0])
-    door = roots.root / "bin" / "skuld" / "role.sh"
+    door = roots.root / "bin" / "fleet" / "role.sh"
     if not os.access(door, os.X_OK):
         return ""
     answer = runner(["bash", str(door), "resolve"], env=dict(env))

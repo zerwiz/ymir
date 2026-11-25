@@ -15,7 +15,7 @@ Eight specialists, one primary. Each is named for the figure whose role matches 
 | **Mimir** | Mimir | Planner — memory, recall, architecture sequencing | Planning | `.agents/agents/mimir-planner.md` |
 | **Kvasir** | Kvasir (wisest) | Scout — reconnaissance, investigation | Scout | `.agents/agents/kvasir-scout.md` |
 | **Forseti** | Forseti (reconciler) | Reviewer — QA, acceptance, compliance; seated automatically after every ship PR | Review | `.agents/agents/forseti-reviewer.md` |
-| **Snotra** | Snotra (modest) | Documenter — docs, changelogs, runbooks | Docs | `.agents/agents/snotra-documenter.md` |
+| **Snotra** | Snotra (modest) | Keeper of the meeting ear — the record, the minutes, the outbound gate (plan 374 D2; the documenter's craft is Bragi's) | Meetings | `.agents/agents/snotra-ear.md` |
 
 **Rule:** Every agent carries its rune of introduction (Agent Card). Every agent
 reports to Brokk. Brokk reports to the Allfather.

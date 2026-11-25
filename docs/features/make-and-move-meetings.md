@@ -33,7 +33,7 @@ $C move "Standup" --to "tomorrow 14:00" --duration 30m
 $C move ev-1234abcd --to "2026-11-12 16:00"
 ```
 
-The `bin/` front for it is `bin/time/snotra/calendar-write.sh`, which execs the door above and  # allow-superseded-path: the bin/ shim RECORDS the move and execs the system door
+The `bin/` front for it is `bin/time/managandr/calendar-write.sh`, which execs the door above and  # allow-superseded-path: the bin/ shim RECORDS the move and execs the system door
 prints the move notice, exactly as the other retired shims on that shelf do.
 
 ## Limits — what it will not do

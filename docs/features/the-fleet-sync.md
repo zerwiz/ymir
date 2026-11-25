@@ -53,7 +53,7 @@ bin/fleet/fleet-version.sh           # version across seats
 |---|---|
 | `status` shows a peer offline | Bring Tailscale up on that seat; check MagicDNS resolves it. |
 | A push moves nothing | `--dry-run` first; the path may not be in the configured set. |
-| A seat raised the wrong services | Fix its role (`bin/skuld/role.sh set <host> <role>`), then `bin/fleet/fleet-ensure.sh`. |
+| A seat raised the wrong services | Fix its role (`bin/fleet/role.sh set <host> <role>`), then `bin/fleet/fleet-ensure.sh`. |
 | The home diverges | Resolve on the seat and re‑sync; the mover never forces (it reports). |
 
 ## CHANGE LOG

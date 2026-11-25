@@ -1,4 +1,7 @@
-# Apps — every app in its own home: install, update, roll back
+# Apps — every app in its own home (Élivágar): install, update, roll back
+
+> **The name (2026-11-25, plan 374):** this system is **Élivágar**, the rivers that flow out of one spring and run
+> far from it — each app its own river. **Hvergelmir** is one of the apps (the news service), not this system.
 
 ## What it is
 

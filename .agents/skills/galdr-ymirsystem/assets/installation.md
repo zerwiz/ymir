@@ -485,7 +485,7 @@ install[39]{step,what,self-heals}:
   "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/desktop/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/desktop/sessrumnir-launch.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/seat/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — sensed on EVERY host","bin/host/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/host/omarchy-sense.sh observe), places the apps (bin/desktop/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example and DERIVES the Eindri dispatch profile from the machine into $YMIR_HOME/hodd/config/eindri-dispatch.json (bin/fleet/dispatch-profile.sh derive — the shipped template with unfilled model tokens is never left to look active; the private override wins over the repo file)"
-  "role","what this machine IS — resolved BEFORE the chain, so the whole step set is role-selected","bin/skuld/role-lib.sh establish_roles: --role/$YMIR_ROLE → the fleet registry (bin/skuld/role.sh) → the machine card in hodd/data/machines.md → ask (interactive) → the safe body dev; step_role reports the role + components + live link, records it with bin/skuld/role.sh set, and folds a Machine Card into the ONE registry hodd/data/machines.md (plan 39). An unknown --role is refused (exit 2); --check writes nothing"
+  "role","what this machine IS — resolved BEFORE the chain, so the whole step set is role-selected","bin/fleet/role-lib.sh establish_roles: --role/$YMIR_ROLE → the fleet registry (bin/fleet/role.sh) → the machine card in hodd/data/machines.md → ask (interactive) → the safe body dev; step_role reports the role + components + live link, records it with bin/fleet/role.sh set, and folds a Machine Card into the ONE registry hodd/data/machines.md (plan 39). An unknown --role is refused (exit 2); --check writes nothing"
   "fleet","the role-gated fleet services: the heart's offices (well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root · snotra, the meeting ear's MCP face) on heart seats, the stone on forge seats, the well door, the MCP gateway and the a2abridge mesh directory on dev seats","bin/fleet/fleet-ensure.sh copies tools/ and packages/ to the seat (a DIRECTORY row keeps its relative path, so a cross-package import resolves in the deployed copy as in the repo), plus the snotra operator commands — WITH hoard-lib.sh beside them, because each resolves the operator's home through it and a command without its resolver dies on an unbound YMIR_HOME — to ~/.fleet; materializes ONLY what the roles owe (a2abridge-directory is engine-owned: patched by bin/bridge/a2abridge-ensure.sh and materialized from its house template when owed; the arm is seated as the standing unit ymir-syn-watch.service from tools/mill/systemd/), purges stale units, points the seat's pi mcp-adapter.json at THIS body's MCP gateway (bin/bridge/mcp-gateway.sh, :8316, which fronts well/bolthorn/skuld and resolves the heart at request time; --well-url still forces an explicit well door), and carries the model rail the same way — bin/bridge/mcp-config.sh writes the serving box under the config's `ymir` block, read from the ONE resolver bin/model/rail-resolve.sh (plan 51 Part 9c: models come from whichever strong box is CONNECTED), enables the ONE target (ymir.target), raises them, and VERIFIES — a program that cannot rise is a FAILURE with its reason, never a warn; the mail desk (gna-desk) rides the same table and is ARMED ONLY WHERE AN ACCOUNT IS DECLARED (see the mail step)"
   "mail","Gná — the one mail desk (read-only, loopback :8494): the inbox the arm is told about, as it arrives","a role-owed program (heart · forge · dev) in the autoboot ONE table, materialized by bin/fleet/fleet-ensure.sh from tools/mill/systemd/gna-desk.service — a TEMPLATE rendered against the PINNED runtime (__YMIR_BIN_DIR__ resolves from $YMIR_HOME/config/runtime.env: YMIR_RUNTIME_DIR, default ~/ymir-runtime, never the working tree) — and ARMED ONLY WHERE AN ACCOUNT IS DECLARED: with no row in $YMIR_HOME/hodd/memory/mail/accounts.yaml the ensure names that file and arms nothing, because a desk with nothing to read must never read as an empty inbox. bin/agents/eir-doctor.sh's mail surface reports ok · unconfigured · broken, and its mend is bin/mail/install.sh"
   "mail","Gná — the one mail desk (read-only, loopback :8490): the inbox the arm is told about, as it arrives","a role-owed program (heart · forge · dev) in the autoboot ONE table, materialized by bin/fleet/fleet-ensure.sh from tools/mill/systemd/gna-desk.service — a TEMPLATE rendered against the PINNED runtime (__YMIR_BIN_DIR__ resolves from $YMIR_HOME/config/runtime.env: YMIR_RUNTIME_DIR, default ~/ymir-runtime, never the working tree) — and ARMED ONLY WHERE AN ACCOUNT IS DECLARED: with no row in $YMIR_HOME/hodd/memory/mail/accounts.yaml the ensure names that file and arms nothing, because a desk with nothing to read must never read as an empty inbox. bin/agents/eir-doctor.sh's mail surface reports ok · unconfigured · broken, and its mend is bin/mail/install.sh"
@@ -1098,13 +1098,13 @@ portable terms the code now uses, not the Omarchy-only terms it used before.
 ### The machine's role — the install's component set (plan 51, P1)
 
 **Role is resolved before the first step runs.** `bin/engine/ymir-install.sh` calls
-`establish_roles` (`bin/skuld/role-lib.sh`) right after consent and **before** the step
+`establish_roles` (`bin/fleet/role-lib.sh`) right after consent and **before** the step
 chain, because the role is what selects the components the chain installs.
 
 ```
 role_resolution[4]{source,when}:
   "--role <r> | $YMIR_ROLE","the operator names it for this run — the strongest statement; an unknown name is REFUSED (exit 2), never guessed"
-  "the fleet registry","$YMIR_HOME/hodd/data/fleet.json, read by hostname (bin/skuld/role.sh)"
+  "the fleet registry","$YMIR_HOME/hodd/data/fleet.json, read by hostname (bin/fleet/role.sh)"
   "the machine card","the host's own row in $YMIR_HOME/hodd/data/machines.md — a role token in that row"
   "ask -> the safe body","a host in none of them is ASKED on a real interactive run; a run that cannot ask (--check, --yes, no tty) takes the documented safe body `dev` (owns no record, runs no record job) and says so — never the union of every role's parts"
 ```
@@ -1118,7 +1118,7 @@ of the roles that own the component, emits a `SKIP` that names why:
 "local-model","SKIP","not this machine's role (forge,dev only) — the model rail"
 ```
 
-The components each role owes (the ONE table, `bin/skuld/role-lib.sh` `components_for`):
+The components each role owes (the ONE table, `bin/fleet/role-lib.sh` `components_for`):
 
 ```
 role_components[4]{role,components}:
@@ -1128,7 +1128,7 @@ role_components[4]{role,components}:
   "hand","core only — nothing persistent"
 ```
 
-`step_role` then **records** what was resolved: `bin/skuld/role.sh set` writes the fleet
+`step_role` then **records** what was resolved: `bin/fleet/role.sh set` writes the fleet
 registry, and `machine_card_write` folds this machine into the ONE registry,
 `hodd/data/machines.md` (plan 39's fold — no parallel card). The card is keyed by
 a deterministic heading (`## Machine card — <host> (role: <roles>)`), so a repeat
@@ -1139,7 +1139,7 @@ history is never rewritten (Rule 06).
 bin/engine/ymir-install.sh --check                 # this host's role + component set, no writes
 bin/engine/ymir-install.sh --check --role heart    # read AS a heart: the dev desktop layer and the rail SKIP
 bin/engine/ymir-install.sh --role forge            # declare it for the run (and record it)
-bin/skuld/role.sh set <host> heart,forge          # change it afterwards
+bin/fleet/role.sh set <host> heart,forge          # change it afterwards
 ```
 
 **Rule 05 holds:** the role layer is **host-neutral** — it selects components,

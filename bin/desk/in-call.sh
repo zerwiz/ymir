@@ -21,7 +21,7 @@
 #
 # Env (all optional):
 #   YMIR_DESK_NOW=1        the operator's explicit "now" (same as --now)
-#   YMIR_DESK_ROLE         override the seat role (default: bin/skuld/role.sh resolve)
+#   YMIR_DESK_ROLE         override the seat role (default: bin/fleet/role.sh resolve)
 #   YMIR_DESK_GUARD_ROLES  roles the guard acts on        (default: dev)
 #   YMIR_DESK_IGNORE       extended regex of capture clients that are not calls
 #                          (default: this house's own voice engine and Rödd's window)
@@ -38,7 +38,7 @@ GUARD_ROLES="${YMIR_DESK_GUARD_ROLES:-dev}"
 
 seat_role() {
   if [ -n "${YMIR_DESK_ROLE:-}" ]; then printf '%s' "$YMIR_DESK_ROLE"; return; fi
-  bash "$ROOT/bin/skuld/role.sh" resolve 2>/dev/null | head -1 || true
+  bash "$ROOT/bin/fleet/role.sh" resolve 2>/dev/null | head -1 || true
 }
 
 # TSV rows: holder-name <TAB> source-name — one per live capture stream

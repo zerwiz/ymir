@@ -321,3 +321,4 @@ giant's frame.
 ## CHANGE LOG
 
 - 2026-11-22 — the book written: the saga from the void to the reforging, fifteen parts, to be read aloud (the homepage's Saga page reads it in the Seeress's voice).
+- 2026-11-25 — plan 374 (one name everywhere): five sentences are owed at the next recording, because the book is read aloud from recordings and its text changes only with them. Heimdall *"signs every agent's rune"* → admits an entrant by the key it carries (the signing is owed). Þjazi *"is the terminal craft"* → Herdr, the program, keeps its own name. Hvergelmir *"gives every app its own home"* → Élivágar does; Hvergelmir is the news well. Gungnir, Gunnlöð and Kádlín → named, still to be built. Snotra already reads true (*"listens to meetings and keeps what was decided"*). Until then `docs/lore.md` section XXXVIII is the correction.

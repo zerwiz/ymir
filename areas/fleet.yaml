@@ -16,7 +16,7 @@ lens: fleet
 # paths while the area is unheld. Empty = nothing is claimed yet.
 may_write: ["bin/skuld/"]
 
-evidence: ["bin/skuld/role.sh — the role read once, from the registry", "RULES/25-agnostic-by-construction.md"]
+evidence: ["bin/fleet/role.sh — the role read once, from the registry", "RULES/25-agnostic-by-construction.md"]
 
 # the canon's questions, with this project's answers. An open answer is honest; a blank is not.
 answers:

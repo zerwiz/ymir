@@ -178,7 +178,7 @@ def log_fact() -> dict:
 
 
 def role() -> str:
-    for cand in (repo_root() / "bin/skuld/role.sh",):
+    for cand in (repo_root() / "bin/fleet/role.sh",):
         if cand.is_file():
             try:
                 out = subprocess.run(["bash", str(cand), "resolve"], capture_output=True, text=True, timeout=20)
