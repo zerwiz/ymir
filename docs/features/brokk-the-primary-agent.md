@@ -10,7 +10,7 @@ Brokk, bound so a second session cannot run beside it.
 ## What you need
 
 - Ymir installed and raised (`ymir raise`).
-- A harness on your PATH — **Pi**, OpenCode, Claude Code, Codex, or Cursor. Which one
+- A harness on your PATH — **Pi**, OpenCode, Claude Code, Codex, Cursor, or Hermes. Which one
   does the work is *your* choice, per agent.
 
 ## Do it
@@ -68,3 +68,4 @@ Brokk stays the primary; beside it Ymir seats specialists, each bound by
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-25** — Hermes is named among the harnesses a seat can run on (plan 372).
