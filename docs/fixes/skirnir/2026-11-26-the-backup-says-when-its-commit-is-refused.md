@@ -19,3 +19,7 @@ too.
 ## Proof
 
 `systems/skirnir/tests/test_backup_honest.sh` (gate `backup-honest`).
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #965
