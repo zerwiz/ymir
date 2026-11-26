@@ -11,3 +11,7 @@ One appended section lists each hook and the door it calls.
 ## Proof
 
 Document only.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #966
