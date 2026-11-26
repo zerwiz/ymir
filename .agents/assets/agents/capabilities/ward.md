@@ -10,11 +10,11 @@
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | browserkill-install.sh | browserkill-install.sh — seat the kill tracer and its GPU note (plan 1 | tested | keep (a human or a cron row must run it) |
 | browserkill-note.sh | browserkill-note.sh — at every browser/Discord death, write down the G | tested | keep (a human or a cron row must run it) |
-| 10-nightly-renewal.sh | The nightly renewal ran, and finished, on this machine: Gróa's unit is  | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
-| 20-house-units.sh | No user unit of the house sits `failed`. Caught on 2026-11-22: housewatc | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| 10-nightly-renewal.sh | The nightly renewal ran, and finished, on this machine: Gróa's unit is  | tested | keep (a human or a cron row must run it) |
+| 20-house-units.sh | No user unit of the house sits `failed`. Caught on 2026-11-22: housewatc | tested | keep (a human or a cron row must run it) |
 | 30-review-once-per-head.sh | The review watcher hands one head to review once. Caught on 2026-11-22:  | tested | keep (a human or a cron row must run it) |
-| 40-arm-receipts.sh | A report handed to the arm gets its RECEIVED (plan 350 B): none waits pa | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
-| 50-well-recall.sh | A recall from the well returns episodes (plan 350 E): the well is not me | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| 40-arm-receipts.sh | A report handed to the arm gets its RECEIVED (plan 350 B): none waits pa | tested | keep (a human or a cron row must run it) |
+| 50-well-recall.sh | A recall from the well returns episodes (plan 350 E): the well is not me | tested | keep (a human or a cron row must run it) |
 | contracts.sh | contracts.sh — is every system BEHAVING as it should, today, on this m | tested | keep (a human or a cron row must run it) |
 | garmr-bite-test.sh | garmr-bite-test.sh — the laws of the bite, proven offline (no real bit | tested | keep (a human or a cron row must run it) |
 | garmr-bite.sh | garmr-bite.sh — GARMR'S TEETH. The hound may contain, within a written | tested | keep (a human or a cron row must run it) |

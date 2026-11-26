@@ -22,11 +22,11 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[43]{file,does,kind,verdict,disposition,callers,lines}:
-  "10-nightly-renewal.sh","The nightly renewal ran, and finished, on this machine: Gróa's unit is not failed, and Eir's last night is recent","tool","orphan","retire",0,23
-  "20-house-units.sh","No user unit of the house sits `failed`.","tool","orphan","retire",0,8
+  "10-nightly-renewal.sh","The nightly renewal ran, and finished, on this machine: Gróa's unit is not failed, and Eir's last night is recent","tool","wired","keep",0,23
+  "20-house-units.sh","No user unit of the house sits `failed`.","tool","wired","keep",0,8
   "30-review-once-per-head.sh","The review watcher hands one head to review once.","tool","wired","keep",1,39
-  "40-arm-receipts.sh","A report handed to the arm gets its RECEIVED (plan 350 B): none waits past VEIL_RED_S (600) seconds.","tool","orphan","retire",0,17
-  "50-well-recall.sh","A recall from the well returns episodes (plan 350 E): the well is not merely running, it answers.","tool","orphan","retire",0,9
+  "40-arm-receipts.sh","A report handed to the arm gets its RECEIVED (plan 350 B): none waits past VEIL_RED_S (600) seconds.","tool","wired","keep",0,17
+  "50-well-recall.sh","A recall from the well returns episodes (plan 350 E): the well is not merely running, it answers.","tool","wired","keep",0,9
   "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",1,250
   "browserkill-install.sh","browserkill-install.sh — seat the kill tracer and its GPU note (plan 152 / 271).","tool","wired","keep",0,43
   "browserkill-note.sh","browserkill-note.sh — at every browser/Discord death, write down the GPU's side of it (plan 271 piece 5).","tool","wired","keep",2,33
@@ -66,6 +66,6 @@ bin[43]{file,does,kind,verdict,disposition,callers,lines}:
   "ward-answer.sh","ward-answer.sh — answer a ward decision.","tool","wired","keep",0,82
   "ward-ask.sh","ward-ask.sh — Vörðr reports, then ASKS.","tool","wired","keep",1,82
 
-**Tally.** verdict: wired=32, tested=7, orphan=4
+**Tally.** verdict: wired=36, tested=7
 
-**Tally.** disposition: keep=38, retire=4, migrate → src/ymir_runtime/hermes/common.py=1
+**Tally.** disposition: keep=42, migrate → src/ymir_runtime/hermes/common.py=1
