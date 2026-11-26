@@ -49,14 +49,14 @@ export default Plugin.define({
         if (!sessionID || !root) continue;
         try {
           const turn = lastTurn(await ctx.session.context({ sessionID }));
-          if (!turn.answer || !turn.messages.some((m) => m.text?.includes("[from "))) continue;
+          if (!turn.answer) continue;
           const child = spawn("bash", [join(root, "bin", "agents", "reply.sh"), "--turn-end"], {
             stdio: ["pipe", "ignore", "ignore"],
             timeout: 140_000,
           });
           child.on("error", () => {});
           child.stdin.on("error", () => {});
-          child.stdin.end(JSON.stringify({ session: sessionID, ...turn }));
+          child.stdin.end(JSON.stringify({ session: sessionID, answered_at: Date.now() / 1000, ...turn }));
         } catch {
           // a history that cannot be read answers nobody; it never breaks the session
         }

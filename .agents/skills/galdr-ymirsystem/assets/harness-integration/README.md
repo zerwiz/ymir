@@ -1749,4 +1749,4 @@ This section corrects the Hermes lines above. They said `bin/seat/hermes-seat.sh
 
 ## 2026-11-26 — the turn-end answer
 
-Each worker harness has one thin turn-end hook that hands the turn to `bin/agents/reply.sh --turn-end`: `.claude/hooks/reply-back.sh` (a `Stop` entry the installer seats), `.pi/extensions/reply-back.ts`, `.agents/harness/opencode/plugins/reply-back.js`, and the `post_llm_call` shell hook that `bin/pi/arm.sh hook hermes --install` seats. All judgement stays in the door. Codex and Cursor have no hook yet. How-to: `docs/features/answer-back.md`.
+Each worker harness has one thin turn-end hook that hands the turn to `bin/agents/reply.sh --turn-end`: `.claude/hooks/reply-back.sh` (a `Stop` entry the installer seats), `.pi/extensions/reply-back.ts`, `.agents/harness/opencode/plugins/reply-back.js`, and the `post_llm_call` shell hook that `bin/pi/arm.sh hook hermes --install` seats. The `.claude` and `.pi` hooks answered in real panes; the OpenCode and Hermes hooks are built, not yet proven live. All judgement stays in the door. Codex and Cursor have no hook yet. How-to: `docs/features/answer-back.md`.

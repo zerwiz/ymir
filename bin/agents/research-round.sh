@@ -130,6 +130,7 @@ TASK — a research round. TOPIC: $TOPIC
    Name it for the topic and the date.
 4. Then write $STATE/eindri-reports/$FIGURE.md with a short summary and the artifact path, and end your turn."
 
+. "$(dirname "${BASH_SOURCE[0]}")/msg-origin.sh" 2>/dev/null && BRIEF="$(msg_stamp "$BRIEF")"   # the road back (plan 381)
 herdr agent prompt "$FIGURE" "$BRIEF" >/dev/null 2>&1 || true
 
 # 5. arm the handoff, so the report wakes Brokk

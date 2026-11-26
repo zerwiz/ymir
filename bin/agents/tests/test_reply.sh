@@ -25,6 +25,9 @@ case "${1:-} ${2:-}" in
   "agent prompt") printf '%s\t%s\n' "$3" "$4" >>"$SENTLOG" ;;
   "pane read") r="$(printf '─%.0s' $(seq 1 70))"; box="❯ "; [ "${BOX_PANE:-}" = "$3" ] && box="❯ half written words"
                printf ' t\n%s\n%s\n%s\n  ⏵⏵ auto mode on\n' "$r" "$box" "$r" ;;
+  "agent list") echo '{"result":{"agents":[{"agent":"claude","pane_id":"w1:pA"},{"agent":"claude","pane_id":"w1:pB"}]}}' ;;
+  "pane list") echo '{"result":{"panes":[]}}' ;;
+  "pane process-info") [ "${4:-}" = "${FAKE_PANE:-none}" ] && printf '{"result":{"process_info":{"shell_pid":%s}}}\n' "$FAKE_PANE_PID" ;;
   *) exit 1 ;;
 esac
 S
@@ -33,11 +36,12 @@ cat >"$T/bin/ssh" <<'S'
 for a in "$@"; do case "$a" in *@*) printf 'ssh %s\n' "$a" >>"$DOORS" ;; esac; done
 eval "${@: -1}"
 S
+printf '#!/usr/bin/env bash\necho "${HOLDER:-not-found}"\n' >"$T/doors/holder"
 for d in room arm notify tell; do
   printf '#!/usr/bin/env bash\nprintf "%s %%s\\n" "$*" >>"$DOORS"\nexit "${%s_RC:-0}"\n' "$d" "${d^^}" >"$T/doors/$d"
 done
 chmod +x "$T/bin"/* "$T/doors"/*; export PATH="$T/bin:$PATH"
-export YMIR_REPLY_ROOM="$T/doors/room" YMIR_REPLY_ARM="$T/doors/arm" YMIR_REPLY_NOTIFY="$T/doors/notify" YMIR_REPLY_TELL="$T/doors/tell"
+export YMIR_REPLY_ROOM="$T/doors/room" YMIR_REPLY_ARM="$T/doors/arm" YMIR_REPLY_NOTIFY="$T/doors/notify" YMIR_REPLY_TELL="$T/doors/tell" YMIR_REPLY_HOLDER="$T/doors/holder" YMIR_REPLY_FOREGROUND=1 YMIR_REPLY_SETTLE=1 YMIR_REPLY_GRACE=0
 as() { local pane="$1" name="$2"; shift 2; env YMIR_REPLY_PANE="$pane" YMIR_REPLY_ORIGIN="agent $name · herdr pane $pane · $ME" "$@"; }
 reset() { : >"$SENTLOG"; : >"$DOORS"; rm -rf "$XDG_STATE_HOME/ymir/replies"; }
 turn() { python3 -c 'import json,sys; print(json.dumps({"session":"s","answer":sys.argv[2],"messages":[{"id":sys.argv[1],"text":sys.argv[3]}]}))' "$@"; }
@@ -145,4 +149,74 @@ o="$(printf '{"session_id":"c","transcript_path":"%s"}' "$T/t.jsonl" | env YMIR_
 [ "$rc" = 0 ] && [ -z "$o" ] && good "the hook script never blocks and writes nothing on stdout" || bad "hook" "$rc $o"
 
 [ "$fail" = 0 ] || { echo "--- sent:"; cat -A "$SENTLOG" | head; }
+# ── a refused stop sends nothing; the stop that ends the turn sends the real answer ──
+reset
+python3 - "$T/b.jsonl" "$ME" <<'PY'
+import json, sys
+rows = [{"type": "user", "uuid": "u1", "message": {"content": f"[from agent A · herdr pane w1:pA · {sys.argv[2]}] go"}},
+        {"type": "assistant", "message": {"content": [{"type": "text", "text": "unfinished words"}]}}]
+open(sys.argv[1], "w").write("".join(json.dumps(r) + "\n" for r in rows))
+PY
+row() { printf '%s\n' "$1" >>"$T/b.jsonl"; }
+stop() { printf '{"session_id":"b","transcript_path":"%s"}' "$T/b.jsonl" | env YMIR_ROOT="$ROOT" YMIR_REPLY_PANE=w1:pB YMIR_REPLY_FOREGROUND=0 YMIR_REPLY_SETTLE=20 bash "$ROOT/.claude/hooks/reply-back.sh" >/dev/null 2>&1; }
+until_sent() { timeout "$1" bash -c 'until grep -q . "$SENTLOG"; do timeout 0.2 tail -f /dev/null; done'; }
+# the live order (measured): the other hook's refusal is already written when this door starts
+row '{"type":"attachment","attachment":{"type":"hook_blocking_error","hookEvent":"Stop"}}'
+row '{"type":"user","isMeta":true,"message":{"content":"Stop hook feedback:\nwrite your report"}}'
+stop
+row '{"type":"system","subtype":"stop_hook_summary","preventedContinuation":false}'
+until_sent 4
+[ ! -s "$SENTLOG" ] && [ -z "$(ls "$XDG_STATE_HOME/ymir/replies/done" 2>/dev/null)" ] && good "blocked stop: nothing sent, nothing marked answered" || bad "blocked" "$(cat "$SENTLOG")"
+row '{"type":"assistant","message":{"content":[{"type":"text","text":"the real answer"}]}}'
+stop
+[ ! -s "$SENTLOG" ] && good "nothing is sent before the harness gives its verdict" || bad "early" "$(cat "$SENTLOG")"
+row '{"type":"system","subtype":"stop_hook_summary","preventedContinuation":false}'
+until_sent 15
+has "$(cat "$SENTLOG")" "the real answer" && ! has "$(cat "$SENTLOG")" "unfinished" && [ "$(wc -l <"$SENTLOG")" = 1 ] && good "the stop that ends the turn sends the real answer, once" || bad "real answer" "$(cat "$SENTLOG" "$XDG_STATE_HOME/ymir/replies/hook.log")"
+
+# ── the arm holder is answered through its wake queue, never its input box ──
+reset; turn k1 "for the helm" "[from agent H · herdr pane w1:pH · $ME] q" | HOLDER=w1:pH as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+[ ! -s "$SENTLOG" ] && has "$(cat "$DOORS")" "arm tell --class report" && has "$(cat "$DOORS")" "[reply from agent B" && good "an answer for the arm holder goes to its queue" || bad "holder" "$(cat "$DOORS" "$SENTLOG")"
+
+# ── an agent's message never reaches the operator ──
+reset
+for who in "agent Rödd helper · herdr pane w1:pA" "agent telegram-seat · herdr pane w1:pA" "the arm holder · herdr pane w1:pA"; do
+  turn "n$who" "quiet" "[from $who · $ME] q" | BOX_PANE=w1:pA as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+done
+! grep -qE '^(room|notify) ' "$DOORS" && has "$(cat "$DOORS")" "arm tell" && good "agent-stamped messages: no room, no chat, no notice, even when the pane refuses" || bad "notice" "$(cat "$DOORS")"
+o="$(bash "$REPLY" --parse "[from agent A · herdr pane w1:pA · $ME] q"; bash "$REPLY" --parse "$rodd")"
+has "$o" '"w1:pA","no"' && has "$o" '"room","yes"' && good "the parser says whether the operator is there" || bad "presence" "$o"
+
+# ── a wake shown to the holder is owed an answer ──
+reset
+printf '1\t2\tsignal\tk\tagent W · herdr pane w1:pW · %s to the arm holder: done\tclass=report\n1\t3\tsignal\tk2\tagent R · herdr pane w1:pR · %s to the arm holder: [reply from x] y\n1\t4\tsignal\tk3\tRödd (the voice) to the arm holder: hi\n' "$ME" "$ME" | as w1:pB B bash "$REPLY" --owe
+printf '{"session":"s","answer":"noted","messages":[]}' | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+[ "$(cut -f1 "$SENTLOG")" = "w1:pW" ] && good "the holder's turn end answers the wake's sender, no reply and no voice wake" || bad "owed" "$(cat "$SENTLOG")"
+
+# ── the REAL doors, driven from a pane: each stamps that pane, and the answer comes back to it ──
+export FAKE_PANE=w1:pA FAKE_PANE_PID=$$ HERDR_PANE_ID=w1:pA YMIR_STATE_DIR="$T/state"; mkdir -p "$YMIR_STATE_DIR"
+back() {  # <door label> — what the door typed into w1:pB comes back from B's turn into w1:pA
+  local q; q="$(grep '^w1:pB' "$SENTLOG" | tail -1 | cut -f2)"; : >"$SENTLOG"
+  turn "d-$1" "back-$1" "$q" | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+  has "$(cat "$SENTLOG")" "back-$1" && [ "$(cut -f1 "$SENTLOG")" = w1:pA ] && good "real door $1: the answer returns to the sender's pane" || bad "door $1" "q=$q sent=$(cat "$SENTLOG")"
+}
+reset; bash "$SEND" w1:pB "x" >/dev/null 2>&1; back eindri-send
+reset; bash "$ROOT/bin/agents/tell.sh" w1:pB "x" >/dev/null 2>&1; back tell
+reset; FLEET_TELL_ME="$ME" bash "$ROOT/bin/fleet/fleet-tell.sh" --pane-only --to w1:pB "x" >/dev/null 2>&1; back fleet-tell
+reset; VEIL_STATE="$T/veil" bash "$ROOT/bin/agents/veil.sh" steer --to w1:pB "x" >/dev/null 2>&1; back veil-steer
+reset; bash "$ROOT/bin/forge/smith-seat.sh" ask w1:pB "x" >/dev/null 2>&1; back smith-seat
+reset; PYTHONPATH="$ROOT/bin/seat/backends" python3 -c 'import herdr,sys; print("w1:pB\t"+herdr.stamped("x"))' >>"$SENTLOG"; back backend-prompt
+# the wake queue: rodd-arm and arm-send, then the holder drains in its own pane
+reset; rm -f "$YMIR_STATE_DIR/.wake-queue" "$YMIR_STATE_DIR/.wake-drained"
+export RODD_ARM_LEASE="$YMIR_STATE_DIR/.arm.lease"
+printf 'pid=%s starttime=%s gen=1 mode=test session=none heartbeat=%s state=%s\n' "$$" "$(sed 's/.*) //' /proc/$$/stat | awk '{print $20}')" "$(date +%s)" "$YMIR_STATE_DIR" >"$RODD_ARM_LEASE"
+bash "$ROOT/bin/voice/rodd-arm.sh" tell --from "agent W" "report one" >/dev/null 2>&1
+bash "$ROOT/bin/fleet/arm-send.sh" "$ME" "report two" >/dev/null 2>&1
+[ "$(grep -c 'herdr pane w1:pA' "$YMIR_STATE_DIR/.wake-queue" 2>/dev/null)" = 2 ] && good "real doors rodd-arm tell and arm-send record the sender's pane" || bad "wake pane" "$(cat "$YMIR_STATE_DIR/.wake-queue")"
+printf 'w1:pH\n' >"$YMIR_STATE_DIR/.arm.pane"
+FAKE_PANE=w1:pH HERDR_PANE_ID=w1:pH BROKK_STATE_OVERRIDE="$YMIR_STATE_DIR" YMIR_ACK_ANY=1 bash "$ROOT/bin/time/saga-wake-drain.sh" drain >/dev/null 2>&1
+: >"$SENTLOG"; printf '{"session":"h","answer":"holder-answer","messages":[]}' | as w1:pH H bash "$REPLY" --turn-end >/dev/null 2>&1
+has "$(cat "$SENTLOG")" "holder-answer" && [ "$(cut -f1 "$SENTLOG")" = w1:pA ] && good "the real drain: the holder's turn end answers the wake's sender, once per sender" || bad "drain" "$(cat "$SENTLOG"; ls -R "$XDG_STATE_HOME/ymir/replies")"
+unset FAKE_PANE FAKE_PANE_PID HERDR_PANE_ID
+
 printf '\ntest_reply: %s ok, %s failed\n' "$ok" "$fail"; [ "$fail" = 0 ]

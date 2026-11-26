@@ -100,6 +100,7 @@ if ! herdr agent start "$NAME" --kind pi --pane "$PANE" "${PI_ARGS[@]}" >/dev/nu
 fi
 
 # 3. optional first task.
+[ -n "$TASK" ] && . "$SCRIPT_DIR/../agents/msg-origin.sh" 2>/dev/null && TASK="$(msg_stamp "$TASK")"   # the road back (plan 381)
 [ -n "$TASK" ] && herdr agent prompt "$NAME" "$TASK" >/dev/null 2>&1 || true
 
 # 4. arm the handoff (plan 42). A when-source beside the smith files his report

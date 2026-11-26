@@ -15,3 +15,5 @@ The session hook handles `post_llm_call` and hands the message and answer to `re
 ## CHANGE LOG
 
 - 2026-11-26 — review-mend: added missing heading for #966
+
+- 2026-11-26 — part of plan 381, an answer goes back the way it came.

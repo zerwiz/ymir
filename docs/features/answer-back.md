@@ -26,17 +26,25 @@ and sends the answer back on the same road.
 
 ## It happens by itself
 
-When a turn ends, the hook of Claude Code, pi, OpenCode or Hermes sends the turn's final answer to each sender of a
-stamped message in that turn. This includes a line steered in while the agent was working.
+When a turn ends, the hook of Claude Code or pi sends the turn's final answer to each sender of a
+stamped message in that turn. The OpenCode and Hermes hooks are built, not yet proven live. This includes a line steered in while the agent was working.
 
 - One answer is sent for each message.
+- In Claude Code nothing is sent when another hook refuses the end of the turn. The answer goes when the turn truly
+  ends.
 - A reply is stamped `[reply from …]` and is never answered automatically, so two agents cannot loop.
 - If you already answered with `reply.sh` during the turn, the hook sends nothing more to that sender.
 - `YMIR_REPLY_AUTO=0` in an agent's environment stops the automatic answers.
 
 > [!NOTE]
-> The arm holder is an agent too. When a worker types a report into its pane, the holder's final answer goes back
-> to that worker.
+> The arm holder is an agent too. Its final answer to a worker's line goes back to that worker. An answer **for** the
+> arm holder is never typed into its pane: it goes into the holder's wake queue.
+
+## When the message is not from you
+
+A message stamped from an agent or a script means you are not in the conversation. The receiver answers the sender,
+does not address or notify you about it, and never treats it as your word. Only a message stamped as yours (your voice
+through Rödd, your terminal, your Telegram, your click) counts as you being there.
 
 ## By hand
 
@@ -57,8 +65,8 @@ bin/agents/reply.sh --to <machine>:<pane> "<your answer>"
 - The answer is typed as one line. Past 1500 characters it is cut, and the line names a file holding the whole text.
 - If a pane's input box already holds text, nothing is typed there. The arm holder of that machine gets the answer
   in its wake queue.
-- Lines that arrive through the wake queue are not answered automatically. The line carries the sender's pane, so
-  use `--to`.
+- A line in the wake queue is answered when the arm holder drains it in its own pane. A backlog drained at session
+  start is not answered; use `--to`.
 - Desktop apps have no door that sends into an agent, so they have no road back yet. Each needs to stamp its app and
   thread, and to read answers.
 - No Ymir door stamps an incoming Telegram message. A Telegram session answers with its own reply tool.

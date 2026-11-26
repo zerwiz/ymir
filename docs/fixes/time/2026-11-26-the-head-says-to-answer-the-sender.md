@@ -15,3 +15,5 @@ One line in `saga-head-core.md` names `reply.sh` and the turn-end answer.
 ## CHANGE LOG
 
 - 2026-11-26 — review-mend: added missing heading for #966
+
+- 2026-11-26 — part of plan 381, an answer goes back the way it came.

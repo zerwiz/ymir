@@ -147,6 +147,8 @@ msg_origin() {
         who="agent ${seat:-the helm} (the helm${agent:+, $agent})"
       elif [ -n "$name" ]; then
         who="agent ${name}${agent:+ ($agent)}"
+      elif [ -z "$agent" ] && [ -t 0 ]; then
+        who="a person at terminal $(tty 2>/dev/null)"
       else
         who="agent ${agent:-in a pane}"
       fi

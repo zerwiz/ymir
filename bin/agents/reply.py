@@ -65,17 +65,28 @@ def parse(line: str) -> tuple[str, str]:
     return ("from", first) if first else ("none", "")
 
 
+def present(who: str) -> bool:
+    """Is the operator there? Only a message stamped as his own says so; an agent or a script means he is not."""
+    return who.startswith(("the Allfather", "Rödd", "a person at terminal"))
+
+
 def road(origin: str) -> dict:
     parts = [p.strip() for p in origin.split(" · ")]
     who = parts[0]
     machine = parts[-1] if len(parts) > 1 and re.fullmatch(MACHINE, parts[-1]) else me()
-    out = {"road": "none", "address": "", "machine": machine, "who": who, "why": ""}
-    if who.startswith("Rödd") or "through Rödd" in who:
-        return {**out, "road": "rodd", "address": "room"}
+    out = {"road": "none", "address": "", "machine": machine, "who": who, "why": "", "him": False}
+    him = present(who)
+    out["him"] = him
     if who.startswith("script") or who.startswith("fleet-tell"):
         return {**out, "why": f"'{who}' is a script: nobody waits for an answer"}
-    if re.search(r"\bTelegram\b", who, re.I):
+    # The roads that reach HIM (the room, his chat, his terminal) open only for a message stamped as his own.
+    if him and "Rödd" in who:
+        return {**out, "road": "rodd", "address": "room"}
+    if him and re.search(r"\bTelegram\b", who, re.I):
         return {**out, "road": "telegram", "address": "operator"}
+    m = re.fullmatch(r"a person at terminal (/dev/(?:pts/\d+|tty\d+))", who)
+    if m:
+        return {**out, "road": "terminal", "address": m.group(1)}
     for p in parts:
         m = re.fullmatch(r"hermes session ([A-Za-z0-9._-]+)", p)
         if m:
@@ -84,9 +95,6 @@ def road(origin: str) -> dict:
         m = re.fullmatch(rf"herdr pane ({PANE})", p)
         if m:
             return {**out, "road": "pane", "address": m.group(1)}
-    m = re.fullmatch(r"a person at terminal (/dev/(?:pts/\d+|tty\d+))", who)
-    if m:
-        return {**out, "road": "terminal", "address": m.group(1)}
     return {**out, "why": f"the stamp '{origin}' names no pane, room, terminal, chat or session to answer"}
 
 
@@ -128,6 +136,29 @@ def to_arm(r: dict, line: str, why: str) -> tuple[bool, str]:
     return False, f"{why}; the arm did not take it either: {out}"
 
 
+def is_holder(r: dict) -> bool:
+    """Is that pane the arm holder's? Asked of the machine it stands on (bin/fleet/arm-holder-pane.sh)."""
+    if r["machine"] == me():
+        _, out = run(["bash", door("YMIR_REPLY_HOLDER", "fleet/arm-holder-pane.sh")])
+    else:
+        dest = ssh_road(r["machine"])
+        if not dest:
+            return False
+        _, out = run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", dest,
+                      "bash -lc 'd=${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}; cd $d && bash bin/fleet/arm-holder-pane.sh'"])
+    return out.strip() == r["address"]
+
+
+def to_holder(r: dict, line: str, origin: str) -> tuple[bool, str]:
+    if r["machine"] == me():
+        rc, out = run(["bash", door("YMIR_REPLY_ARM", "voice/rodd-arm.sh"), "tell", "--class", "report",
+                       "--from", origin, line])
+    else:
+        rc, out = run(["bash", door("YMIR_REPLY_FLEET", "fleet/fleet-tell.sh"), "--arm-only", "--to",
+                       r["machine"], "--", line], 120)
+    return (True, "the arm holder's wake queue") if rc == 0 else (False, f"the arm did not take it: {out}")
+
+
 def deliver(r: dict, answer: str) -> tuple[bool, str]:
     body = flat(answer)
     if len(body) > CAP:
@@ -140,6 +171,8 @@ def deliver(r: dict, answer: str) -> tuple[bool, str]:
     here = r["machine"] == me()
     kind = r["road"]
     if kind == "pane":
+        if is_holder(r):  # its input box is often in use: the wake queue is its road (the fixed core)
+            return to_holder(r, line, origin)
         if here:
             rc, out = run(["bash", door("YMIR_REPLY_SEND", "agents/eindri-send.sh"), r["address"], line],
                           env={"EINDRI_SEND_WAIT": os.environ.get("EINDRI_SEND_WAIT", "4")})
@@ -210,7 +243,8 @@ def turn_end(doc: dict) -> int:
     done = state() / "done"
     done.mkdir(exist_ok=True)
     owed: dict[str, dict] = {}
-    for n, msg in enumerate(doc.get("messages") or []):
+    wakes = owed_wakes(float(doc.get("answered_at") or time.time()))
+    for n, msg in enumerate([*(doc.get("messages") or []), *wakes]):
         text = str(msg.get("text") or "")
         kind, origin = parse(text)
         if kind != "from":
@@ -218,7 +252,8 @@ def turn_end(doc: dict) -> int:
         r = road(origin)
         if r["road"] == "none" or is_self(r):
             continue
-        key = hashlib.sha256(f"{doc.get('session')}|{msg.get('id', n)}|{text}".encode()).hexdigest()
+        session = "wake" if str(msg.get("id", "")).startswith("wake:") else doc.get("session")  # a redelivered wake
+        key = hashlib.sha256(f"{session}|{msg.get('id', n)}|{text}".encode()).hexdigest()
         try:
             (done / key).touch(exist_ok=False)  # the claim: two hooks on one turn send once
         except FileExistsError:
@@ -236,6 +271,40 @@ def turn_end(doc: dict) -> int:
     if rows:
         report(rows)
     return 0 if all(row[2] for row in rows) else 1
+
+
+def owe_wakes(lines: list[str], pane: str) -> None:
+    """The drain showed the arm holder these queue lines: note each agent sender, to be answered at turn end."""
+    box = state() / "owed" / pane
+    for line in lines:
+        m = re.search(r"(?:^|\t|— )([^\t]*?) to the arm holder: ([^\t]*)", line)
+        if not m:
+            continue
+        origin, text = m.group(1).split("— ")[-1].strip(), m.group(2)
+        r = road(origin)
+        if r["him"] or r["road"] not in ("pane", "hermes") or "[reply from " in text:
+            continue
+        key = hashlib.sha256(line.encode()).hexdigest()[:32]
+        (state() / "owed-seen").mkdir(exist_ok=True)
+        try:
+            (state() / "owed-seen" / key).touch(exist_ok=False)  # a wake shown again is not owed again
+        except FileExistsError:
+            continue
+        box.mkdir(parents=True, exist_ok=True)
+        (box / key).write_text(f"[from {origin}] {text}\n", encoding="utf-8")
+
+
+def owed_wakes(answered_at: float) -> list[dict]:
+    """Wakes this pane was shown BEFORE the answer was written: that answer is theirs. Each is taken once."""
+    pane = os.environ.get("YMIR_REPLY_PANE")
+    box = state() / "owed" / pane if pane else None
+    out = []
+    for f in sorted(box.glob("*")) if box and box.is_dir() else []:
+        seen = f.stat().st_mtime
+        if seen <= answered_at:
+            out.append({"id": f"wake:{f.name}", "text": f.read_text(encoding="utf-8"), "since": seen})
+            f.unlink(missing_ok=True)
+    return out
 
 
 def consume(r: dict) -> None:
@@ -268,6 +337,7 @@ def claude_turn(hook: dict) -> dict:
     it while it ran, and the final answer."""
     messages: list[dict] = []
     answer = ""
+    answered_at = 0.0
     with open(hook["transcript_path"], encoding="utf-8", errors="replace") as fh:
         for raw in fh:
             try:
@@ -287,22 +357,115 @@ def claude_turn(hook: dict) -> dict:
                 messages.append({"id": att.get("source_uuid") or d.get("uuid"), "text": entry_text(att.get("prompt")),
                                  "since": stamp_time(d.get("timestamp"))})
             elif d.get("type") == "assistant":
-                answer = entry_text((d.get("message") or {}).get("content")) or answer
-    return {"session": hook.get("session_id"), "messages": messages,
+                said = entry_text((d.get("message") or {}).get("content"))
+                if said:
+                    answer, answered_at = said, stamp_time(d.get("timestamp"))
+    return {"session": hook.get("session_id"), "messages": messages, "answered_at": answered_at,
             "answer": hook.get("last_assistant_message") or answer}
+
+
+def verdict(path: str, offset: int) -> str:
+    """What Claude Code wrote after this stop: 'blocked' (the turn goes on), 'ended', or '' (not said yet).
+
+    Every Stop hook runs side by side and the verdict is written only when they have all returned, so it is read
+    from the transcript afterwards: a block leaves a "Stop hook feedback" entry, an ended turn its summary."""
+    with open(path, "rb") as fh:
+        fh.seek(offset)
+        tail = fh.read().decode("utf-8", "replace")
+    ended = False
+    for raw in tail.splitlines():
+        try:
+            d = json.loads(raw)
+        except ValueError:
+            continue
+        if d.get("isSidechain"):
+            continue
+        att = d.get("attachment") or {}
+        if d.get("type") == "assistant" or att.get("type") == "hook_blocking_error":
+            return "blocked"
+        if d.get("type") == "user" and entry_text((d.get("message") or {}).get("content")).startswith("Stop hook feedback"):
+            return "blocked"
+        if d.get("type") == "system" and d.get("subtype") in ("stop_hook_summary", "turn_duration"):
+            if d.get("preventedContinuation") is not True:
+                ended = True
+    return "ended" if ended else ""
+
+
+def anchor(path: str, said: str) -> int:
+    """The byte just after the answer this stop is about: the last assistant text in the transcript.
+
+    A file size taken at hook start is too late: each hook's refusal is written as soon as THAT hook returns, often
+    before this door is up. The answer itself is always before every verdict. When the harness names the answer and
+    it is not written yet, wait a moment for it."""
+    limit = time.time() + 5
+    while True:
+        end = at = 0
+        found = ""
+        with open(path, "rb") as fh:
+            for raw in fh:
+                end += len(raw)
+                try:
+                    d = json.loads(raw)
+                except ValueError:
+                    continue
+                if d.get("type") == "assistant" and not d.get("isSidechain"):
+                    text = entry_text((d.get("message") or {}).get("content"))
+                    if text:
+                        at, found = end, text
+        if not said or found.strip() == said.strip() or time.time() >= limit:
+            return at
+        time.sleep(0.2)
+
+
+def settle(path: str, offset: int) -> bool:
+    """Wait for the verdict. With none inside the limit, the turn is held to be over."""
+    limit = time.time() + float(os.environ.get("YMIR_REPLY_SETTLE", "660"))
+    while True:
+        got = verdict(path, offset)
+        if got == "ended":
+            time.sleep(float(os.environ.get("YMIR_REPLY_GRACE", "1")))  # a late block still wins
+            return verdict(path, offset) != "blocked"
+        if got == "blocked":
+            return False
+        if time.time() >= limit:
+            return True
+        time.sleep(0.5)
+
+
+def detach() -> None:
+    """Let the hook return now (its verdict waits on it) and carry on alone."""
+    sys.stdout.flush()
+    if os.fork():
+        os._exit(0)
+    os.setsid()
+    log = os.open(state() / "hook.log", os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    null = os.open(os.devnull, os.O_RDONLY)
+    for src, dst in ((null, 0), (log, 1), (log, 2)):
+        os.dup2(src, dst)
 
 
 def main(argv: list[str]) -> int:
     if argv[0] == "--parse":
         kind, origin = parse(" ".join(argv[1:]))
         r = road(origin) if origin else {"road": "none", "address": "", "machine": ""}
-        print("reply-parse[1]{kind,road,machine,address}:")
-        print(f'  "{kind}","{r["road"]}","{r["machine"]}","{r["address"]}"')
+        print("reply-parse[1]{kind,road,machine,address,operator_there}:")
+        print(f'  "{kind}","{r["road"]}","{r["machine"]}","{r["address"]}","{"yes" if r.get("him") else "no"}"')
+        return 0
+    if argv[0] == "--owe":
+        pane = os.environ.get("YMIR_REPLY_PANE")
+        if pane:
+            owe_wakes(sys.stdin.read().splitlines(), pane)
         return 0
     if argv[0] in ("--turn-end", "--claude-stop"):
         try:
             doc = json.loads(sys.stdin.read() or "{}")
             if argv[0] == "--claude-stop":
+                path = doc["transcript_path"]
+                offset = anchor(path, str(doc.get("last_assistant_message") or ""))
+                if os.environ.get("YMIR_REPLY_FOREGROUND") != "1":
+                    detach()
+                if not settle(path, offset):
+                    return 0  # the stop was refused: nothing is claimed, the stop that ends the turn sends
                 doc = claude_turn(doc)
             with open(state() / ".lock", "w") as lock:
                 fcntl.flock(lock, fcntl.LOCK_EX)

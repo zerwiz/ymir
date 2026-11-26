@@ -15,3 +15,5 @@ Installed against a temporary Hermes config; `--check` passed.
 ## CHANGE LOG
 
 - 2026-11-26 — review-mend: added missing heading for #966
+
+- 2026-11-26 — part of plan 381, an answer goes back the way it came.

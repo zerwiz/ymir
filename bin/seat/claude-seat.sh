@@ -97,7 +97,7 @@ except Exception: print("")' 2>/dev/null)"
         # never approve on the worker's behalf: refuse the one call, and tell it to go on without it
         hdr agent send-keys "$pane" Escape >/dev/null 2>&1 || exit 1
         sleep 1
-        hdr agent prompt "$pane" "That permission was refused by the seat (no human is here). Carry on with the errand without it, or write the question to your questions file." >/dev/null 2>&1 || exit 1
+        hdr agent prompt "$pane" "[from script claude-seat] That permission was refused by the seat (no human is here). Carry on with the errand without it, or write the question to your questions file." >/dev/null 2>&1 || exit 1
         ;;
       model)
         [ -n "$model" ] || exit 1

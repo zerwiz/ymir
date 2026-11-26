@@ -2730,7 +2730,7 @@ async def _tool_eindri_send(args):
     line = str(args.get("line") or "").strip()
     if not (target and line):
         raise ValueError("eindri_send needs a target (a pane id from eindri_list) and a line")
-    code, out = _run([_door("agents/eindri-send.sh"), target, line], timeout=40)
+    code, out = _run([_door("agents/eindri-send.sh"), "--from", "the Allfather, by voice through Rödd", target, line], timeout=40)
     said = _clean(out, 300)
     if code == 0 and '"sent"' in said:
         return ToolResult(
@@ -3207,7 +3207,7 @@ async def _tool_eindri_send(args):
     line = str(args.get("line") or "").strip()
     if not target or not line:
         raise ValueError("eindri_send needs a target and a line")
-    code, out = _run([_door("agents/eindri-send.sh"), target, line], timeout=40)
+    code, out = _run([_door("agents/eindri-send.sh"), "--from", "the Allfather, by voice through Rödd", target, line], timeout=40)
     if code != 0:
         return ToolResult(f"herdr did not take the line for {target}: {_clean(out, 240)}. "
                           "Call eindri_list to see which panes actually hold a worker.")

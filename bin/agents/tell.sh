@@ -28,7 +28,7 @@ set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
-FROM="${YMIR_MSG_FROM:-script tell}"
+FROM="${YMIR_MSG_FROM:-}"
 DRY=0
 
 die() { printf 'tell: %s\n' "$*" >&2; exit "${2:-2}"; }
@@ -101,6 +101,14 @@ case "$line" in *$'\n'*) die "one line only — put a long message in a letter f
 case "$line" in *$'\e'*) die "refusing a line carrying an escape sequence" 64 ;; esac
 [ -n "${line//[[:space:]]/}" ] || die "no line to hand" 64
 
+# The road back (plan 381): with no name given, an agent calling from its pane is named with that pane, so it
+# can be answered; anything else is the script it is.
+if [ -z "$FROM" ]; then
+  FROM="script tell"
+  if . "$HERE/msg-origin.sh" 2>/dev/null; then
+    o="$(msg_origin </dev/null)"; case "$o" in "agent "*) FROM="$o" ;; esac
+  fi
+fi
 # ── resolve who -> road ───────────────────────────────────────────────────────
 road=""; target=""; argv=()
 case "$who" in

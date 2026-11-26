@@ -1097,6 +1097,8 @@ else
 fi
 PROMPT="$DATA/$ID/prompt.md"
 {
+  # THE ROAD BACK (plan 381): who sent this errand and from which pane, so the worker's turn end answers it.
+  ( . "$SCRIPT_DIR/msg-origin.sh" && printf '[from %s]\n' "$(msg_origin </dev/null)" ) 2>/dev/null
   cat "$BRIEF"
   if [ -s "$CTX" ]; then printf '\n\n---\n\n'; cat "$CTX"; fi
   # THE FIXED CORE (plan 275 §04:15–04:25): Ymir is public, the home is private, the pin,

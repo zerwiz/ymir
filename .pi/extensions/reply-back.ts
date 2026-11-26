@@ -33,17 +33,20 @@ export default function replyBack(pi: any) {
   pi.on("agent_end", async (event: any) => {
     const messages: { id: string; text: string; since: number }[] = [];
     let answer = "";
+    let answered_at = 0;
     for (const message of event?.messages ?? []) {
       if (message?.role === "user") {
         const stamp = Number(message.timestamp) || 0;
         messages.push({ id: String(stamp || messages.length), text: textOf(message), since: stamp / 1000 });
       } else if (message?.role === "assistant") {
         // an aborted or failed turn has no answer to send
-        answer = ["aborted", "error"].includes(message.stopReason) ? "" : textOf(message) || answer;
+        const said = textOf(message);
+        if (["aborted", "error"].includes(message.stopReason)) answer = "";
+        else if (said) [answer, answered_at] = [said, Date.now() / 1000];
       }
     }
     const root = resolveRoot();
-    if (!root || !answer || !messages.some((m) => m.text.includes("[from "))) return;
+    if (!root || !answer) return;
     await new Promise<void>((done) => {
       const child = spawn("bash", [join(root, "bin", "agents", "reply.sh"), "--turn-end"], {
         stdio: ["pipe", "ignore", "ignore"],
@@ -52,7 +55,7 @@ export default function replyBack(pi: any) {
       child.on("error", () => done());
       child.on("close", () => done());
       child.stdin.on("error", () => {});
-      child.stdin.end(JSON.stringify({ session, answer, messages }));
+      child.stdin.end(JSON.stringify({ session, answer, answered_at, messages }));
     });
   });
 }
