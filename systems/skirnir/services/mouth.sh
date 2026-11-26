@@ -65,7 +65,12 @@ if { [ "$CODE" != "200" ] || [ ! -s "$TMP/say.wav" ]; } && [ -f "$HOME/.local/bi
   sleep 1
   CODE="$(speak "$TMP/say.wav")"
 fi
-[ "$CODE" = "200" ] || { printf 'mouth: the synthesiser did not answer (http %s)\n' "${CODE:-none}" >&2; exit 3; }
+if [ "$CODE" != "200" ]; then
+  # an open port is not the engine: name whoever took it, or the unit crash-loops in silence (2026-11-26)
+  SQUATTER="$(kokoro_port_squatter)"
+  printf 'mouth: the synthesiser did not answer (http %s)%s\n' "${CODE:-none}" "${SQUATTER:+ — $SQUATTER}" >&2
+  exit 3
+fi
 [ -s "$TMP/say.wav" ] || { printf 'mouth: empty audio\n' >&2; exit 4; }
 # hold the voice: the idle-stop must never lower the card under a conversation (2026-10-23)
 bash "$LEASE" touch 2>/dev/null || true

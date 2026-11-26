@@ -360,6 +360,42 @@ MODEL_SAFE_CLASSES = ("public", "logistics", "role")
 MODEL_TIERS = ("owner", "collaborator", "known")
 
 
+# A fact made from a BACKUP of the book, or from a record that was retired or moved away, names a thing
+# the house no longer holds: it is never an answer (measured 2026-11-26: "what is gimle" was answered
+# "bin/gimle — moved out of Ymir").
+ARCHIVED_RE = re.compile(r"^home-doc-hodd-(saves-|reference-.*(retired|moved))")
+
+# The Ymir pitch without a mouth, in telling order: what it is, who does the work, how the work is kept.
+PITCH_SPINE = ("what-ymir-is", "lore-ymir")
+PITCH_PARTS = ("lore-brokk", "feature-brokk-the-primary", "lore-eindri", "feature-eindri-isolated-sub-agents",
+               "lore-kaia", "lore-yggdrasil", "feature-yggdrasil-worktrees-utgard-sandbox",
+               "lore-mimirsbrunn", "feature-the-well-mimirsbrunn-engram",
+               "lore-runes", "feature-the-plan-ledger-runes-audit")
+
+
+def pitch_selection(facts: dict, limit: int = 7) -> list[str]:
+    """The slugs that EXPLAIN Ymir: public sentences only.
+
+    A document's title ("Eindri-homes — persistent worker homes."), a scrap of a web page and a two-word
+    label are all about Ymir by keyword and explain nothing, so none of them is a candidate.
+    """
+    usable = {}
+    for slug, fact in facts.items():
+        if str(fact.get("class", "public")).lower() != "public":
+            continue
+        if slug.startswith(("home-", "site-")) or slug == "capabilities":
+            continue
+        claim = str(fact.get("claim", "")).strip()
+        if len(claim.split()) >= 8:
+            usable[slug] = claim
+    order = [s for s in PITCH_SPINE if s in usable]
+    order += sorted(s for s, c in usable.items() if re.match(r"Ymir (is|—|\()", c))
+    order += sorted(s for s, c in usable.items() if re.match(r"(Brokk|Eindri|Völundr|Kaia) ", c)
+                    and not s.startswith("lore-"))
+    order += [s for s in PITCH_PARTS if s in usable]
+    return list(dict.fromkeys(order))[:limit]
+
+
 def tokens(text: str) -> set[str]:
     return {w for w in re.findall(r"[a-z0-9]+", (text or "").lower())
             if w not in STOPWORDS and len(w) > 2}
@@ -1537,7 +1573,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         if m:
             needle = m.group(1)
             for slug, fact in facts.items():
-                if needle in fact["claim"].lower():
+                if needle in fact["claim"].lower() and not ARCHIVED_RE.match(slug):
                     used = [slug]
                     intent = f"fact:{slug}"
                     break
@@ -1550,6 +1586,8 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             needle = m.group(1).strip()
             for slug, fact in facts.items():
                 claim = fact["claim"].lower()
+                if ARCHIVED_RE.match(slug):
+                    continue
                 if claim.startswith(needle) or (needle in claim and slug.startswith("contact-")):
                     used = [slug]
                     intent = "directory" if fact.get("class") == "contacts" else f"fact:{slug}"
@@ -1586,7 +1624,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             for slug, fact in facts.items():
                 claim = str(fact.get("claim", ""))
                 body = tokens(claim)
-                if not body:
+                if not body or ARCHIVED_RE.match(slug):
                     continue
                 hit_body = len(q & body)
                 hit_head = len(q & head(claim))
@@ -1705,30 +1743,9 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     elif kind == "ymir_pitch":
         # MARKETING, BUT STILL TRUE. His own word (2026-10-23): "when he gets asked about Ymir he
         # needs to tell a lot more about what it is… he needs to get the user to understand what it
-        # is — not one sentence." So the pitch is assembled from MANY approved facts and composed by
-        # the mouth; every sentence must trace to a fact, and the gate still runs on all of it.
-        pitch_facts = {}
-        for slug, fact in facts.items():
-            claim = str(fact.get("claim", "")).lower()
-            if any(k in claim for k in ("ymir", "house", "substrate", "brokk", "eindri", "kaia",
-                                        "yggdrasil", "mimirsbrunn", "runes", "lore", "the fleet")):
-                pitch_facts[slug] = fact
-        # a stable spine first: what it is, then the fleet, then the parts
-        # the spine is chosen by SLUG, not by a keyword guess: these are the facts that say what the
-        # house is, and they exist in the digest by name
-        spine = [s2 for s2 in ("what-ymir-is", "lore-ymir", "lore-brokk", "lore-eindri", "lore-kaia",
-                               "lore-yggdrasil", "lore-mimirsbrunn", "lore-runes", "what-the-houses-are")
-                 if s2 in facts]
-        chosen = {k: facts[k] for k in spine if k in facts}
-        # without a model the pitch is the facts themselves, so the FLEET must be among them by name
-        for slug, fact in facts.items():
-            claim = str(fact.get("claim", ""))
-            if any(claim.startswith(n) for n in ("Brokk", "Eindri", "Völundr", "Kaia")):
-                chosen.setdefault(slug, fact)
-        for slug in sorted(pitch_facts):
-            if len(chosen) >= 10:
-                break
-            chosen.setdefault(slug, pitch_facts[slug])
+        # is — not one sentence." So the pitch is assembled from MANY approved public facts and composed
+        # by the mouth; every sentence must trace to a fact, and the gate still runs on all of it.
+        chosen = pitch_selection(facts)
         brief = ("Write the answer a person needs in order to UNDERSTAND what Ymir is: three or four "
                  "short paragraphs, plain language. Paragraph 1: what it is. Paragraph 2: who does the "
                  "work — name ONLY the figures the facts name (Brokk the counsellor, Eindri the isolated "
@@ -1737,18 +1754,20 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                  "well, the append-only ledger. Paragraph 4: what it is for. "
                  "HARD RULES: invent no name, product, number or claim that is not in the facts; no "
                  "links, no lists longer than three items. " + name_law())
-        said = model_small(brief, question, mouth, history(chat)) if mouth else None
+        # the facts go WITH the brief (a mouth told to use "the facts" and given none can only invent),
+        # and a stranger never reaches a model
+        said = None
+        if mouth and tier in MODEL_TIERS and chosen:
+            said = model_small(brief + "\nFACTS:\n" + "\n".join(f"- {facts[k]['claim']}" for k in chosen),
+                               question, mouth, history(chat))
         if said and not sounds_like_refusal(said):
             reply = said
+        elif chosen:
+            # no model: the facts themselves, in telling order
+            reply = "\n\n".join(str(facts[k]["claim"]).strip() for k in chosen)
         else:
-            # no model: a structured answer from the facts themselves, still several sentences
-            # spine first (what it is), then the fleet and the rest — the pitch must name the figures
-            lines = [str(chosen[k]["claim"]).strip() for k in spine if k in chosen]
-            lines += [str(v["claim"]).strip() for k, v in chosen.items() if k not in spine]
-            if not lines:
-                lines = [str(f["claim"]).strip() for f in list(chosen.values())[:4]]
-            reply = "\n\n".join(lines[:6])
-        used = list(chosen)[:10]
+            reply = say_unknown(tier)
+        used = chosen
         pitched = True
     elif kind == "group_members":
         if tier != "owner":

@@ -33,7 +33,11 @@ try:
 except Exception:
     print("trello-map: no map yet — run trello-map.sh first", file=sys.stderr); sys.exit(2)
 board_q, list_q = os.environ.get("BOARD_Q", "").lower(), os.environ.get("LIST_Q", "").lower()
-boards = [b for b in m.get("boards", []) if board_q in b["name"].lower()]
+known = m.get("boards") or []
+if not isinstance(known, list):
+    print("trello-map: %s is not this door's map (boards is not a list) — nothing to resolve from"
+          % os.environ["MAP_Q"], file=sys.stderr); sys.exit(2)
+boards = [b for b in known if board_q in b["name"].lower()]
 if not boards:
     print("trello-map: no board matches %r — have: %s" % (os.environ["BOARD_Q"],
           ", ".join(b["name"] for b in m.get("boards", []))), file=sys.stderr); sys.exit(3)
