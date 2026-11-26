@@ -11,3 +11,7 @@ One line in `saga-head-core.md` names `reply.sh` and the turn-end answer.
 ## Proof
 
 `bin/time/tests/test_saga_head.sh`.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #966
