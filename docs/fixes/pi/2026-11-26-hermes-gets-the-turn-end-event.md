@@ -11,3 +11,7 @@ The Hermes seat had hooks for the start of a session only.
 ## Proof
 
 Installed against a temporary Hermes config; `--check` passed.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #966
