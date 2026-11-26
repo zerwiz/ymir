@@ -11,3 +11,7 @@ A line in the arm holder's wake queue named the agent but not its pane, so there
 ## Proof
 
 `bin/voice/tests/test_rodd_arm.sh`.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #966
