@@ -84,6 +84,27 @@ $RA
 $RA
   ⏵⏵ auto mode on" empty
 
+# The marker is followed by a NO-BREAK SPACE (U+00A0) on a real pane, not a plain one. The first line is
+# the box line byte for byte as measured 2026-11-25, trailing CR included.
+NB=$(printf '\302\240')
+verdict 'claude box, real bytes: no-break space then a dim suggestion' " some transcript
+$RA
+$(printf '\342\235\257\302\240\033[0m\033[2mcut the 60-second sample now\033[0m\r')
+$RA
+  ⏵⏵ auto mode on" suggestion 'cut the 60-second sample now'
+
+verdict 'claude box, no-break space then normal text still refuses' " some transcript
+$RA
+❯${NB}${E}[0mfix the thing before you go
+$RA
+  ⏵⏵ auto mode on" text 'fix the thing before you go'
+
+verdict 'claude box, a bare marker and no-break space is empty' " some transcript
+$RA
+❯${NB}${E}[0m
+$RA
+  ⏵⏵ auto mode on" empty
+
 # Honesty: what cannot be read is `unknown`, never `empty`.
 verdict 'no box at all is unknown, not empty' "just a log line
 and another one" unknown

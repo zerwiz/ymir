@@ -362,7 +362,7 @@ def research(root: Path, question: str, project: str = "", plan: str = "", post=
                 page, src = md, (u, h.get("title") or u)
                 break
     except (urllib.error.URLError, OSError, ValueError) as e:
-        return f"ymir_research: Firecrawl did not answer ({e})."
+        return f"ymir_research: Firecrawl did not answer ({e}). Huginn's tools are down — run ymir_huginn with action 'up' (or bin/fleet/huginn-web.sh up)."
     answer = re.sub(r"\s+", " ", page)[:700]
     record_saving("miss", len(page) // 4, len(answer) // 4, 1 if page else 0)
     keep = ["bash", str(Path(root) / "bin" / "records" / "library.sh"), "research", "keep", "--question", question,

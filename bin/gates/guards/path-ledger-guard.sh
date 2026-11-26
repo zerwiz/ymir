@@ -9,7 +9,8 @@
 #
 # So: every move is written into `.agents/paths-ledger.yaml`, and this ward refuses a
 # shipped file that still uses a superseded spelling. History is excepted — `docs/fixes/`
-# (one file per fix, append-only) and the ledger itself — and a line may be waived in
+# (one file per fix, append-only), `docs/contract-history/` (the contract's verbatim
+# prior text) and the ledger itself — and a line may be waived in
 # writing with `allow-superseded-path:` and a reason.
 #
 #   path-ledger-guard.sh check [path…]
@@ -95,6 +96,7 @@ while IFS=$'\t' read -r old new still; do
       file="${hit%%:*}"; rest="${hit#*:}"; line="${rest%%:*}"
       case "$file" in
         */docs/fixes/*) continue ;;
+        */docs/contract-history/*) continue ;;   # the contract's verbatim prior text: a record (plan 369 item 7)
         */.agents/paths-ledger.yaml) continue ;;
         "$SELF"|*path-ledger-guard.sh) continue ;;   # the ward names the old paths on purpose
       esac

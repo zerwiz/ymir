@@ -145,6 +145,28 @@ intact into the file it duplicates (or a new home beside it), the contract keeps
 and the move is verified by name before and after, like any move under this rule. A section that is stale is not
 deleted: it moves with its correction. Nothing is lost; the always-loaded set gets lighter.
 
+## Appended 2026-11-24 — the contract is a living document: a correction is folded in, the old text is kept whole (plan 369 item 7)
+
+At the Allfather's word: *"the append sections must be involved in the agents.md and not be appended, but involved in
+it"* · *"not lose any data. but we must make it more efficient. and split it up to more files."*
+
+The always-loaded contract is `AGENTS.md`, its seat render and a machine's box notes. It is a **living document**, not a
+ledger, and the 2026-11-11 section above is narrowed by this one:
+
+- **A correction is folded into the topic it corrects.** The topic then states the current truth once. The superseded
+  sentence leaves the live text, and no dated section is stacked under the text it contradicts.
+- **The prior text is kept verbatim** in `docs/contract-history/` (for example `AGENTS-2026-11-24.md`), with its dated
+  sections intact, in the same change. That copy is the record. It is append-only like everything else this rule names,
+  and a file there is never edited.
+- **Nothing is lost, and it is checked.** `bin/seat/contract-coverage.sh` lists every command, path, rule number, port
+  and plan number in the last history copy. It fails when one appears nowhere in the live core and topic files. A
+  deliberate retirement is named in its allow-list with the reason.
+- **The core is short.** `AGENTS.md` is the core every task needs, at most 150 lines, ending in an index. Everything
+  else lives in one topic file per subject under `.agents/assets/agents/contract/`, read when the task needs it.
+
+The ledger, the rules, the fix notes and the home stay append-only exactly as above. This rule covers only the contract.
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-24** — appended: the contract is a living document; corrections are folded into their topic and the old text is kept verbatim in `docs/contract-history/` (plan 369 item 7).

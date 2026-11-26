@@ -567,6 +567,17 @@ def ymir_figure(name: str, task: str = "", project: str = "") -> str:
 
 
 @mcp.tool()
+def ymir_huginn(action: str = "status") -> str:
+    """Huginn's eyes on the web: Firecrawl (search, scrape), SearXNG and the headless browser (plan 373).
+    `status` says for each whether it is up, where, and on which road (local, or borrowed from another machine);
+    `up` raises the Firecrawl stack from its main checkout, joins SearXNG and proves one search; `down` lowers
+    it. Addresses come from config (YMIR_FIRECRAWL_URL and the home's config/huginn.env), never from here."""
+    if action not in ("status", "up", "down"):
+        return "ymir_huginn: action is status, up or down."
+    return _run(["bash", str(ROOT / "bin" / "fleet" / "huginn-web.sh"), action], 400)
+
+
+@mcp.tool()
 def ymir_research(question: str, project: str = "", plan: str = "") -> str:
     """Huginn — Huginn's road from every harness: Firecrawl first (search, then the best page as markdown, main content
     only), the finding KEPT in the library with its source and practice (`plan` names the plan that uses it), and a

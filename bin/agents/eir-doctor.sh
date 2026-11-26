@@ -155,7 +155,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks renewal packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates gatepack migrations hoard autoboot vault vaultkeys ward seats seatreap models nornir)
+SURFACES=(floors seatpaths hooks renewal packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp browser huginn harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates gatepack migrations hoard autoboot vault vaultkeys ward seats seatreap models nornir)
 
 # ── the register (plan 278): config/surfaces.yaml names the surfaces, their roles and their risk class ──
 # The array above is the FALLBACK, kept until every seat carries the register. Without the register every
@@ -666,6 +666,51 @@ f_mcp()       {
   [ -x "$SCRIPT_DIR/../bridge/a2a-mcp.sh" ] && "$SCRIPT_DIR/../bridge/a2a-mcp.sh" install >/dev/null 2>&1
   [ -x "$SCRIPT_DIR/../bridge/mcp-config.sh" ] && "$SCRIPT_DIR/../bridge/mcp-config.sh" seat >/dev/null 2>&1
 }
+# Browser door (plan 373): every harness carries the Playwright MCP door (headless shell, isolated
+# profile, stdio only). Red when the door is not seated for Claude, when the headless shell is
+# missing, or when the seated command does not answer an MCP initialize within 40 s. A host with no
+# Claude owes nothing. `bin/seat/playwright-mcp-launch.sh --check` names the fetch command.
+browser_seated_cmd() {
+  python3 - "$HOME/.claude.json" <<'PY' 2>/dev/null
+import json, sys
+try:
+    e = (json.load(open(sys.argv[1])).get("mcpServers") or {}).get("playwright") or {}
+except Exception:
+    e = {}
+print(e.get("command") or "")
+PY
+}
+browser_state() {  # prints one word: absent | noshell | stale | silent | ok
+  local cmd launch="$SCRIPT_DIR/../seat/playwright-mcp-launch.sh"
+  cmd="$(browser_seated_cmd)"
+  [ -n "$cmd" ] || { printf absent; return; }
+  [ -x "$launch" ] && ! "$launch" --check >/dev/null 2>&1 && { printf noshell; return; }
+  [ -x "$cmd" ] || { printf stale; return; }
+  if printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"eir","version":"1"}}}' \
+      | { cat; sleep 12; } | timeout 40 "$cmd" 2>/dev/null | head -c 4000 | grep -q protocolVersion; then printf ok; else printf silent; fi
+}
+s_browser() { command -v claude >/dev/null 2>&1 || return 0; [ "$(browser_state)" = ok ]; }
+browser_detail() {
+  command -v claude >/dev/null 2>&1 || { printf 'no claude on this host'; return 0; }
+  case "$(browser_state)" in
+    ok) printf 'the Playwright door answers (headless shell, isolated profile, stdio)' ;;
+    absent) printf 'not seated for Claude — bin/bridge/mcp-config.sh seat' ;;
+    noshell) printf 'no chrome-headless-shell — fetch it: npx playwright install chromium-headless-shell' ;;
+    stale) printf 'seated at a path that does not exist (the pin lags) — bin/seat/armpin.sh, then bin/bridge/mcp-config.sh seat' ;;
+    *) printf 'the door is seated but did not answer an MCP initialize in 40 s' ;;
+  esac
+}
+f_browser() { [ -x "$SCRIPT_DIR/../bridge/mcp-config.sh" ] && "$SCRIPT_DIR/../bridge/mcp-config.sh" seat >/dev/null 2>&1; s_browser; }
+# Huginn's web tools (plan 373): Firecrawl, SearXNG and the browser, as bin/fleet/huginn-web.sh reports them.
+# A seat with no Firecrawl checkout and no borrow address owes nothing; one that has the stack and finds it
+# down is red, and the mend is `huginn-web.sh up`.
+huginn_owed() { [ -x "$SCRIPT_DIR/../fleet/huginn-web.sh" ] && { [ -f "${YMIR_FIRECRAWL_DIR:-$HOME/firecrawl}/docker-compose.yaml" ] || [ -n "${YMIR_FIRECRAWL_BORROW_URL:-}" ]; }; }
+s_huginn() { huginn_owed || return 0; bash "$SCRIPT_DIR/../fleet/huginn-web.sh" status >/dev/null 2>&1; }
+huginn_detail() {
+  huginn_owed || { printf 'no Firecrawl stack on this seat, nothing borrowed'; return 0; }
+  bash "$SCRIPT_DIR/../fleet/huginn-web.sh" status 2>/dev/null | awk -F'","' '/^  "/{gsub(/^ *"/,"",$1); gsub(/"$/,"",$4); printf "%s %s (%s); ", $1, $2, $4}' | cut -c1-200
+}
+f_huginn() { huginn_owed && bash "$SCRIPT_DIR/../fleet/huginn-web.sh" up >/dev/null 2>&1; s_huginn; }
 # Harness: the Pi extensions are DEPLOYED away from this tree, so a copy cannot
 # find bin/ by walking up — it reads the root recorded beside it (`.ymir-root`,
 # written by bin/seat/valknut-load.sh, resolved by .pi/extensions/lib/ymir-home.ts).
@@ -1125,6 +1170,8 @@ detail() { # <name> -> the command that prints one short fact
     mail)      printf '%s\n' mail_detail ;;
     models)    printf '%s\n' models_detail ;;
     mcp)       printf '%s\n' "echo 'a2abridge + the well door'" ;;
+    browser)   printf '%s\n' browser_detail ;;
+    huginn)    printf '%s\n' huginn_detail ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     pidoor) printf '%s\n' pidoor_detail ;;
