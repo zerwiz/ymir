@@ -17,3 +17,4 @@ Several doors typed a brief into a pane with no stamp, so the worker read it as 
 ## CHANGE LOG
 
 - 2026-11-26 — written with the rework.
+- 2026-11-26 — plan 381, round three: the engine road, the default one for `einherjar-spawn.sh` and `eindri-start.sh --id`, handed the brief over before any stamp, so a worker's first turn read as the operator's. `_prompt_for` in `src/ymir_runtime/seat.py` now writes the `msg-origin.sh` stamp as the first line of `prompt.md`, ahead of the bearings; a brief that already leads with a stamp keeps that one. Proof: `src/ymir_runtime/tests/test_seat.py` and `bin/agents/tests/test_reply.sh`.

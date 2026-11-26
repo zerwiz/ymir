@@ -35,6 +35,7 @@ ENGINE_ID = "ymir_runtime/phase1"
 
 _TASK_SECTION_END = re.compile(r"^# (Delivery contract|Setup|Rules)")
 _VERDICT_ROW = re.compile(r'"([^"]*)","([^"]*)"')
+_LEADING_STAMP = re.compile(r"\A\s*((?:\[(?:reply )?from [^\]\n]*\][ \t]*)+)\n*")
 
 
 def task_section(brief: str) -> str:
@@ -143,6 +144,19 @@ def _bearings(roots: paths.Roots, project_dir: str, *, runner: proc.Runner) -> s
     return out.strip()
 
 
+def _stamped(body: str, *, runner: proc.Runner) -> str:
+    """`body` with the sender's stamp first (plan 381). A turn with no stamp reads as the operator's own.
+
+    `bin/agents/msg-origin.sh` names the sender; a stamped body keeps its own stamp. A door that
+    cannot answer still gets a script's stamp, never none.
+    """
+    door = Path(__file__).resolve().parents[2] / "bin" / "agents" / "msg-origin.sh"
+    # empty stdin: a dispatch typed at a terminal must not be stamped as a person's own line
+    result = runner(["bash", str(door), "--origin"], input_text="")
+    origin = proc.out(result) if proc.ok(result) else ""
+    return f"[from {origin or 'script ymir-engine · ' + os.uname().nodename.split('.')[0]}]\n{body}"
+
+
 def _prompt_for(
     roots: paths.Roots,
     errand: Errand,
@@ -151,7 +165,7 @@ def _prompt_for(
     *,
     runner: proc.Runner,
 ) -> tuple[Path, str]:
-    """Write `data/<id>/prompt.md`: the bearings, the brief, and the well's recall."""
+    """Write `data/<id>/prompt.md`: the sender's stamp, the bearings, the brief, and the well's recall."""
     data_dir = roots.data / seat_id
     data_dir.mkdir(parents=True, exist_ok=True)
     prompt = data_dir / "prompt.md"
@@ -164,12 +178,17 @@ def _prompt_for(
         if proc.ok(recall):
             recalled = (recall.stdout or "").strip()
     body = brief_text.rstrip("\n") + "\n"
+    # A stamp the brief already leads with is set aside, so the bearings cannot push it down.
+    held = _LEADING_STAMP.match(body)
+    if held:
+        body = body[held.end():]
     # The bearings are PREPENDED, so they are read before the errand — and only when the brief does
     # not already carry them (eindri-start.sh adds the same section on the ordinary road).
     if "eindri-bearings:v1" not in body:
         body = _bearings(roots, str(errand.project_dir or roots.root), runner=runner) + "\n\n---\n\n" + body
     if recalled:
         body += "\n\n---\n\n" + recalled + "\n"
+    body = f"{held.group(1).rstrip()}\n{body}" if held else _stamped(body, runner=runner)
     prompt.write_text(body, encoding="utf-8")
     return prompt, body
 

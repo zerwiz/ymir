@@ -225,6 +225,28 @@ PY
 printf '{"session_id":"h","transcript_path":"%s"}' "$T/h.jsonl" | as w1:pB B bash "$REPLY" --claude-stop >/dev/null 2>&1
 has "$(cat "$SENTLOG")" "for the agent" && good "Claude's own injected entry is not the operator" || bad "claude injected" "$(cat "$SENTLOG")"
 
+# ── the engine's own prompt.md as a worker's first turn: a steer queued into it gets the answer ──
+engine_prompt() {  # <brief> — what the engine writes to prompt.md for it, through the real stamp door
+  PYTHONPATH="$ROOT/src" python3 - "$T/engine" "$1" <<'PY'
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+from ymir_runtime import proc
+from ymir_runtime.seat import Errand, _prompt_for
+tmp = Path(sys.argv[1])
+roots = SimpleNamespace(root=tmp / "no-doors", data=tmp / "data")
+errand = Errand(task_id="e", project_dir=str(tmp))
+print(_prompt_for(roots, errand, "e", sys.argv[2], runner=proc.run)[1])
+PY
+}
+for brief in "# Task" "[from agent A · herdr pane w1:pA · $ME] # Task"; do
+  reset; prompt="$(engine_prompt "$brief")"
+  python3 -c 'import json,sys; print(json.dumps({"session":"s","answer":"steered-answer","messages":[{"id":"o","text":sys.argv[1]},{"id":"q","text":sys.argv[2]}]}))' \
+    "$prompt" "[from agent H · herdr pane w1:pH · $ME] steer" | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+  [[ "$prompt" == "[from "* ]] && has "$(cat "$SENTLOG")" steered-answer && ! has "$(cat "$SENTLOG")" "Receipt:" \
+    && good "engine brief turn plus a queued steer: the answer, not a receipt (${brief%% *})" || bad "engine brief: $brief" "$(head -1 <<<"$prompt"; cat "$SENTLOG" "$DOORS")"
+done
+
 # ── answered by hand with eindri-send: the hook stays quiet ──
 export FAKE_PANE=w1:pB FAKE_PANE_PID=$$ HERDR_PANE_ID=w1:pB
 q="[from agent A · herdr pane w1:pA · $ME] status?"
