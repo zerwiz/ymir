@@ -72,3 +72,7 @@ bin/agents/reply.sh --to <machine>:<pane> "<your answer>"
 | `no way back` | the sender has no road; read the sentence that follows it |
 | `no stamped message is waiting` | name the sender with `--to` |
 | the answer reached the arm holder | the sender's pane could not take it; the line says why |
+
+## CHANGE LOG
+
+- 2026-11-26 — written with the answer-back door.
