@@ -72,7 +72,7 @@ fi
 
 # Runtime services: the Nornir schedule and the Bifrost model bridge.
 if [ -x "$ROOT/bin/time/nornir-cron-start.sh" ]; then
-  "$ROOT/bin/time/nornir-cron-start.sh" --stop >/dev/null 2>&1 && { style_line ok nornir "cron stopped"; stopped=1; }
+  "$ROOT/bin/time/nornir-cron-start.sh" --stop --why "scripts/stop.sh" >/dev/null 2>&1 && { style_line ok nornir "cron stopped"; stopped=1; }
 fi
 if [ -x "$ROOT/bin/bridge/bifrost-bridge.sh" ]; then
   "$ROOT/bin/bridge/bifrost-bridge.sh" --stop >/dev/null 2>&1 && { style_line ok bifrost "bridge stopped"; stopped=1; }
