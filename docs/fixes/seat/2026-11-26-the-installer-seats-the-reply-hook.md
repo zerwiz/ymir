@@ -11,3 +11,7 @@ The new Claude Code hook needed an entry in the user's settings, and the seat la
 ## Proof
 
 `bin/time/tests/test_saga_head.sh`.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #966
