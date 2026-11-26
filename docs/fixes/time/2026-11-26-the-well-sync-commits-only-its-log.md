@@ -15,3 +15,7 @@ staged and uncommitted.
 ## Proof
 
 `bin/time/tests/test_well_sync_own_path.sh` (gate `well-sync-own-path`).
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #965
