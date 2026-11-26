@@ -127,56 +127,65 @@ for l in loose:
     print("W\t" + l)
 '
 
+# THE HELM OWNS THE ACK (2026-11-11). The home's queue is drained by the session that holds the lock; a
+# second session that acks it eats the helm's wakes. True (and prints the owner) when the lease names THIS
+# state dir and a live session that is not the caller holds the lock. YMIR_ACK_ANY=1 is the loud override.
+# THE HOLDER MAY ACKNOWLEDGE FROM ANY SHELL IT OWNS (2026-11-19): the session is the owner, whichever of
+# its children asks.
+arm_is_anothers() {
+  local lease="$STATE/.arm.lease" owner sess
+  [ -z "${YMIR_ACK_ANY:-}" ] && [ -r "$lease" ] && grep -qE "(^| )state=$STATE( |$)" "$lease" 2>/dev/null || return 1
+  owner="$(bash "$SCRIPT_DIR/../records/ymir-state.sh" lock owner 2>/dev/null | tr -d '[:space:]')"
+  sess="$(bash "$SCRIPT_DIR/../records/ymir-state.sh" lock session-pid 2>/dev/null | tr -d '[:space:]')"
+  [ -n "$owner" ] && [ -d "/proc/$owner" ] && [ "${sess:-}" != "$owner" ] \
+    && ! bash "$SCRIPT_DIR/../records/ymir-state.sh" lock owned --shell-pid "$$" >/dev/null 2>&1 || return 1
+  printf '%s' "$owner"
+}
+
+# Remove exactly the lines of <list> from <queue> (a multiset diff), without losing a wake that arrives
+# meanwhile (plan 369 item 16). The queue is moved aside first and what stays is APPENDED back, so a writer
+# never meets a rewrite of the file it appends to. A move left over from a killed run is returned first.
+consume_lines() { # <queue> <list>
+  [ -f "$2" ] || return 0
+  python3 - "$1" "$2" <<'PY' 2>/dev/null || true
+import collections, os, sys
+queue, listed = sys.argv[1:3]
+aside = queue + ".consuming"
+def give_back(lines):
+    if lines:
+        with open(queue, "a") as out:
+            out.write("".join(l + "\n" for l in lines))
+if os.path.exists(aside):
+    give_back(open(aside).read().splitlines()); os.remove(aside)
+want = collections.Counter(open(listed).read().splitlines())
+if not want or not os.path.exists(queue):
+    raise SystemExit(0)
+os.rename(queue, aside)
+keep = []
+for l in open(aside).read().splitlines():
+    if want.get(l, 0) > 0:
+        want[l] -= 1
+    else:
+        keep.append(l)
+give_back(keep)
+os.remove(aside)
+PY
+}
+
 case "${1:-drain}" in
   -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   ack|--ack)
-    # THE HELM OWNS THE ACK (2026-11-11). The home's queue is drained by the session that holds
-    # the lock; a second session (another Claude, a stale watcher's rewake) that acks it eats the
-    # helm's wakes. When the lease names THIS state dir and a live session holds the lock, only that
-    # session may ack. Eindri-homes keep their own state dirs and are untouched. YMIR_ACK_ANY=1 is
-    # the loud override.
-    _lease="$STATE/.arm.lease"
-    if [ -z "${YMIR_ACK_ANY:-}" ] && [ -r "$_lease" ] && grep -qE "(^| )state=$STATE( |$)" "$_lease" 2>/dev/null; then
-      _owner="$(bash "$SCRIPT_DIR/../records/ymir-state.sh" lock owner 2>/dev/null | tr -d '[:space:]')"
-      # THE HOLDER MAY ACKNOWLEDGE FROM ANY SHELL IT OWNS (2026-11-19). `owned --shell-pid` judged the
-      # shell, so a tool run by the holder itself was refused its own queue and needed YMIR_ACK_ANY=1 —
-      # measured at 18:08 with the arm held by session 477836 and its own drain refusing it. The session
-      # that holds the lock is the owner, whichever of its children asks.
-      _sess="$(bash "$SCRIPT_DIR/../records/ymir-state.sh" lock session-pid 2>/dev/null | tr -d '[:space:]')"
-      if [ -n "$_owner" ] && [ -d "/proc/$_owner" ] && [ "${_sess:-}" != "$_owner" ] \
-         && ! bash "$SCRIPT_DIR/../records/ymir-state.sh" lock owned --shell-pid "$$" >/dev/null 2>&1; then
-        printf 'error: the arm is held by session %s; this queue is its to acknowledge, not yours\nhelp: tell the arm holder over the arm (bin/voice/rodd-arm.sh tell --from <you> "...") — YMIR_ACK_ANY=1 overrides\n' "$_owner" >&2
-        exit 3
-      fi
+    if ! _owner="$(arm_is_anothers)"; then :; else
+      printf 'error: the arm is held by session %s; this queue is its to acknowledge, not yours\nhelp: tell the arm holder over the arm (bin/voice/rodd-arm.sh tell --from <you> "...") — YMIR_ACK_ANY=1 overrides\n' "$_owner" >&2
+      exit 3
     fi
     # Consume EXACTLY what the last drain PRESENTED — never a wake that arrived
     # after it. The old full-truncate ate undrained wakes (the ack race) and let
     # the sweep's re-presentation ring with an empty hand — the ghost wakes the
     # Allfather saw. A multiset diff: handled lines leave, newer lines stay.
-    python3 - "$QUEUE" "$FMQ" "$STATE/.wake-drained" "$STATE/.wake-fmq-drained" <<'PY' 2>/dev/null || true
-import os, sys, collections
-queue, fmq, qsnap, fsnap = sys.argv[1:5]
-def consume(path, snap):
-    if not os.path.exists(snap) or not os.path.exists(path):
-        return  # no presentation record — nothing consumed from this door
-    lines = open(path).read().splitlines()
-    cnt = collections.Counter(open(snap).read().splitlines())
-    out = []
-    for l in lines:
-        if cnt.get(l, 0) > 0:
-            cnt[l] -= 1
-        else:
-            out.append(l)
-    if out:
-        open(path, "w").write("\n".join(out) + "\n")
-    else:
-        os.remove(path)
-consume(queue, qsnap)
-consume(fmq, fsnap)
-for snap in (qsnap, fsnap):
-    if os.path.exists(snap):
-        os.remove(snap)
-PY
+    consume_lines "$QUEUE" "$STATE/.wake-drained"
+    consume_lines "$FMQ" "$STATE/.wake-fmq-drained"
+    rm -f "$STATE/.wake-drained" "$STATE/.wake-fmq-drained"
     # The flood-brake hash clears only when both doors are truly empty, so a
     # later terminal wake signals cleanly; preserved newer wakes keep it set.
     if [ ! -s "$QUEUE" ] && { [ ! -f "$FMQ" ] || [ ! -s "$FMQ" ]; }; then
@@ -251,7 +260,7 @@ if [ -s "$QUEUE" ]; then
   _prev="$STATE/.wake-drained"
   _kept="$(mktemp "$STATE/.wake-kept.XXXXXX" 2>/dev/null || printf '%s' "$STATE/.wake-kept.tmp")"
   : >"$_kept" 2>/dev/null || true
-  _before="$(md5sum <"$QUEUE" 2>/dev/null | cut -d' ' -f1)"
+  _gone="$_kept.gone"; : >"$_gone" 2>/dev/null || true
   while IFS= read -r line || [ -n "$line" ]; do
     [ -n "$line" ] || continue
     # A wake is presented until Brokk acks it. The errand's status (done/failed)
@@ -264,25 +273,38 @@ if [ -s "$QUEUE" ]; then
       _claim="$(tail -n1 "$STATE/$_key.status" 2>/dev/null | tr -d '\r')"
       case "$_claim" in
         done:*|failed:*|needs-decision:*|paused:*)
-          resolved=$((resolved + 1)); continue ;;
+          resolved=$((resolved + 1)); printf '%s\n' "$line" >>"$_gone"; continue ;;
       esac
     fi
     printf '%s\n' "$line" >>"$_kept" 2>/dev/null || true
   done <"$QUEUE"
+  count=$(awk 'END{print NR}' "$_kept")
   _order="$(WAKE_ORDER_MODE=present WAKE_ORDER_FULL="${SAGA_DRAIN_FULL:-0}" python3 -c "$WAKE_ORDER_PY" <"$_kept" 2>/dev/null)"
   # The shape of what waits, before anything else is shown.
   printf 'wake classes: %s\n' "$(printf '%s\n' "$_order" | sed -n 's/^S\t//p' | head -1)"
 fi
 
-if [ -s "$FMQ" ]; then
-  printf 'FM wake queue: %s pending (fm-queued wakes below)\n' "$(awk 'END{print NR}' "$FMQ")"
+# THE RECORD IS WHAT WAS SHOWN (plan 369 item 16). It was copied from the queue AFTER the lines were
+# printed, so a wake arriving meanwhile was recorded as shown and the ack ate it: the sequence moved and the
+# queue was empty. A session that may not ack writes no record, so it cannot replace the holder's.
+RECORD=1; arm_is_anothers >/dev/null && RECORD=0
+_fmshow="$(mktemp "$STATE/.wake-fmq-show.XXXXXX" 2>/dev/null || printf '%s' "$STATE/.wake-fmq-show.tmp")"
+cp "$FMQ" "$_fmshow" 2>/dev/null || : >"$_fmshow"
+if [ "$RECORD" = 1 ]; then
+  if [ -n "$_kept" ] && [ -s "$_kept" ]; then cp "$_kept" "$STATE/.wake-drained" 2>/dev/null; else rm -f "$STATE/.wake-drained"; fi
+  if [ -s "$_fmshow" ]; then cp "$_fmshow" "$STATE/.wake-fmq-drained" 2>/dev/null; else rm -f "$STATE/.wake-fmq-drained"; fi
+fi
+
+if [ -s "$_fmshow" ]; then
+  printf 'FM wake queue: %s pending (fm-queued wakes below)\n' "$(awk 'END{print NR}' "$_fmshow")"
   while IFS= read -r line || [ -n "$line" ]; do
     [ -n "$line" ] && printf 'WAKE %s\n' "$line"
-  done <"$FMQ"
+  done <"$_fmshow"
   printf 'FM_ACK_REQUIRED: acknowledge handled fm wakes to drop them from the fm queue\n'
 fi
 
-if [ ! -s "$QUEUE" ]; then
+rm -f "$_fmshow" 2>/dev/null
+if [ -z "$_kept" ] || { [ ! -s "$_kept" ] && [ "$resolved" = 0 ]; }; then
   printf 'wake queue: 0 pending\n'
 else
   printf '%s — wake queue: %s pending\n' "$(sol_line)" "${count:-0}"
@@ -301,11 +323,9 @@ else
       esac
     done <<<"$_order"
   fi
-  if [ "$resolved" -gt 0 ] && [ "$(md5sum <"$QUEUE" 2>/dev/null | cut -d' ' -f1)" = "$_before" ]; then
-    mv "$_kept" "$QUEUE" 2>/dev/null || true
+  if [ "$resolved" -gt 0 ]; then
+    consume_lines "$QUEUE" "$_gone"
     printf 'wake_resolved[1]{dropped,why}:\n  %s,"presented once, and its errand has since closed — a resolved wake is not news"\n' "$resolved"
-  else
-    rm -f "$_kept" 2>/dev/null || true
   fi
   [ "${dropped:-0}" -gt 0 ] && printf 'wake_echo[1]{dropped,why}:\n  %s,"errands already closed — ack clears them, they are not presented as news"\n' "$dropped"
   printf 'WAKE_ACK_REQUIRED: acknowledge handled wakes to drop them from the queue\n'
@@ -325,11 +345,7 @@ print(f"OPEN WORK: {len(items)} item(s) — " + " · ".join(f"{k} {v}" for k,v i
   fi
 fi
 
-# Snapshot exactly what this drain presented, so ack consumes these lines and
-# never a wake that arrives later (the ack race). An empty door clears its
-# snapshot — nothing was presented to consume.
-if [ -s "$QUEUE" ]; then cp "$QUEUE" "$STATE/.wake-drained" 2>/dev/null; else rm -f "$STATE/.wake-drained"; fi
-if [ -s "$FMQ" ]; then cp "$FMQ" "$STATE/.wake-fmq-drained" 2>/dev/null; else rm -f "$STATE/.wake-fmq-drained"; fi
+[ -n "$_kept" ] && rm -f "$_kept" "$_kept.gone" 2>/dev/null
 
 # Open-decision markers (approval gates) left unhandled.
 decisions=$(find "$STATE" -maxdepth 1 -name '*.decision' 2>/dev/null | wc -l | tr -d '[:space:]')

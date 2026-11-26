@@ -30,7 +30,10 @@ refute "a name outside the naming law is refused" "$DOOR" set "$HOST" NotAGod te
 check "set seals a new name" "$DOOR" set "$HOST" brokk tester
 check "set updated the roster" bash -c "grep -q 'sealed' '$YMIR_HOME/hodd/identity/seats.yaml'"
 check "render writes the identity" bash -c "'$DOOR' --render '$HOST' >/dev/null; grep -q 'This seat: $HOST' '$HOME/.pi/agent/AGENTS.seat.md'"
-check "render includes the shared contract" bash -c "grep -q 'YMIR AGENT OPERATING SYSTEM' '$HOME/.pi/agent/AGENTS.seat.md'"
+check "render includes the shared contract" bash -c "grep -q 'Ymir — the agent contract (core)' '$HOME/.pi/agent/AGENTS.seat.md'"
+# plan 369 item 7: Claude's seat file carries the header and IMPORTS the core, never a pasted copy
+check "render writes the Claude seat file with the header" bash -c "grep -q 'Name him in every answer' '$HOME/.pi/agent/CLAUDE.seat.md'"
+check "the Claude seat file imports the core once" bash -c "[ \"\$(grep -c '^@/.*AGENTS.md\$' '$HOME/.pi/agent/CLAUDE.seat.md')\" = 1 ] && ! grep -q 'Ymir — the agent contract (core)' '$HOME/.pi/agent/CLAUDE.seat.md'"
 check "another host is not installed locally" bash -c "'$DOOR' --install seat-a | grep -q skipped"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"; [ "$FAIL" -eq 0 ]

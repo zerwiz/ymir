@@ -22,7 +22,8 @@ def home_dir():
     h = os.environ.get('YMIR_HOME')
     if h:
         return h
-    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    # four up: cron → services → snotra → systems → the tree that carries bin/
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
     # ymir_home_root takes a RESULT VARIABLE; called bare it returns 2.
     out = subprocess.check_output([
         'bash', '-c',
@@ -254,8 +255,7 @@ def assert_external(text, where):
     # Rule 26 + the NDA registry: protected markers never go on a Trello card.
     try:
         import yaml
-        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-        home = os.environ.get('YMIR_HOME') or subprocess.check_output(['bash', '-c', f'. "{root}/bin/vault/hoard-lib.sh"; ymir_home_root']).decode().strip()
+        home = home_dir()
         reg = yaml.safe_load(open(os.path.join(home, 'hodd/identity/confidential.yaml'), encoding='utf-8')) or {}
         for marker in reg.get('markers', []):
             if re.search(re.escape(marker), str(text or ''), re.I):

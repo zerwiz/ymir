@@ -82,7 +82,7 @@ doc = {
     "bolthorn": {"url": f"{base}/bolthorn"},
     "skuld":    {"url": f"{base}/skuld"},
     "firecrawl": {"command": "npx", "args": ["-y", "firecrawl-mcp"],
-                  "env": {"FIRECRAWL_API_URL": "http://localhost:3002"}},
+                  "env": {"FIRECRAWL_API_URL": __import__("os").environ.get("YMIR_FIRECRAWL_URL") or "http://localhost:3002"}},
   }
 }
 if rail_host:

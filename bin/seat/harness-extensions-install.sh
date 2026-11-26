@@ -26,6 +26,7 @@ set -uo pipefail
 
 _d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$_d" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
+TREE_ROOT="$ROOT"   # the checkout this ran from, before the pin wins (its CLAUDE.md is excluded below)
 
 # A PINNED runtime wins over the working tree (RULES/02 §7): the extensions a harness loads must be the
 # ones a deployment proved, not whatever branch an agent left checked out.
@@ -394,6 +395,52 @@ PY
     done <<< "$_wired"
     unset _wired
   fi
+  # ONE CORE IN EVERY DIRECTORY (plan 369 item 7). ~/.claude/CLAUDE.md (the seat render) imports the PINNED
+  # core. Inside a Ymir tree, that tree's own CLAUDE.md (`@AGENTS.md`) would load a second copy, so this user's
+  # settings exclude the Ymir trees' CLAUDE.md files (claudeMdExcludes, matched on absolute paths). Only Ymir's
+  # trees are named: the working clone and its worktrees, the releases and the shared clone's worktrees.
+  # An operator's other patterns are kept; a pattern is added when absent and never removed.
+  _ex_tree="$(cd "$TREE_ROOT" 2>/dev/null && git rev-parse --path-format=absolute --git-common-dir 2>/dev/null | sed 's#/\.git$##')"
+  _ex="$(python3 - "$HOME/.claude/settings.json" "$mode" "$HOME" "${_ex_tree:-$TREE_ROOT}" <<'PY' 2>/dev/null
+import json, os, shutil, sys, datetime
+dst, mode, home, tree = sys.argv[1:5]
+want = [
+    os.path.join(home, ".local/share/ymir/**/CLAUDE.md"),
+    os.path.join(home, "ymir-runtime/CLAUDE.md"),
+]
+if tree and not tree.startswith(os.path.join(home, ".local/share/ymir")):
+    want += [os.path.join(tree, "CLAUDE.md"), os.path.join(tree, ".yggdrasil/*/CLAUDE.md")]
+try:
+    doc = json.load(open(dst)) if os.path.exists(dst) else {}
+    if not isinstance(doc, dict):
+        raise ValueError
+except Exception:
+    print("claude-md-excludes|skip|~/.claude/settings.json does not parse — left untouched"); raise SystemExit
+have = doc.get("claudeMdExcludes") if isinstance(doc.get("claudeMdExcludes"), list) else []
+missing = [w for w in want if w not in have]
+if not missing:
+    print("claude-md-excludes|current|a Ymir tree's own CLAUDE.md is excluded, so the core loads once")
+elif mode == "check":
+    print("claude-md-excludes|stale|%d Ymir tree pattern(s) missing from claudeMdExcludes" % len(missing))
+else:
+    doc["claudeMdExcludes"] = have + missing
+    try:
+        if os.path.exists(dst):
+            shutil.copy2(dst, dst + ".bak-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%S"))
+        json.dump(doc, open(dst, "w"), indent=2); open(dst, "a").write("\n")
+        print("claude-md-excludes|wired|%d pattern(s) added: a Ymir tree's CLAUDE.md no longer loads a second core" % len(missing))
+    except Exception as exc:
+        print("claude-md-excludes|fail|could not write %s: %s" % (dst, exc))
+PY
+)"
+  IFS='|' read -r _hn _hs _hd <<< "$_ex"
+  case "$_hs" in
+    wired) say "  \"$_hn\",\"synced\",\"$_hd\""; changed=$((changed+1)) ;;
+    stale) say "  \"$_hn\",\"stale\",\"$_hd\""; stale=$((stale+1)) ;;
+    "")    : ;;
+    *)     say "  \"$_hn\",\"$_hs\",\"$_hd\"" ;;
+  esac
+  unset _ex _ex_tree
   if [ -f "$ROOT/.claude/settings.json" ]; then
     # The house's own hooks live in the PROJECT-scope file, which Claude auto-loads inside this
     # repo; they are deliberately not mirrored into the user file (they name $CLAUDE_PROJECT_DIR).
