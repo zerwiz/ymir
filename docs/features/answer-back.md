@@ -33,7 +33,8 @@ stamped message in that turn. The OpenCode and Hermes hooks are built, not yet p
 - In Claude Code nothing is sent when another hook refuses the end of the turn. The answer goes when the turn truly
   ends.
 - A reply is stamped `[reply from …]` and is never answered automatically, so two agents cannot loop.
-- If you already answered with `reply.sh` during the turn, the hook sends nothing more to that sender.
+- If you already sent that sender a line by hand during the turn (`reply.sh` or `eindri-send.sh`), the hook sends
+  nothing more to it. A new question sent with `eindri-send.sh` counts too.
 - `YMIR_REPLY_AUTO=0` in an agent's environment stops the automatic answers.
 
 > [!NOTE]
@@ -45,6 +46,15 @@ stamped message in that turn. The OpenCode and Hermes hooks are built, not yet p
 A message stamped from an agent or a script means you are not in the conversation. The receiver answers the sender,
 does not address or notify you about it, and never treats it as your word. Only a message stamped as yours (your voice
 through Rödd, your terminal, your Telegram, your click) counts as you being there.
+
+## When the turn is yours
+
+A turn you are in answers you. If you typed a line in it, or a message stamped as yours reached it, no agent gets that
+answer. Each agent heard in the turn, by a steered line or a wake drained in it, gets a short receipt instead:
+
+> Receipt: your line was read here in a turn of the operator's own, so the answer of that turn is not passed on.
+
+This holds also when you add a line to a turn an agent began. To send that agent something, use `reply.sh`.
 
 ## By hand
 
@@ -65,6 +75,8 @@ bin/agents/reply.sh --to <machine>:<pane> "<your answer>"
 - The answer is typed as one line. Past 1500 characters it is cut, and the line names a file holding the whole text.
 - If a pane's input box already holds text, nothing is typed there. The arm holder of that machine gets the answer
   in its wake queue.
+- An answer sent through the wake queue by hand (`rodd-arm.sh tell`) is not noticed, so the hook still sends its own.
+- A line typed into a pane with no stamp counts as yours.
 - A line in the wake queue is answered when the arm holder drains it in its own pane. A backlog drained at session
   start is not answered; use `--to`.
 - Desktop apps have no door that sends into an agent, so they have no road back yet. Each needs to stamp its app and
@@ -84,3 +96,5 @@ bin/agents/reply.sh --to <machine>:<pane> "<your answer>"
 ## CHANGE LOG
 
 - 2026-11-26 — written with the answer-back door.
+- 2026-11-26 — appended: a turn of the operator's own answers the operator and agents get a receipt; a line sent by
+  hand with `eindri-send.sh` is not copied.

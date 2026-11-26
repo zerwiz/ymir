@@ -24,6 +24,7 @@ import json
 import socket
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Mapping, TextIO
@@ -97,6 +98,18 @@ def take_digest(env: Mapping[str, str], root: Path, session: str, timeout: float
     return True, f"{len(r.out.splitlines())} lines"
 
 
+def turn_mark(env: Mapping[str, str], session: str) -> Path:
+    return C.state_dir(env) / f"turn.{session}"
+
+
+def turn_since(env: Mapping[str, str], session: str) -> float:
+    """When this turn began (noted at pre_llm_call), so an answer sent by hand during it is seen. 0 = unknown."""
+    try:
+        return turn_mark(env, session).stat().st_mtime
+    except OSError:
+        return 0.0
+
+
 def answer_back(env: Mapping[str, str], raw: str, root: Path, session: str, err: TextIO) -> None:
     """The road back: hand the turn's message and final answer to bin/agents/reply.sh, which decides who is owed."""
     door = root / "bin" / "agents" / "reply.sh"
@@ -108,7 +121,8 @@ def answer_back(env: Mapping[str, str], raw: str, root: Path, session: str, err:
     if not door.exists() or not isinstance(prompt, str) or not isinstance(answer, str):
         return
     doc = json.dumps({"session": session, "answer": answer,
-                      "messages": [{"id": extra.get("turn_id") or "", "text": prompt}]})
+                      "messages": [{"id": extra.get("turn_id") or "", "text": prompt,
+                                    "since": turn_since(env, session)}]})
     who = f"agent hermes · hermes session {session} · {socket.gethostname().split('.')[0]}"
     try:
         r = subprocess.run(["bash", str(door), "--turn-end"], input=doc, capture_output=True, text=True, timeout=50,
@@ -137,6 +151,12 @@ def handle(env: Mapping[str, str], raw: str, *, root: Path | None = None,
         print(f"hermes-session-hook: {'digest stashed for ' + e.session + ' (' + why + ')' if ok else 'no digest — ' + why}",
               file=err)
         return "{}"
+    if e.event == "pre_llm_call":
+        try:
+            state.mkdir(parents=True, exist_ok=True)
+            turn_mark(env, e.session).write_text(f"{time.time()}\n")
+        except OSError as exc:
+            print(f"hermes-session-hook: the turn's start could not be noted — {exc}", file=err)
     if e.event != "pre_llm_call" or not e.first:
         return "{}"
     if not in_scope(env, e.cwd, root):

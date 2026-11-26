@@ -42,6 +42,8 @@
 # (<state>/replies/inbox/<pane>), so `bin/agents/reply.sh "<text>"` in that pane knows whom to answer.
 # A line that is a reply ("[reply from …") is never sent a second copy: a duplicate answer wakes the
 # sender twice, so once it is sent the door ends 0.
+# A line an AGENT sends by hand is noted for the sending pane too (reply.sh --sent), so its turn-end hook does not
+# send the same target a second answer.
 #
 # Report (TOON, one row). `resent` is `no` (nothing was needed), `copy` (the line was lost and
 # was sent once more), `enter` (the words stood in the box unsent, so Enter was pressed) or
@@ -68,7 +70,7 @@ while [ $# -gt 0 ]; do
     --wait)    WAIT="${2-}"; shift 2 ;;
     --once)    RESEND=0; shift ;;
     --resolve) RESOLVE=1; shift ;;
-    -h|--help) sed -n '2,50p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+    -h|--help) sed -n '2,52p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
     --) shift; break ;;
     *) break ;;
   esac
@@ -303,6 +305,10 @@ case "$PANE" in
   *) _pane="" ;;
 esac
 "$ROOT/bin/agents/msg-log.sh" record --from "$_from" --to "$TARGET" --pane "$_pane" "$_text" 2>/dev/null || true
+# Answered by hand: only an agent's own line counts — never a script's, and never reply.sh's (it notes its own).
+case "$TEXT" in
+  '[from agent '*) bash "$ROOT/bin/agents/reply.sh" --sent "${MACHINE:-$ME}" "$PANE" >/dev/null 2>&1 || true ;;
+esac
 sleep "$WAIT" 2>/dev/null || true
 STATE="$(status_of)"
 if [ "$STATE" != working ] && [ "$RESEND" = 1 ] && ! screen_busy; then

@@ -84,5 +84,11 @@ def test_the_turn_end_hands_the_answer_to_the_reply_door(tmp_path):
                       "extra": {"user_message": "[from agent A] q", "assistant_response": "a", "turn_id": "t1"}})
     assert H.handle(env, raw, root=tmp_path / "tree", err=io.StringIO()) == "{}"
     got = json.loads((tmp_path / "got").read_text())
-    assert got == {"session": "s9", "answer": "a", "messages": [{"id": "t1", "text": "[from agent A] q"}]}
+    assert got == {"session": "s9", "answer": "a", "messages": [{"id": "t1", "text": "[from agent A] q", "since": 0.0}]}
     assert (tmp_path / "got.who").read_text().startswith("agent hermes · hermes session s9 · ")
+
+
+def test_the_turns_start_is_noted_so_a_hand_sent_answer_is_seen(tmp_path):
+    env = env_for(tmp_path)
+    H.handle(env, payload("pre_llm_call", "s10", "/x", first=False), root=tmp_path, err=io.StringIO())
+    assert H.turn_since(env, "s10") > 0 and H.turn_since(env, "other") == 0.0

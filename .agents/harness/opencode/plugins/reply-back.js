@@ -28,7 +28,12 @@ export function lastTurn(history) {
         answer = "";
         closed = false;
       }
-      messages.push({ id: entry.id, text: entry.text, since: (entry.time?.created ?? 0) / 1000 });
+      messages.push({
+        id: entry.id,
+        text: entry.text,
+        since: (entry.time?.created ?? 0) / 1000,
+        synthetic: entry.type === "synthetic",
+      });
     } else if (entry.type === "assistant") {
       const text = (entry.content ?? []).filter((p) => p.type === "text").map((p) => p.text).join("\n");
       if (text) answer = text;

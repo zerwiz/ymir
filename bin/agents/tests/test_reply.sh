@@ -193,6 +193,55 @@ printf '1\t2\tsignal\tk\tagent W · herdr pane w1:pW · %s to the arm holder: do
 printf '{"session":"s","answer":"noted","messages":[]}' | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
 [ "$(cut -f1 "$SENTLOG")" = "w1:pW" ] && good "the holder's turn end answers the wake's sender, no reply and no voice wake" || bad "owed" "$(cat "$SENTLOG")"
 
+# ── a turn the operator began is his: the agents heard in it get a receipt, never his conversation ──
+his() {  # <opener> [synthetic 0|1] — an opener, then a steered agent line, answered in words meant for the operator
+  python3 -c 'import json,sys; print(json.dumps({"session":"s","answer":"private-words","messages":[{"id":"o","text":sys.argv[1],"synthetic":sys.argv[3]=="1"},{"id":"q","text":sys.argv[2]}]}))' \
+    "$1" "[from agent A · herdr pane w1:pA · $ME] q" "${2:-0}"
+}
+for opener in "how are we doing?" "[from the Allfather · $ME] how?" "[from a person at terminal /dev/pts/9999 · $ME] how?"; do
+  reset; his "$opener" | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+  has "$(cat "$SENTLOG")" "Receipt:" && ! grep -q private-words "$SENTLOG" \
+    && good "his turn: the steering agent gets a receipt only: ${opener%% ·*}" || bad "his turn: $opener" "$(cat "$SENTLOG" "$DOORS")"
+done
+for opener in "<task-notification>done</task-notification>" $'\xe2\x81\xa3RODD_OP: v1 watcher: wake' "[reply from agent C · herdr pane w1:pC · $ME] ok"; do
+  reset; his "$opener" | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+  has "$(cat "$SENTLOG")" "private-words" && good "a harness or agent line is not the operator: the sender gets the answer" || bad "injected: $opener" "$(cat "$SENTLOG")"
+done
+reset; his "a synthetic note" 1 | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+has "$(cat "$SENTLOG")" "private-words" && good "a synthetic entry is not the operator" || bad "synthetic" "$(cat "$SENTLOG")"
+reset
+printf '1\t2\tsignal\tk\tagent W · herdr pane w1:pW · %s to the arm holder: done\tclass=report\n' "$ME" | as w1:pB B bash "$REPLY" --owe
+turn o1 private-words "what is open?" | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+[ "$(cut -f1 "$SENTLOG")" = w1:pW ] && has "$(cat "$SENTLOG")" "Receipt:" && ! has "$(cat "$SENTLOG")" private-words \
+  && good "a wake drained in his turn gets a receipt, not his conversation" || bad "wake receipt" "$(cat "$SENTLOG")"
+reset
+python3 - "$T/h.jsonl" "$ME" <<'PY'
+import json, sys
+rows = [{"type": "user", "uuid": "n", "origin": {"kind": "task-notification"}, "message": {"content": "wake text"}},
+        {"type": "attachment", "uuid": "q", "attachment": {"type": "queued_command", "origin": {"kind": "human"}, "prompt": f"[from agent A · herdr pane w1:pA · {sys.argv[2]}] q"}},
+        {"type": "assistant", "message": {"content": [{"type": "text", "text": "for the agent"}]}}]
+open(sys.argv[1], "w").write("".join(json.dumps(r) + "\n" for r in rows))
+PY
+printf '{"session_id":"h","transcript_path":"%s"}' "$T/h.jsonl" | as w1:pB B bash "$REPLY" --claude-stop >/dev/null 2>&1
+has "$(cat "$SENTLOG")" "for the agent" && good "Claude's own injected entry is not the operator" || bad "claude injected" "$(cat "$SENTLOG")"
+
+# ── answered by hand with eindri-send: the hook stays quiet ──
+export FAKE_PANE=w1:pB FAKE_PANE_PID=$$ HERDR_PANE_ID=w1:pB
+q="[from agent A · herdr pane w1:pA · $ME] status?"
+late() { python3 -c 'import json,sys; print(json.dumps({"session":"s","answer":"hook-copy","messages":[{"id":sys.argv[1],"text":sys.argv[2],"since":1}]}))' "$1" "$q"; }
+reset; bash "$SEND" w1:pA "by hand" >/dev/null 2>&1
+late e1 | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+[ "$(wc -l <"$SENTLOG")" = 1 ] && ! has "$(cat "$SENTLOG")" hook-copy && good "an eindri-send answer by hand: no second copy" || bad "hand sent" "$(cat "$SENTLOG")"
+late e2 | as w1:pC C bash "$REPLY" --turn-end >/dev/null 2>&1
+has "$(cat "$SENTLOG")" hook-copy && good "another agent's hand-sent line does not silence mine" || bad "per replier" "$(cat "$SENTLOG")"
+reset; YMIR_MSG_FROM="script cron · $ME" bash "$SEND" w1:pA "tick" >/dev/null 2>&1
+late e3 | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+has "$(cat "$SENTLOG")" hook-copy && good "a script's line from the same pane is no answer" || bad "script send" "$(cat "$SENTLOG")"
+reset; BOX_PANE=w1:pA bash "$SEND" w1:pA "refused" >/dev/null 2>&1
+late e4 | as w1:pB B bash "$REPLY" --turn-end >/dev/null 2>&1
+has "$(cat "$SENTLOG")" hook-copy && good "a refused hand send is no answer" || bad "refused send" "$(cat "$SENTLOG")"
+unset FAKE_PANE FAKE_PANE_PID HERDR_PANE_ID
+
 # ── the REAL doors, driven from a pane: each stamps that pane, and the answer comes back to it ──
 export FAKE_PANE=w1:pA FAKE_PANE_PID=$$ HERDR_PANE_ID=w1:pA YMIR_STATE_DIR="$T/state"; mkdir -p "$YMIR_STATE_DIR"
 back() {  # <door label> — what the door typed into w1:pB comes back from B's turn into w1:pA

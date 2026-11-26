@@ -27,6 +27,12 @@ PANE = r"w[0-9A-Za-z]+:p[0-9A-Za-z]+"
 MACHINE = r"[A-Za-z0-9._-]+"
 STAMP = re.compile(r"^\[(reply from|from) ([^\]\n]*)\]\s*")
 WRAP = re.compile(r"^\s*<pasted_content[^>]*>\s*")
+# Lines a harness puts into a turn by itself: nobody typed them. U+2063 is the mark of Ymir's own operational
+# input (bin/agents/rodd-operational-input.sh).
+INJECTED = ("<task-notification", "<system-reminder", "Stop hook feedback", "\u2063", "[brokk-from-primary]\u2063")
+# What a sender gets instead of an answer the operator's own turn produced: his conversation stays with him.
+RECEIPT = ("Receipt: your line was read here in a turn of the operator's own, so the answer of that turn is not "
+           "passed on. Anything meant for you is sent separately.")
 
 
 def door(env: str, rel: str) -> str:
@@ -68,6 +74,19 @@ def parse(line: str) -> tuple[str, str]:
 def present(who: str) -> bool:
     """Is the operator there? Only a message stamped as his own says so; an agent or a script means he is not."""
     return who.startswith(("the Allfather", "Rödd", "a person at terminal"))
+
+
+def his_turn(messages: list[dict]) -> bool:
+    """Is the operator in this turn? A line stamped as his, or one with no stamp that no harness injected."""
+    for msg in messages:
+        text = str(msg.get("text") or "")
+        kind, origin = parse(text)
+        if kind == "from" and present(origin.split(" · ")[0].strip()):
+            return True
+        bare = WRAP.sub("", text).lstrip()
+        if kind == "none" and bare and not msg.get("synthetic") and not bare.startswith(INJECTED):
+            return True
+    return False
 
 
 def road(origin: str) -> dict:
@@ -228,6 +247,19 @@ def is_self(r: dict) -> bool:
     return r["road"] == "pane" and r["machine"] == me() and r["address"] == os.environ.get("YMIR_REPLY_PANE")
 
 
+def manual_marker(r: dict, session: object = None) -> Path:
+    """"I answered that sender by hand", kept per replier: another agent's word to the same sender is not mine."""
+    me_here = os.environ.get("YMIR_REPLY_PANE") or str(session or os.environ.get("HERMES_SESSION_ID") or "")
+    who = hashlib.sha256(me_here.encode()).hexdigest()[:12]
+    return state() / "manual" / f"{who}.{target_id(r)}"
+
+
+def mark_manual(r: dict) -> None:
+    marker = manual_marker(r)
+    marker.parent.mkdir(exist_ok=True)
+    marker.write_text(f"{time.time()}\n")
+
+
 def report(rows: list[tuple[str, str, bool, str]]) -> None:
     q = lambda s: '"' + flat(str(s)).replace('"', "'") + '"'  # noqa: E731
     print(f"reply[{len(rows)}]{{road,to,delivered,why}}:")
@@ -236,15 +268,19 @@ def report(rows: list[tuple[str, str, bool, str]]) -> None:
 
 
 def turn_end(doc: dict) -> int:
-    """One answer per message; senders only; never an answer to a reply."""
+    """One answer per message; senders only; never an answer to a reply.
+
+    A turn the operator is in answers him: each agent heard in it gets a short receipt, never that answer."""
     answer = str(doc.get("answer") or "").strip()
     if os.environ.get("YMIR_REPLY_AUTO") == "0" or not answer:
         return 0
     done = state() / "done"
     done.mkdir(exist_ok=True)
     owed: dict[str, dict] = {}
+    messages = doc.get("messages") or []
+    his = his_turn(messages)
     wakes = owed_wakes(float(doc.get("answered_at") or time.time()))
-    for n, msg in enumerate([*(doc.get("messages") or []), *wakes]):
+    for n, msg in enumerate([*messages, *wakes]):
         text = str(msg.get("text") or "")
         kind, origin = parse(text)
         if kind != "from":
@@ -258,14 +294,14 @@ def turn_end(doc: dict) -> int:
             (done / key).touch(exist_ok=False)  # the claim: two hooks on one turn send once
         except FileExistsError:
             continue
-        marker = state() / "manual" / target_id(r)
+        marker = manual_marker(r, doc.get("session"))
         since = float(msg.get("since") or 0)
         if since and marker.exists() and marker.stat().st_mtime >= since:
             continue  # the agent already answered this sender by hand during the turn
         owed[target_id(r)] = r
     rows = []
     for r in owed.values():
-        ok, why = deliver(r, answer)
+        ok, why = deliver(r, answer if r["him"] or not his else RECEIPT)
         rows.append((r["road"], f"{r['machine']}:{r['address']}", ok, why))
         consume(r)
     if rows:
@@ -332,6 +368,11 @@ def entry_text(content: object) -> str:
     return ""
 
 
+def injected(origin: object) -> bool:
+    """Claude Code names who opened an entry; anything but a person is the harness's own."""
+    return isinstance(origin, dict) and origin.get("kind") not in (None, "human")
+
+
 def claude_turn(hook: dict) -> dict:
     """The turn that just ended, from Claude Code's transcript: the prompt that opened it, the lines queued into
     it while it ran, and the final answer."""
@@ -351,11 +392,13 @@ def claude_turn(hook: dict) -> dict:
                 text = entry_text((d.get("message") or {}).get("content"))
                 if not text:
                     continue  # a tool result, not a new turn
-                messages = [{"id": d.get("uuid"), "text": text, "since": stamp_time(d.get("timestamp"))}]
+                messages = [{"id": d.get("uuid"), "text": text, "since": stamp_time(d.get("timestamp")),
+                             "synthetic": injected(d.get("origin"))}]
                 answer = ""
             elif d.get("type") == "attachment" and att.get("type") == "queued_command":
                 messages.append({"id": att.get("source_uuid") or d.get("uuid"), "text": entry_text(att.get("prompt")),
-                                 "since": stamp_time(d.get("timestamp"))})
+                                 "since": stamp_time(d.get("timestamp")),
+                                 "synthetic": injected(att.get("origin"))})
             elif d.get("type") == "assistant":
                 said = entry_text((d.get("message") or {}).get("content"))
                 if said:
@@ -451,6 +494,10 @@ def main(argv: list[str]) -> int:
         print("reply-parse[1]{kind,road,machine,address,operator_there}:")
         print(f'  "{kind}","{r["road"]}","{r["machine"]}","{r["address"]}","{"yes" if r.get("him") else "no"}"')
         return 0
+    if argv[0] == "--sent":  # bin/agents/eindri-send.sh: this agent just sent a line to that pane by hand
+        if len(argv) > 2:
+            mark_manual(road(f"agent · herdr pane {argv[2]} · {argv[1]}"))
+        return 0
     if argv[0] == "--owe":
         pane = os.environ.get("YMIR_REPLY_PANE")
         if pane:
@@ -507,8 +554,7 @@ def main(argv: list[str]) -> int:
         return 3
     ok, why = deliver(r, body)
     if ok:
-        (state() / "manual").mkdir(exist_ok=True)
-        (state() / "manual" / target_id(r)).write_text(f"{time.time()}\n")
+        mark_manual(r)
         consume(r)
     report([(r["road"], f"{r['machine']}:{r['address']}", ok, why)])
     return 0 if ok else 1
