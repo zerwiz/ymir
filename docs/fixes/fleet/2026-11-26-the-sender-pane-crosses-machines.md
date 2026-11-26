@@ -11,3 +11,7 @@ A line sent to another machine was stamped without the sender's pane, because th
 ## Proof
 
 `bin/fleet/tests/test_fleet_tell.sh`, and the cross-machine case in `bin/agents/tests/test_reply.sh` over a fake ssh.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #966
