@@ -898,7 +898,7 @@ own Apple and Windows credentials, so the artefacts ship unsigned.
 
 ### Termux / Android — the phone is a `hand`
 
-A phone is not a small `dev`. `bin/skuld/role-lib.sh` names the shape itself —
+A phone is not a small `dev`. `bin/fleet/role-lib.sh` names the shape itself —
 `h = heart · f = forge · d = dev · n = hand (phone)` — and `components_for hand`
 returns `core` alone: no record, no well, no web, no mesh. A phone holds the
 **harness** (pi and its Ymir extensions), the **sync** (the private hoard), and the
@@ -1287,9 +1287,9 @@ one registry (`$YMIR_HOME/hodd/data/fleet.json`):
 | **hand** | the phone (PWA) | — | anything long-running |
 
 ```bash
-bin/skuld/role.sh show                  # this machine's role + the whole roster
-bin/skuld/role.sh set whynot heart,forge
-bin/skuld/role.sh validate              # every role known; the named heart is a real row
+bin/fleet/role.sh show                  # this machine's role + the whole roster
+bin/fleet/role.sh set whynot heart,forge
+bin/fleet/role.sh validate              # every role known; the named heart is a real row
 ```
 
 ### Topology — is this box alone, a client, or a node?
@@ -1400,7 +1400,7 @@ bin/fleet/fleet-version.sh check    # exit 1 on drift
 ```text
 fleet_ops[9]{command,what}:
   "bin/fleet/topology.sh","this machine: role, shape, link, journal"
-  "bin/skuld/role.sh","declare / read / validate a machine's role"
+  "bin/fleet/role.sh","declare / read / validate a machine's role"
   "bin/fleet/fleet-version.sh","tree vs installed vs published, with a verdict"
   "bin/records/journal-append.sh","commit a write to the offline outbox"
   "bin/records/journal-reconcile.sh","push the outbox when the heart answers"

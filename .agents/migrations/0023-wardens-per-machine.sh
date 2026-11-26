@@ -49,8 +49,8 @@ MACHINE="$(python3 -I "$POLICY" name 2>/dev/null)"
 
 # This machine's roles, from the one resolver (Rule 07): env, then the registry, then the documented body.
 ROLES="${YMIR_UNITS_ROLES:-${YMIR_ROLE:-}}"
-if [ -z "$ROLES" ] && [ -x "$ROOT/bin/skuld/role.sh" ]; then
-  ROLES="$(bash "$ROOT/bin/skuld/role.sh" resolve 2>/dev/null | tr -d '[:space:]')"
+if [ -z "$ROLES" ] && [ -x "$ROOT/bin/fleet/role.sh" ]; then
+  ROLES="$(bash "$ROOT/bin/fleet/role.sh" resolve 2>/dev/null | tr -d '[:space:]')"
 fi
 ROLES="${ROLES:-dev}"
 

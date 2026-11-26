@@ -63,7 +63,7 @@ mcp = FastMCP("ymir")
 
 @mcp.tool()
 def ymir_where() -> str:
-    """Where Ymir is on this machine: the repo, the private home, the seat's own name.
+    """Sága — Where Ymir is on this machine: the repo, the private home, the seat's own name.
     Call this FIRST when you do not know the house — it answers what this seat is."""
     seat_file = Path.home() / ".pi" / "agent" / "extensions" / ".ymir-seat"
     seat = seat_file.read_text().strip() if seat_file.exists() else "(no .ymir-seat)"
@@ -78,7 +78,7 @@ def ymir_where() -> str:
 
 @mcp.tool()
 def ymir_rule(topic: str) -> str:
-    """The house law that governs a topic, read from RULES/ (e.g. 'delete', 'secrets',
+    """Galdr — The house law that governs a topic, read from RULES/ (e.g. 'delete', 'secrets',
     'ports', 'commits', 'worktrees'). Ask before acting where a law may apply."""
     hits = []
     for p in sorted((ROOT / "RULES").glob("*.md")):
@@ -93,7 +93,7 @@ def ymir_rule(topic: str) -> str:
 
 @mcp.tool()
 def ymir_structure(depth: int = 2) -> str:
-    """The shape of the private home: every shelf and how many files it holds."""
+    """Reginn — The shape of the private home: every shelf and how many files it holds."""
     base = _home() / "hodd"
     rows = []
     for p in sorted(base.iterdir()) if base.exists() else []:
@@ -104,7 +104,7 @@ def ymir_structure(depth: int = 2) -> str:
 
 @mcp.tool()
 def ymir_find(what: str, content: bool = True) -> str:
-    """Where something lives in the home — by name, and by content when asked."""
+    """Mímir — Where something lives in the home — by name, and by content when asked."""
     base = _home()
     found = [str(p.relative_to(base)) for p in base.rglob(f"*{what}*") if p.is_file()][:15]
     if content and len(found) < 15:
@@ -118,13 +118,13 @@ def ymir_find(what: str, content: bool = True) -> str:
 
 @mcp.tool()
 def ymir_recall(query: str, k: int = 5) -> str:
-    """Drink from the well before acting: Ymir's memory of what was learned."""
+    """Mímir — Drink from the well before acting: Ymir's memory of what was learned."""
     return _run(["bash", str(ROOT / "bin" / "records" / "mimir.sh"), "recall", query, "--k", str(k)], 90)
 
 @mcp.tool()
 def ymir_todo_board(action: str = "list", title: str = "", lane: str = "", due: str = "", owner: str = "",
                     priority: str = "", note: str = "", card: str = "", source: str = "") -> str:
-    """The operator's own to-do, as cards on his private board (plan 327) — the ONE door the house writes it
+    """Skuld — The operator's own to-do, as cards on his private board (plan 327) — the ONE door the house writes it
     through, never the old todo.md. action: add (title, lane Inbox|Today|This week|Waiting|Someday|Done, due
     YYYY-MM-DD, owner, priority, note) · list (lane) · move (card, lane) · lanes · flush · status."""
     door = str(ROOT / "bin" / "records" / "todo.sh")
@@ -148,7 +148,7 @@ def ymir_todo_board(action: str = "list", title: str = "", lane: str = "", due: 
 
 @mcp.tool()
 def ymir_remember(lesson: str, tags: str = "") -> str:
-    """Water the well after: record what was learned, so the next hand starts ahead."""
+    """Mímir — Water the well after: record what was learned, so the next hand starts ahead."""
     argv = ["bash", str(ROOT / "bin" / "records" / "mimir.sh"), "observe", lesson]
     if tags:
         argv += ["--tags", tags]
@@ -156,7 +156,7 @@ def ymir_remember(lesson: str, tags: str = "") -> str:
 
 @mcp.tool()
 def ymir_daily(note: str = "") -> str:
-    """Today's log line in the home's daily record: append a note, or read the day."""
+    """Reginn — Today's log line in the home's daily record: append a note, or read the day."""
     day = _dt.date.today().isoformat()
     p = _home() / "hodd" / "memory" / "daily" / f"{day}.md"
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -168,27 +168,27 @@ def ymir_daily(note: str = "") -> str:
 
 @mcp.tool()
 def ymir_calendar(action: str = "what") -> str:
-    """The calendar through Mánagandr: 'what' is coming, 'probe' asks if consent holds."""
-    return _run(["bash", str(ROOT / "bin" / "time" / "snotra" / "calendar-ask.sh"), action], 90)
+    """Mánagandr — The calendar through Mánagandr: 'what' is coming, 'probe' asks if consent holds."""
+    return _run(["bash", str(ROOT / "bin" / "time" / "managandr" / "calendar-ask.sh"), action], 90)
 
 @mcp.tool()
 def ymir_heal() -> str:
-    """Eir, the healer: diagnose every surface of the house (a check, never a change)."""
+    """Eir — Eir, the healer: diagnose every surface of the house (a check, never a change)."""
     return _run(["bash", str(ROOT / "bin" / "agents" / "eir-doctor.sh"), "check"], 600)
 
 @mcp.tool()
 def ymir_gates() -> str:
-    """Which gate covers which surface in this house (the ward list)."""
+    """Vörðr — Which gate covers which surface in this house (the ward list)."""
     return _run(["bash", str(ROOT / "bin" / "gates" / "guards.sh"), "--list"], 120)
 
 @mcp.tool()
 def ymir_update() -> str:
-    """Gróa, the updater: is the checkout behind, and did the instruction surface move?"""
+    """Gróa — Gróa, the updater: is the checkout behind, and did the instruction surface move?"""
     return _run(["bash", str(ROOT / "bin" / "agents" / "groa-update.sh"), "--check"], 180)
 
 @mcp.tool()
 def ymir_secret_keys(filter: str = "") -> str:
-    """Which secret KEY NAMES exist in the vault — names only, never a value."""
+    """the hoard (no figure: plan 374 D10) — Which secret KEY NAMES exist in the vault — names only, never a value."""
     out = _run(["bash", str(ROOT / "bin" / "vault" / "hodd.sh"), "ls"], 60)
     if filter:
         lines = [l for l in out.splitlines() if filter.lower() in l.lower()]
@@ -197,14 +197,14 @@ def ymir_secret_keys(filter: str = "") -> str:
 
 @mcp.tool()
 def ymir_hermes_list() -> str:
-    """Every Hermes session on this machine, with its state in the house's one vocabulary
+    """Hamr — Every Hermes session on this machine, with its state in the house's one vocabulary
     (ready · working · blocked: <why> · dead). Read from the runtime's own admissions, never
     from a title. Use it before sending to a session, so a paused one is not woken."""
     return _run(["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "list"], 120)
 
 @mcp.tool()
 def ymir_hermes_send(session: str, text: str) -> str:
-    """Send one turn to a Hermes session by id prefix or title, through the same door a pane
+    """Hamr — Send one turn to a Hermes session by id prefix or title, through the same door a pane
     is woken through. A paused session is REFUSED with its reason and never replayed: recover
     it first, which shows the lost input before anything is discarded."""
     out = _run(["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "prompt",
@@ -213,7 +213,7 @@ def ymir_hermes_send(session: str, text: str) -> str:
 
 @mcp.tool()
 def ymir_hermes_recover(session: str, yes: bool = False) -> str:
-    """Show what a paused Hermes session was carrying when its gateway died, and discard the
+    """Hamr — Show what a paused Hermes session was carrying when its gateway died, and discard the
     lost turn only when `yes` is true. Without `yes` it prints the lost input and stops —
     a person's turn is not an agent's to throw away."""
     argv = ["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "recover",
@@ -222,7 +222,7 @@ def ymir_hermes_recover(session: str, yes: bool = False) -> str:
 
 @mcp.tool()
 def ymir_context(json_output: bool = False) -> str:
-    """What THIS agent's context actually holds: used, window, remaining, the compaction
+    """Andhrímnir — What THIS agent's context actually holds: used, window, remaining, the compaction
     thresholds, and whether a compaction already fired. Read it before deciding the
     context is out — the number is on disk, and guessing it costs work."""
     out = _run(["bash", str(ROOT / "bin" / "seat" / "context.sh")] + (["--json"] if json_output else []), 60)
@@ -230,26 +230,26 @@ def ymir_context(json_output: bool = False) -> str:
 
 @mcp.tool()
 def ymir_core_four() -> str:
-    """The four dials that decide an agent's outcome, in one read: model, context window
+    """Andhrímnir — The four dials that decide an agent's outcome, in one read: model, context window
     and compaction thresholds, the prompt surfaces in force, and the tool counts."""
     return _run(["bash", str(ROOT / "bin" / "seat" / "core-four.sh")], 60)
 
 @mcp.tool()
 def ymir_pending() -> str:
-    """Everything blocked on the operator, in one list: open pull requests, wake lines,
+    """Urðr — Everything blocked on the operator, in one list: open pull requests, wake lines,
     mail drafts, and the status lines that say 'needs the operator'."""
     return _run(["bash", str(ROOT / "bin" / "seat" / "pending.sh")], 60)
 
 @mcp.tool()
 def ymir_studio(action: str = "status") -> str:
-    """The OpenDesign studio (the container on :7456) — status, start, or stop."""
+    """Hnoss — The OpenDesign studio (the container on :7456) — status, start, or stop."""
     return _run(["bash", str(ROOT / "bin" / "pi" / "opendesign.sh"), action], 180)
 
 @mcp.tool()
 def ymir_errand(action: str, id: str, project: str = "", mode: str = "direct-PR",
                 harness: str = "pi", model: str = "", note: str = "", terminal: str = "done",
                 message: str = "") -> str:
-    """An errand: start an Eindri worker (the one spawn path), read its seat, steer it, or close it.
+    """Eindri — An errand: start an Eindri worker (the one spawn path), read its seat, steer it, or close it.
     steer goes through the ONE road for talking to any agent: bin/fleet/fleet-tell.sh (`id` may be
     `machine:errand`)."""
     if action == "start":
@@ -301,7 +301,7 @@ def _door_indexes(door: Path) -> list[int]:
 def ymir_plan(slug: str = "", title: str = "", action: str = "new", realm: str = "", project: str = "",
               scope: str = "project", owner: str = "", new_shelf: bool = False,
               priority: str = "") -> str:
-    """The plan ledger: a plan is filed on the shelf of whoever owns the work.
+    """Reginn — The plan ledger: a plan is filed on the shelf of whoever owns the work.
 
     action: new (slug+title) · list · next · shelves (every realm and project, and whether it has a shelf).
     scope: project (realm+project; the project is found in any realm, refused if ambiguous or unknown) ·
@@ -325,34 +325,34 @@ def ymir_plan(slug: str = "", title: str = "", action: str = "new", realm: str =
 
 @mcp.tool()
 def ymir_note(path: str, heading: str, body: str) -> str:
-    """Append a DATED section to an existing home document (append-only; a correction cites the old entry)."""
+    """Reginn — Append a DATED section to an existing home document (append-only; a correction cites the old entry)."""
     return _run(["bash", str(ROOT / "bin" / "records" / "note.sh"), path, heading, body], 60)
 
 @mcp.tool()
 def ymir_header(action: str = "check", path: str = "hodd") -> str:
-    """The declared-truth header of home documents: check (list the ones missing one) or apply (add a minimal one)."""
+    """Reginn — The declared-truth header of home documents: check (list the ones missing one) or apply (add a minimal one)."""
     return _run(["bash", str(ROOT / "bin" / "records" / "header.sh"), action, path], 300)
 
 @mcp.tool()
 def ymir_push(message: str, paths: list[str]) -> str:
-    """Commit and push NAMED paths in the private home (never git add -A; the vault refuses a secret)."""
+    """Reginn — Commit and push NAMED paths in the private home (never git add -A; the vault refuses a secret)."""
     if not message or not paths:
         return "push needs message and paths[]"
     return _run(["bash", str(ROOT / "bin" / "vault" / "push.sh"), message, *paths], 180)
 
 @mcp.tool()
 def ymir_seats() -> str:
-    """Where the work actually is: every pane in herdr (or tmux), and a shell whose owner is gone named DEAD."""
+    """Herdr — Where the work actually is: every pane in herdr (or tmux), and a shell whose owner is gone named DEAD."""
     return _run(["bash", str(ROOT / "bin" / "seat" / "seats.sh"), "list"], 120)
 
 @mcp.tool()
 def ymir_hall(runes: int = 5) -> str:
-    """The whole house in one read: the seat, the doors, the queue, the last runes carved."""
+    """Hlidskjalf — The whole house in one read: the seat, the doors, the queue, the last runes carved."""
     return _run(["bash", str(ROOT / "bin" / "agents" / "hall.sh"), "--runes", str(runes)], 120)
 
 @mcp.tool()
 def ymir_arm(action: str = "status", harness: str = "") -> str:
-    """The Gná arm, honestly: is the watch loop alive, and can THIS harness arm it? (hook <harness> names its hook.)"""
+    """Gná — The Gná arm, honestly: is the watch loop alive, and can THIS harness arm it? (hook <harness> names its hook.)"""
     if action == "hook":
         return _run(["bash", str(ROOT / "bin" / "pi" / "arm.sh"), "hook", harness or "claude"], 60)
     return _run(["bash", str(ROOT / "bin" / "pi" / "arm.sh"), "status"], 60)
@@ -361,7 +361,7 @@ def ymir_arm(action: str = "status", harness: str = "") -> str:
 def gna_fleet_tell(to: str = "", line: str = "", verb: str = "tell", all: bool = False,
                    record_only: bool = False, pane_only: bool = False, arm_only: bool = False,
                    dry_run: bool = False, sender: str = "") -> str:
-    """The ONE road for talking to and steering any agent on any machine. `to` is a comma list of
+    """Gná — The ONE road for talking to and steering any agent on any machine. `to` is a comma list of
     targets: a machine (its arm holder), an errand id, machine:errand, a pane id, or machine:pane;
     all=true reaches every arm holder. verb: tell | steer | answer | stop. Uses each machine's own
     tell.sh over ssh, falls back to typing into the agent's herdr pane, signs the line, returns one
@@ -384,7 +384,7 @@ def gna_fleet_tell(to: str = "", line: str = "", verb: str = "tell", all: bool =
 @mcp.tool()
 def ymir_veil(action: str = "pending", id: str = "", text: str = "", to: str = "", by: str = "",
               kind: str = "report", sender: str = "") -> str:
-    """The Veil's road to the arm (plan 350 B): every report carries an id and the arm holder answers it.
+    """the Veil — The Veil's road to the arm (plan 350 B): every report carries an id and the arm holder answers it.
     action: send (text; kind report|finding|steer; sender) · steer (to, text) · received | accepted | rework
     (id; text is the note, required for rework) · status (id) · pending (every item not yet RECEIVED, with
     its age). A report left unanswered is resent into the holder's pane, then turns the trouble panel red."""
@@ -417,7 +417,7 @@ def ymir_veil(action: str = "pending", id: str = "", text: str = "", to: str = "
 @mcp.tool()
 def ymir_board_sync(project: str = "", plan: int = 0, file: str = "", dry_run: bool = False,
                     highest: bool = False) -> str:
-    """Mirror a project's plan ledger onto its board (Plane through Gimlé, or the adapter the project's
+    """Vingólf — Mirror a project's plan ledger onto its board (Plane through Gimlé, or the adapter the project's
     registry row names): one card per plan, its state from the plan's Status (an appended Status closes it),
     assigned to the plan's owner. `highest` prints the highest plan number already on the board. Name a
     `project` (registry id) or a plan `file`; `plan` limits it to one number."""
@@ -436,7 +436,7 @@ def ymir_board_sync(project: str = "", plan: int = 0, file: str = "", dry_run: b
 
 @mcp.tool()
 def ymir_publish(action: str = "check") -> str:
-    """Put an app on a public name ONLY behind the hall's login (Gjallarhorn's publish door, from this
+    """Gjallarhorn — Put an app on a public name ONLY behind the hall's login (Gjallarhorn's publish door, from this
     machine's publish.yaml in the home). action: check (refuses an app with no gate or nobody named) ·
     plan (what would be written) · rules (the hall's per-app rules) · status (each name, from outside) ·
     apply (raises the edge, proves an unsigned visitor is challenged, then the tunnel and DNS)."""
@@ -447,7 +447,7 @@ def ymir_publish(action: str = "check") -> str:
 
 @mcp.tool()
 def ymir_place(path: str, why: str, source: str = "") -> str:
-    """The ONLY sanctioned way a document enters the home: classify the destination against the
+    """Reginn — The ONLY sanctioned way a document enters the home: classify the destination against the
     layout law (refusing what it cannot justify) and move it there. `path` is home-relative."""
     env = dict(os.environ)
     if source:
@@ -458,7 +458,7 @@ def ymir_place(path: str, why: str, source: str = "") -> str:
 
 @mcp.tool()
 def ymir_find_home(path: str, note: str = "", sample: str = "") -> str:
-    """Where should this file go? The placement oracle: the destination shelf, the reason, and the
+    """Reginn — Where should this file go? The placement oracle: the destination shelf, the reason, and the
     next step. It NEVER moves anything."""
     argv = ["python3", str(ROOT / "bin" / "records" / "layout.py"), "find-home", path]
     if note:
@@ -469,12 +469,12 @@ def ymir_find_home(path: str, note: str = "", sample: str = "") -> str:
 
 @mcp.tool()
 def ymir_layout(path: str) -> str:
-    """The layout law itself: which shelf a home-relative path belongs to, and why (or the refusal)."""
+    """Reginn — The layout law itself: which shelf a home-relative path belongs to, and why (or the refusal)."""
     return _run(["python3", str(ROOT / "bin" / "records" / "layout.py"), "classify", path], 60)
 
 @mcp.tool()
 def ymir_import(sources: list[str], area: str = "", dry_run: bool = True) -> str:
-    """Bring material IN from outside the home: classified, then moved with git mv. dry_run proposes."""
+    """Reginn — Bring material IN from outside the home: classified, then moved with git mv. dry_run proposes."""
     argv = ["python3", str(ROOT / "bin" / "records" / "layout.py"), "import", *sources]
     if area:
         argv += ["--area", area]
@@ -484,22 +484,22 @@ def ymir_import(sources: list[str], area: str = "", dry_run: bool = True) -> str
 
 @mcp.tool()
 def ymir_index(shelf: str = "hodd") -> str:
-    """What is uncalled, empty or stray in a shelf: empty dirs now, and the home's git strays by name."""
+    """Reginn — What is uncalled, empty or stray in a shelf: empty dirs now, and the home's git strays by name."""
     return _run(["python3", str(ROOT / "bin" / "records" / "layout.py"), "index", shelf], 120)
 
 @mcp.tool()
 def ymir_dellingr(path: str = "hodd", eldri: int = 90, forn: int = 365) -> str:
-    """Dellingr grades a document or shelf: nýr · eldri · forn · safn, from measurable signals only."""
+    """Dellingr — Dellingr grades a document or shelf: nýr · eldri · forn · safn, from measurable signals only."""
     return _run(["bash", str(ROOT / "bin" / "records" / "grade.sh"), path, "--eldri", str(eldri), "--forn", str(forn)], 180)
 
 @mcp.tool()
 def ymir_close_dead(pane: str) -> str:
-    """Close a shell whose owner is GONE. Refuses a pane that holds a live agent."""
+    """Herdr — Close a shell whose owner is GONE. Refuses a pane that holds a live agent."""
     return _run(["bash", str(ROOT / "bin" / "seat" / "seats.sh"), "close", pane], 120)
 
 @mcp.tool()
 def ymir_telegram(action: str = "list", machine: str = "", text: str = "") -> str:
-    """Telegram across the fleet: list the machines (bot id · chat · token ref), check a machine's bot,
+    """Hófvarpnir — Telegram across the fleet: list the machines (bot id · chat · token ref), check a machine's bot,
     or relay a line from THIS machine into another's chat (a Rune is carved)."""
     if action == "relay":
         if not machine or not text:
@@ -523,7 +523,7 @@ def ymir_telegram(action: str = "list", machine: str = "", text: str = "") -> st
 
 @mcp.tool()
 def skuld_branch_report(task: str, verdict: str, summary: str, wake: str = "", silent: bool = False) -> str:
-    """Record one handled fleet event in the durable branch-outcome store (append-only).
+    """Skuld — Record one handled fleet event in the durable branch-outcome store (append-only).
     verdict is routine | Allfather; silent is true only for a fleet-wide no-change heartbeat.
     The branch's merge note into the Allfather-facing conversation stays the branch extension's."""
     task, verdict, summary = task.strip(), verdict.strip(), summary.strip()
@@ -559,7 +559,7 @@ def _recall_for(task: str) -> str:
 
 @mcp.tool()
 def ymir_figure(name: str, task: str = "", project: str = "") -> str:
-    """A figure's KIT for a task (never copied into a project): its prompt, the skills to read (Ymir's frame skills and
+    """Völundr — A figure's KIT for a task (never copied into a project): its prompt, the skills to read (Ymir's frame skills and
     the project's OWN skills, chosen for the task's words and paths), the tools it may use, the project's RULES and
     OUTCOMES.md, and the well's top episodes. `name` is a figure (forseti, sindri, kvasir, huginn, mimir, ...);
     `project` is a path, else the repository the session was opened in."""
@@ -579,7 +579,7 @@ def ymir_huginn(action: str = "status") -> str:
 
 @mcp.tool()
 def ymir_research(question: str, project: str = "", plan: str = "") -> str:
-    """Huginn's road from every harness: Firecrawl first (search, then the best page as markdown, main content
+    """Huginn — Huginn's road from every harness: Firecrawl first (search, then the best page as markdown, main content
     only), the finding KEPT in the library with its source and practice (`plan` names the plan that uses it), and a
     short answer back. A question nothing answers is kept as a negative result."""
     return _fig.research(ROOT, question, project, plan)
@@ -587,7 +587,7 @@ def ymir_research(question: str, project: str = "", plan: str = "") -> str:
 
 @mcp.tool()
 def ymir_research_find(query: str, limit: int = 5) -> str:
-    """Search the kept research answers, read-only (plan 365 H3). Served to granted collaborators: only answers the
+    """Huginn — Search the kept research answers, read-only (plan 365 H3). Served to granted collaborators: only answers the
     operator tagged `shareable` are returned, so private research never leaves this machine. No web call is made."""
     rows = _fig.find_kept(query, shareable_only=True, limit=max(1, min(limit, 10)), root=ROOT)
     if not rows:

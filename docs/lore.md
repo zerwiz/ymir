@@ -1651,6 +1651,103 @@ next recording of that chapter should name them.
 
 *Two books, one house: the saga tells it, the lore names it, and where they part, the lore says so plainly.*
 
+## XXXVIII. One Name Everywhere — the map, the lore, the homepage and the code agree (2026-11-25)
+
+At the Allfather's word: *"Who are missing their tools? What have we not mapped out, and what service carries the
+wrong name? It must be the same as on the homepage and lore.md."* A naming audit (plan 374) laid this page, the
+component map (`.agents/assets/agents/naming.md`), the homepage and the code side by side. Ten choices came out of
+it, and he accepted all ten. They are carved here. Nothing above is rewritten (RULES/06); where an older line
+disagrees, this section is the one to read.
+
+### Hvergelmir is the news well, and Élivágar carries every app home
+
+Section XXXVI gave **Hvergelmir** to *"every app in its own home"*. The app registry and the repository
+`zerwiz/hvergelmir` gave the same name to the news service. One name cannot keep two jobs, so:
+
+- **Hvergelmir** is the **news well**: many streams gathered into one, sorted, and kept.
+- **Élivágar** — *the icy rivers that flow out of Hvergelmir and run far from their spring* — is **every app in its
+  own home**. Each app installs, updates and rolls back from its own repository, and never lives inside Ymir's tree
+  again. Its door is `bin/apps/apps.sh`; its register is `config/app-repos.yaml`.
+
+### Snotra keeps the meeting ear, and Bragi writes the documents
+
+Section XXIII's table names **Snotra** *"the modest — documenter"*. The saga already told the truer thing: Snotra
+*"listens to meetings and keeps what was decided"*, and the code agreed — the meeting system in `systems/snotra/`,
+the `snotra` door through the gateway, the meeting ladder. So:
+
+- **Snotra** is the **meeting ear**: she hears a meeting, keeps its record, writes the minutes and carries the
+  promises. Her card is `.agents/agents/snotra-ear.md`.
+- **Bragi** keeps the documenter's craft as well as the marketing words. He already kept `bragi-documents`, and the
+  homepage already said he *"writes the words, for people"*.
+
+The fleet is the counsellor and the eight: **Sindri, Bragi, Huginn, Mímir, Kvasir, Forseti, Snotra and Galdr**.
+
+### Skuld keeps what shall be
+
+Section XVI gave **Skuld** the outcome of every branch. The code gave her two more jobs: the tickets and plans behind
+the `skuld` door, and the resolver of which machine plays which role. She keeps **what shall be** — the tickets, the
+plans owed, the to-do board and each branch's outcome. The role resolver is a fleet fact, and it moved to
+`bin/fleet/role.sh`; the old path forwards for one release cycle.
+
+### Heimdall admits by key
+
+Section V and the contract call **Heimdall** the OAuth guard who *"signs every agent's rune of introduction"*. The
+login was removed on 2026-11-14, and no code signs a rune yet. What he does is the oldest thing a watchman does: he
+**admits an entrant only by the key it carries** — the SSH-key ward, `bin/host/heimdall-*.sh`. Signing each agent's
+rune of introduction is **owed**, not built.
+
+### Hermóðr is the gateway
+
+Section V gave **Hermóðr**, who rode to Hel and back, the work of composition — sideways to agents, downward to tools.
+No door carried his name, and the body's one MCP door carried none. They are one: **Hermóðr is the gateway**
+(`bin/bridge/mcp-gateway.sh`). It fronts the well, the skills, the tickets and the ear; attached it rides to the heart
+and back, and dark it serves what it remembers and carries the rest later.
+
+### Three that already worked, now named
+
+- **Bölþorn** — *the giant whose famous son taught Odin nine mighty songs (Hávamál 140)* — is the **skills door**:
+  the shelf of skills served to every harness through the gateway.
+- **Dellingr** — *the dawn, father of Day* — **grades how fresh a document is** (nýr, eldri, forn, safn) from
+  measurable signals only (`bin/records/grade.sh`). He stands under Reginn.
+- **Týr** — *the god of law who put his hand in the wolf's mouth so a binding would hold* — is the **tool judge**:
+  he checks the tools, skills and docs against the ten Galdr principles (`.agents/agents/tyr-check.md`).
+
+### Mímir plans from the well
+
+Mímir's card says *planner*, and section IV says he speaks from the well. Both stand: **Mímir plans from the well.**
+The doors that drink from it and water it (`ymir_recall`, `ymir_remember`) are his.
+
+### Þjazi is retired as a name
+
+The contract named the terminal backend twice, **Þjazi** and **Herdr**. Herdr is the program that runs, and an
+adopted engine keeps its own name. Þjazi is retired; the line in section V stays as the record.
+
+### What is built, and what is still only named
+
+| Figure | Before this section | Now |
+|---|---|---|
+| **Gungnir** (the skill forge) | told as working | **planned** — no door yet |
+| **Gunnlöð** (refining a run into a skill) | built (XXXV) | **planned** — no door yet |
+| **Kádlín** (the broad slice) | built (XXXV) | **planned** — no door yet |
+| **Himinbjörg** (the watchtower) | built here, planned in the map | **built** — the Ward panel in the high seat |
+| **Vörðr** (the warden) | built here, planned in the map | **built** — the mends in `bin/ward/harden.sh` |
+| **Gladsheim** (the fleet room) | planned here, live in the map | **built** — `bin/room/gladsheim.sh` |
+
+### Who answers for the tools without a figure's name
+
+A tool may keep a function name (RULES/23). What must be true is that one figure answers for it. Every tool of
+Ymir's MCP now begins its description with its owner — *Reginn* for the ledger and the shelves, *Mímir* for the
+well, *Urðr* for what waits on the Allfather, *Andhrímnir* for what a context holds — and the component map lists the
+owner of every unit and container. Two things keep their function names by choice: the hoard's secrets and the model
+rail.
+
+### Spelling
+
+Prose uses the Old Norse form — **Hliðskjálf, Mjölnir, Mímir, Útgarðr, Bifröst, Heimdallr, Smíðja** — as the
+homepage does. Paths, units and tools stay ASCII, and none is renamed for spelling.
+
+*One giant, one tree, one name for each thing that works in it.*
+
 ## CHANGE LOG
 
 - **2026-11-14** — Kaia renamed to **Völundr, the master of the smiths**, at the Allfather's word; the document's
@@ -1660,3 +1757,4 @@ next recording of that chapter should name them.
 - 2026-11-22 — XXXVI: the halls that came after — eleven figures carved, Gimlé and the decision models brought up to date.
 - 2026-11-22 — Móðguðr and Andhrímnir carved: the two built figures the lore had not yet named.
 - 2026-11-24 — XXXVII: the saga and the lore agree — the reforging (built vs named), the Einherjar count, and this page's own faults named.
+- 2026-11-25 — XXXVIII: one name everywhere (plan 374) — Hvergelmir and Élivágar, Snotra and Bragi, Skuld, Heimdall, Hermóðr, Bölþorn, Dellingr, Týr, Mímir, Þjazi retired, and what is built and what is planned.

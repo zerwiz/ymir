@@ -47,7 +47,7 @@ worktrees. Each is a specialist role:
 | `kvasir-scout.md` | Kvasir | Reconnaissance — find where things live, report |
 | `forseti-reviewer.md` | Forseti | Review, QA, acceptance, drift — changes nothing |
 | `bragi-marketer.md` | Bragi | Marketing, SEO, content, campaigns, social |
-| `snotra-documenter.md` | Snotra | Documentation, write-ups, changelogs |
+| `snotra-ear.md` | Snotra | Keeper of the meeting ear (systems/snotra); the documenter's craft is Bragi's since 2026-11-25 (plan 374) |
 | `hnoss-designer.md` | Hnoss | Interface & visual design via OpenDesign |
 | `galdr.md` → | Galdr | Agent-CLI ergonomics, master builder (symlink to skill) |
 

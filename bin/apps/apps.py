@@ -208,9 +208,9 @@ def _legacy(app: dict) -> dict:
 
 
 def seat_role() -> str:
-    """This seat's role (heart · forge · dev · hand), read once from the fleet registry by bin/skuld/role.sh."""
+    """This seat's role (heart · forge · dev · hand), read once from the fleet registry by bin/fleet/role.sh."""
     if "role" not in _ROADS_ROLE:
-        door = ROOT / "bin" / "skuld" / "role.sh"
+        door = ROOT / "bin" / "fleet" / "role.sh"
         out = sh(["bash", str(door), "resolve"], timeout=30) if door.is_file() else None
         _ROADS_ROLE["role"] = (out.stdout.strip().splitlines() or [""])[-1] if out and out.returncode == 0 else ""
     return os.environ.get("YMIR_ROLE") or _ROADS_ROLE["role"]

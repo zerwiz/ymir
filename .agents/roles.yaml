@@ -69,7 +69,7 @@ roles:
     tools: [vector_db, hermes_runner, herder, yggdrasil]
 
   documenter:
-    figure: snotra
+    figure: bragi   # plan 374 D2 (2026-11-25): the documenter's craft folded into Bragi; Snotra keeps the meeting ear
     craft: "document — prose, guides, references"
     dispatch: true
     keywords: [document, docs, guide, reference, readme, manual, explain, describe, prose]

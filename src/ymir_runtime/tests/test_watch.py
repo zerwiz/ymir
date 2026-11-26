@@ -220,7 +220,7 @@ class HelmIdentityTest(ArmTestCase):
 
     def test_an_unresolvable_fleet_role_stands_read_only_and_names_it(self) -> None:
         self.seat.write_text("host=seat-host\n", encoding="utf-8")
-        helm = self.helm()  # no YMIR_ROLE and the temp repo carries no bin/skuld/role.sh
+        helm = self.helm()  # no YMIR_ROLE and the temp repo carries no bin/fleet/role.sh
         self.assertEqual(helm.identity, "readonly")
         self.assertEqual(helm.missing, ("fleetrole",))
         self.assertIn("missing=fleetrole", helm.lease_tokens())

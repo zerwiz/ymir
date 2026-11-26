@@ -151,7 +151,7 @@ grep -q 'clause 2' "$T/out6" && ok "clause 2 is named in the refusal" || bad "cl
 # (d) clause 4: a machine that cannot resolve its fleet role does not take the helm.
 export BROKK_SESSION_PID="$PI"
 rm -f "$LOCK" "$T/state/.arm.role"
-# a home with no fleet registry: bin/skuld/role.sh answers nothing, so the role is unresolved
+# a home with no fleet registry: bin/fleet/role.sh answers nothing, so the role is unresolved
 env -u YMIR_ROLE YMIR_HOME="$T/ymirhome" \
   timeout -k 1 15 bash "$ARM" --holder rodd >"$T/out7" 2>&1; rc7=$?
 [ "$rc7" != 0 ] && ok "a holder with no fleet role is refused non-zero" || bad "a holder with no fleet role is refused non-zero" "rc=$rc7 out=$(head -4 "$T/out7")"

@@ -285,12 +285,12 @@ All jobs are **stateless spawns**: fresh process → inject directives → execu
 
 A machine's **role** is ONE fact, declared once, and read by every surface that
 would otherwise install, boot, schedule, or route wrongly. It is captured at
-install time, before the step chain runs, by `bin/skuld/role-lib.sh` `establish_roles`:
+install time, before the step chain runs, by `bin/fleet/role-lib.sh` `establish_roles`:
 
 ```
 role_resolution[4]{source,when}:
   "--role <r> | $YMIR_ROLE","the operator names it for this run; an unknown name is refused (exit 2)"
-  "the fleet registry","$YMIR_HOME/hodd/data/fleet.json, read by hostname (bin/skuld/role.sh)"
+  "the fleet registry","$YMIR_HOME/hodd/data/fleet.json, read by hostname (bin/fleet/role.sh)"
   "the machine card","the host's own row in hodd/data/machines.md"
   "ask -> the safe body","asked interactively; a run that cannot ask takes `dev` (owns no record) and says so"
 ```
@@ -1342,7 +1342,7 @@ The arm writes these fields at take, beside the old ones and the `role=` of plan
 | `seat=` | the name this seat answers as, else `unnamed` | `~/.pi/agent/extensions/.ymir-seat` `primary=` — never invented (Rule 44) |
 | `charter=` | `planning,mail,the-work-in-hand,dispatch-on` | the Allfather's own definition of the helm's work |
 | `host=` / `machine=` | this machine, and its key in the seat registry | `.ymir-seat` `host=`, else `hostname` · `hodd/identity/seats.yaml` |
-| `fleetrole=` | heart · forge · dev · hand | `bin/skuld/role.sh resolve` (or `YMIR_ROLE`) |
+| `fleetrole=` | heart · forge · dev · hand | `bin/fleet/role.sh resolve` (or `YMIR_ROLE`) |
 | `fleet=` | the fleet's name, as one token | `seats.yaml` `fleet.name` |
 | `pin=` / `pin_behind=` | the pinned runtime's sha and `git rev-list --count HEAD..origin/main` | `YMIR_RUNTIME_DIR`, else `$YMIR_HOME/config/runtime.env` |
 | `identity=` / `missing=` | `held`, or `readonly` with the field named | derived at take |

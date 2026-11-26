@@ -223,7 +223,7 @@ runtime_figures[7]{figure,role,path}:
   "Valknut","repo-local loader (binds agents into each tool)","`bin/seat/valknut-load.sh`"
   "Mímir","Eindri planner (architecture, sequencing)","`.agents/agents/mimir-planner.md`"
   "Forseti","Eindri reviewer (QA, acceptance; changes nothing)","`.agents/agents/forseti-reviewer.md`"
-  "Snotra","Eindri documenter (docs, changelogs)","`.agents/agents/snotra-documenter.md`"
+  "Snotra","keeper of the meeting ear (plan 374 D2; the documenter's craft is Bragi's)","`.agents/agents/snotra-ear.md`"
   "Kvasir","Eindri scout (recon; changes nothing)","`.agents/agents/kvasir-scout.md`"
 ```
 

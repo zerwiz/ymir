@@ -9,7 +9,7 @@ force-pushes, never closes another hand's work, and never writes to GitHub as a 
 **It merges in exactly one place: the heart's machine, behind a gate.** Everywhere else the road is
 closed and the door says why. That is the Allfather's word of 2026-11-14: *"the heart handles the
 merging of the PRs … every other machine's says `merge: off`."* The heart is whichever machine
-`bin/skuld/role.sh` names heart; no page here spells a machine's name.
+`bin/fleet/role.sh` names heart; no page here spells a machine's name.
 
 ## What it does on a pass
 
@@ -76,7 +76,7 @@ Three keys and a gate, in this order. On any machine but the heart's the first o
 | Condition | Where it is decided |
 |---|---|
 | `merge: on` in this machine's own wardens file | the operator's home |
-| this machine's role is `heart` | `bin/skuld/role.sh resolve`, from the fleet registry in the home |
+| this machine's role is `heart` | `bin/fleet/role.sh resolve`, from the fleet registry in the home |
 | `bin/forge/merge-verdict.sh` exists on the tree | the heart's own work (PR #747) |
 | the gate answers `0` for this PR | one sha, one verdict, main green, branch current |
 

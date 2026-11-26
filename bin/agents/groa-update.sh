@@ -567,7 +567,7 @@ fi
 # its limit, with the exact command — never a closing line that says done while installs are owed. A
 # timeout is a failure here, not a note. The operator may accept a surface as owed on this machine
 # ($YMIR_HOME/config/owed-accepted.txt): it is still named, but it no longer fails the update.
-GROA_ROLE="$(timeout 10 "$SCRIPT_DIR/../skuld/role.sh" resolve 2>/dev/null | head -1)"
+GROA_ROLE="$(timeout 10 "$SCRIPT_DIR/../fleet/role.sh" resolve 2>/dev/null | head -1)"
 GROA_COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null)"
 export GROA_ROLE GROA_COMMIT
 printf '\n'

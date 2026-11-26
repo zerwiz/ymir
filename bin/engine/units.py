@@ -97,7 +97,7 @@ def roles_here() -> set[str]:
     """The roles this seat holds, or the empty set when unresolved (an unresolved seat owes all)."""
     raw = os.environ.get("YMIR_UNITS_ROLES") or os.environ.get("YMIR_ROLE")
     if raw is None and not os.environ.get("YMIR_UNITS_NO_ROLE_PROBE"):
-        door = CODE_ROOT / "bin" / "skuld" / "role.sh"
+        door = CODE_ROOT / "bin" / "fleet" / "role.sh"
         if door.exists():
             try:
                 raw = subprocess.run(["bash", str(door), "resolve"], capture_output=True, text=True, timeout=20).stdout

@@ -52,7 +52,7 @@ GROA="$ROOT/bin/agents/groa-update.sh"
 
 # ── 1 · the facts this machine has, read from its own home ──────────────────────────────────────────
 hoard="$(bash -c '. "$1/bin/vault/hoard-lib.sh" >/dev/null 2>&1; ymir_home_root out; printf %s "$out"' _ "$ROOT" 2>/dev/null || true)"
-role="$(cd "$ROOT" && timeout 20 bin/skuld/role.sh resolve 2>/dev/null | head -1 || true)"
+role="$(cd "$ROOT" && timeout 20 bin/fleet/role.sh resolve 2>/dev/null | head -1 || true)"
 branch="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
 head_sha="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 dirty="$(git -C "$ROOT" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"

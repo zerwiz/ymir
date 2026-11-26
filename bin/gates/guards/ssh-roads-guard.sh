@@ -13,7 +13,7 @@ if [ -z "${YMIR_HOME:-}" ]; then
   echo "SKIP: the home is unresolved — set YMIR_HOME, or run from a checkout"; exit 0
 fi
 # The registry is the HOME's, and $YMIR_FLEET_REGISTRY may name another one (the same override
-# bin/skuld/role.sh and the public ward honour) so a test can judge a fleet of its own.
+# bin/fleet/role.sh and the public ward honour) so a test can judge a fleet of its own.
 REG="${YMIR_FLEET_REGISTRY:-$YMIR_HOME/hodd/data/fleet.json}"
 python3 - "$FILE" "$REG" <<'PY'
 import json,sys,re

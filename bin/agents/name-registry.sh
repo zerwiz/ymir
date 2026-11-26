@@ -88,7 +88,7 @@ def scan():
     # agents
     for p in sorted(glob.glob(f"{root}/.agents/agents/*.md")):
         n = os.path.basename(p)[:-3]
-        n = re.sub(r"-(developer|marketer|reviewer|documenter|researcher|planner|stow|check|scout|designer|consent|bearings|recovery|diagnostics|projects|hold|update|smith)$", "", n)
+        n = re.sub(r"-(developer|marketer|reviewer|documenter|researcher|planner|stow|check|scout|designer|consent|bearings|recovery|diagnostics|projects|hold|update|smith|ear)$", "", n)
         add(n, "agent", p, n)
     # skills
     for p in sorted(glob.glob(f"{root}/.agents/skills/*/SKILL.md")):

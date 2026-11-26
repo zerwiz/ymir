@@ -1298,7 +1298,7 @@ async def _execute(name, arguments):
 
     if name == "read_calendar":
         what = str(args.get("what") or "what").strip().lower()
-        door = _door("time/snotra/calendar-ask.sh")
+        door = _door("time/managandr/calendar-ask.sh")
         live = str(ROOT / "systems/snotra/services/calendar/calendar-ask.sh")
         if Path(live).is_file():
             door = live
@@ -2751,7 +2751,7 @@ async def _tool_calendar_write(args):
     made must never be spoken as made. There is no local calendar to fall back on.
     """
     action = str(args.get("action") or "").strip().lower()
-    door = _door("time/snotra/calendar-write.sh")  # allow-superseded-path: the ledger moved this shelf; the bin/ shim execs systems/snotra/services/calendar/calendar-write.sh
+    door = _door("time/managandr/calendar-write.sh")  # Mánagandr's write door (plan 374 A6); it execs systems/snotra/services/calendar/calendar-write.sh
     if action == "status":
         code, out = _run([door, "status"], timeout=45)
         return ToolResult(

@@ -88,14 +88,14 @@ for _seat in "${HOME}/.pi/agent/extensions/.ymir-seat" "${YMIR_HOME:-/nonexisten
 done
 unset _seat
 FLEET_ROLES="${YMIR_EIR_ROLES-}"
-if [ -z "${YMIR_EIR_ROLES+set}" ] && [ -x "$SCRIPT_DIR/../skuld/role.sh" ]; then
-  FLEET_ROLES="$(timeout 10 "$SCRIPT_DIR/../skuld/role.sh" resolve 2>/dev/null | tr ',\n' '  ' | sed 's/  */ /g; s/^ //; s/ $//')"
+if [ -z "${YMIR_EIR_ROLES+set}" ] && [ -x "$SCRIPT_DIR/../fleet/role.sh" ]; then
+  FLEET_ROLES="$(timeout 10 "$SCRIPT_DIR/../fleet/role.sh" resolve 2>/dev/null | tr ',\n' '  ' | sed 's/  */ /g; s/^ //; s/ $//')"
 fi
 
 # surface_skip <surface> — 0 when this substrate/role cannot owe the surface.
 surface_skip() {
   # The register's roles (plan 278): a surface declared for other roles is not this seat's to owe.
-  # The FLEET role is read once from the fleet registry (bin/skuld/role.sh), never the seat's own word
+  # The FLEET role is read once from the fleet registry (bin/fleet/role.sh), never the seat's own word
   # (`.ymir-seat` role= names the agent's office, e.g. counsellor). Unresolved: the seat owes everything.
   local _ro="${SURF_ROLES[$1]:-all}" _fr
   if [ "$_ro" != all ] && [ -n "$FLEET_ROLES" ]; then
