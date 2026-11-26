@@ -36,3 +36,7 @@ the original guard: `gimle` may not be answered as the Ymir pitch, or from an ar
 - `systems/skirnir/tests/test_smoke_verdicts.sh`
 - `bin/voice/kokoro-lib.sh` (`kokoro_port_squatter`)
 - `systems/snotra/services/cron/trello-map.sh`
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #964
