@@ -21,6 +21,8 @@ stderr, named.
 from __future__ import annotations
 
 import json
+import socket
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -95,6 +97,28 @@ def take_digest(env: Mapping[str, str], root: Path, session: str, timeout: float
     return True, f"{len(r.out.splitlines())} lines"
 
 
+def answer_back(env: Mapping[str, str], raw: str, root: Path, session: str, err: TextIO) -> None:
+    """The road back: hand the turn's message and final answer to bin/agents/reply.sh, which decides who is owed."""
+    door = root / "bin" / "agents" / "reply.sh"
+    try:
+        extra = json.loads(raw).get("extra") or {}
+    except (ValueError, AttributeError):
+        return
+    prompt, answer = extra.get("user_message"), extra.get("assistant_response")
+    if not door.exists() or not isinstance(prompt, str) or not isinstance(answer, str):
+        return
+    doc = json.dumps({"session": session, "answer": answer,
+                      "messages": [{"id": extra.get("turn_id") or "", "text": prompt}]})
+    who = f"agent hermes · hermes session {session} · {socket.gethostname().split('.')[0]}"
+    try:
+        r = subprocess.run(["bash", str(door), "--turn-end"], input=doc, capture_output=True, text=True, timeout=50,
+                           env={**env, "YMIR_REPLY_ORIGIN": who})
+        if r.returncode:
+            print(f"hermes-session-hook: the answer was not delivered — {(r.stdout + r.stderr).strip()[-200:]}", file=err)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        print(f"hermes-session-hook: the answer was not delivered — {exc}", file=err)
+
+
 def handle(env: Mapping[str, str], raw: str, *, root: Path | None = None,
            digest: Callable[[Mapping[str, str], Path, str, float], tuple[bool, str]] = take_digest,
            err: TextIO = sys.stderr) -> str:
@@ -102,6 +126,9 @@ def handle(env: Mapping[str, str], raw: str, *, root: Path | None = None,
     root = root or C.tree_root()
     e = envelope(raw)
     if not e.event or not e.session or e.session == "-":
+        return "{}"
+    if e.event == "post_llm_call":
+        answer_back(env, raw, root, e.session, err)
         return "{}"
     state = C.state_dir(env)
     stash = state / f"digest.{e.session}.md"

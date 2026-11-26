@@ -38,6 +38,11 @@
 # YMIR_MSG_FROM, names the sender; --from "" is not a way to strip the stamp (YMIR_MSG_STAMP=0
 # is, and it exists for tests and for a caller that already stamped).
 #
+# THE ROAD BACK. Every stamped line that is sent is also noted on the receiving machine
+# (<state>/replies/inbox/<pane>), so `bin/agents/reply.sh "<text>"` in that pane knows whom to answer.
+# A line that is a reply ("[reply from …") is never sent a second copy: a duplicate answer wakes the
+# sender twice, so once it is sent the door ends 0.
+#
 # Report (TOON, one row). `resent` is `no` (nothing was needed), `copy` (the line was lost and
 # was sent once more), `enter` (the words stood in the box unsent, so Enter was pressed) or
 # `none` (the box could not be read, so nothing was done):
@@ -63,7 +68,7 @@ while [ $# -gt 0 ]; do
     --wait)    WAIT="${2-}"; shift 2 ;;
     --once)    RESEND=0; shift ;;
     --resolve) RESOLVE=1; shift ;;
-    -h|--help) sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+    -h|--help) sed -n '2,50p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
     --) shift; break ;;
     *) break ;;
   esac
@@ -283,6 +288,11 @@ SENT=1
 # stamp's own origin, so the log and the pane can never disagree. A send that failed writes nothing,
 # and a log that cannot be written never fails the send — the message matters more than its record.
 case "$TEXT" in
+  '[from '*'] '*|'[reply from '*'] '*)
+    far "d=\"\${YMIR_REPLY_STATE:-\${XDG_STATE_HOME:-\$HOME/.local/state}/ymir/replies}/inbox\"; mkdir -p \"\$d\" && printf '%s\\n' $(printf '%q' "$TEXT") > \"\$d\"/$(printf '%q' "$PANE")" >/dev/null 2>&1 || true ;;
+esac
+case "$TEXT" in
+  '[reply from '*'] '*) _from="${TEXT#\[reply from }"; _from="${_from%%\]*}"; _text="${TEXT#*\] }" ;;
   '[from '*'] '*) _from="${TEXT#\[from }"; _from="${_from%%\]*}"; _text="${TEXT#*\] }" ;;
   *) _from="$(msg_origin)"; _text="$TEXT" ;;
 esac
@@ -302,8 +312,10 @@ if [ "$STATE" != working ] && [ "$RESEND" = 1 ] && ! screen_busy; then
       submit_key || die "the Enter key was refused — the line stands in the box, unsent" 4
       RESENT=enter ;;
     empty|suggestion)
+      case "$TEXT" in '[reply from '*) RESENT=none ;; *)
       send_once || die "the resend failed — the far side refused it" 4
       RESENT=copy ;;
+      esac ;;
     *)
       RESENT=none ;;
   esac
@@ -319,6 +331,7 @@ if [ "$VERDICT" = unknown ]; then
   printf 'help: the input box of %s could not be read, so it may not have been empty — check the pane\n' "$PANE" >&2
 fi
 [ "$STATE" = working ] && exit 0
+case "$TEXT" in '[reply from '*) exit 0 ;; esac
 case "$RESENT" in
   enter) printf '%s: the brief stood in %s unsent, so Enter was pressed — it has not read `working` yet\n' "$SELF" "$PANE" >&2 ;;
   copy)  printf '%s: the line was lost, so it was sent once more — %s still does not read `working`\n' "$SELF" "$PANE" >&2 ;;

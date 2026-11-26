@@ -67,7 +67,15 @@ while [ $# -gt 0 ]; do
     *) LINE="${LINE:+$LINE }$1"; shift ;;
   esac
 done
-SIGN="$SEAT ($ME)"
+SIGN="$SEAT ($ME)"; ORIGIN=""
+# THE ROAD BACK: the sender's pane is proved HERE, on the sender's machine — the far side cannot know it. A
+# full origin in --from is taken verbatim by eindri-send, so bin/agents/reply.sh can answer this pane.
+case "$SEAT" in
+  script*|"the Allfather"*) ;;
+  *) . "$ROOT/bin/agents/msg-origin.sh" 2>/dev/null && PANE_SELF="$(_pane_of_self)"
+     [ -n "${PANE_SELF:-}" ] && ORIGIN="agent $SEAT ($ME) · herdr pane $PANE_SELF · $ME" ;;
+esac
+ORIGIN="${ORIGIN:-$SIGN}"
 [ "$VERB" = stop ] && [ -z "$LINE" ] && LINE="stop at the next safe point: commit what stands, write your report, then stop"
 [ "$VERB" = stop ] && case "$LINE" in "stop at the next safe point"*) ;; *) LINE="stop at the next safe point ($LINE): commit what stands, write your report, then stop" ;; esac
 [ -n "$LINE" ] || die 'give the line to send (fleet-tell.sh --help)'
@@ -129,7 +137,7 @@ wire_state() {  # <rc> → handed | refused | no-answer
 # type <machine> <pane-or-errand> <line> → 0 typed
 type_pane() {
   local m="$1" p="$2" l="$3" out
-  out="$(rexec "$m" bash bin/agents/eindri-send.sh --from "$SIGN" "$p" "$l")"; local rc=$?
+  out="$(rexec "$m" bash bin/agents/eindri-send.sh --from "$ORIGIN" "$p" "$l")"; local rc=$?
   TYPED_WHY="$(printf '%s' "$out" | tail -1 | cut -c1-90)"
   return "$rc"
 }
@@ -148,7 +156,7 @@ tell_arm() {  # machine
     row "$m" "arm holder" "-" no-answer "-" no "$m did not answer (ssh exit $rc) within ${LIMIT}s"; return
   fi
   if [ "$MODE" != pane ]; then
-    out="$(rexec "$m" bash bin/agents/tell.sh --from "$SIGN" arm "$text")"; rc=$?
+    out="$(rexec "$m" bash bin/agents/tell.sh --from "$ORIGIN" arm "$text")"; rc=$?
     if [ "$rc" -eq 127 ] || printf '%s' "$out" | grep -q 'No such file'; then
       out="$(bash "$ROOT/bin/fleet/arm-send.sh" "$m" "$text" 2>&1)"; rc=$?   # its runtime predates tell.sh
       printf '%s' "$out" | grep -q handed && rc=0
@@ -193,7 +201,7 @@ tell_who() {  # machine who   (an errand id or a pane id)
     row "$m" "$who" "-" "$arm" "$pane" "$typed" "${why:-ok}"; return
   fi
   if [ "$MODE" != pane ]; then
-    out="$(rexec "$m" bash bin/agents/tell.sh --from "$SIGN" "$who" "$line")"; rc=$?
+    out="$(rexec "$m" bash bin/agents/tell.sh --from "$ORIGIN" "$who" "$line")"; rc=$?
     arm="$(wire_state "$rc")"; why="$(printf '%s' "$out" | tail -1 | cut -c1-90)"
     if [ "$arm" = no-answer ]; then
       row "$m" "$who" "-" no-answer "-" no "$m did not answer (exit $rc) within ${LIMIT}s"; return

@@ -73,3 +73,16 @@ def test_a_failed_digest_is_named_and_still_valid_json(tmp_path):
     out = H.handle(env_for(tmp_path), payload("pre_llm_call", "s6", "/x"), root=tmp_path,
                    digest=lambda *a: (False, "saga exit 1"), err=err)
     assert out == "{}" and "saga exit 1" in err.getvalue()
+
+
+def test_the_turn_end_hands_the_answer_to_the_reply_door(tmp_path):
+    door = tmp_path / "tree" / "bin" / "agents" / "reply.sh"
+    door.parent.mkdir(parents=True)
+    door.write_text('cat > "$OUT"; printf %s "$YMIR_REPLY_ORIGIN" > "$OUT.who"\n')
+    env = env_for(tmp_path, OUT=str(tmp_path / "got"), PATH="/usr/bin:/bin")
+    raw = json.dumps({"hook_event_name": "post_llm_call", "session_id": "s9", "cwd": "/x",
+                      "extra": {"user_message": "[from agent A] q", "assistant_response": "a", "turn_id": "t1"}})
+    assert H.handle(env, raw, root=tmp_path / "tree", err=io.StringIO()) == "{}"
+    got = json.loads((tmp_path / "got").read_text())
+    assert got == {"session": "s9", "answer": "a", "messages": [{"id": "t1", "text": "[from agent A] q"}]}
+    assert (tmp_path / "got.who").read_text().startswith("agent hermes · hermes session s9 · ")

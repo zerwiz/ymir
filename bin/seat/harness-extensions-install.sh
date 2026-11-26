@@ -249,6 +249,7 @@ fi
 # ── claude: the hook SCRIPTS; the JSON wiring is named, never merged blind ────
 if command -v claude >/dev/null 2>&1; then
   copy_tree "$ROOT/.claude/hooks" "$HOME/.claude/hooks" "claude-hooks" || true
+  # (plus the reply-back Stop hook, below: a turn's answer returns to its sender)
   # FIVE user-scope hooks, each wired as ONE NAMED entry in ~/.claude/settings.json, so they
   # serve EVERY project on the machine and never a single repo:
   #   SessionStart  saga-session.sh    Sága's ONE digest: it resolves the CURRENT home (project, then pin)
@@ -296,6 +297,9 @@ desired = [
     ("claude-errand-stop", "Stop", "errand-stop.sh", {
         "hooks": [{"type": "command",
                    "command": 'bash "$HOME/.claude/hooks/errand-stop.sh"', "timeout": 30}]}),
+    ("claude-reply-back", "Stop", "reply-back.sh", {
+        "hooks": [{"type": "command",
+                   "command": 'bash "$HOME/.claude/hooks/reply-back.sh"', "timeout": 150}]}),
     ("claude-ymir-arm", "Stop", "ymir-arm.sh", {
         "hooks": [{"type": "command",
                    "command": 'bash "$HOME/.claude/hooks/ymir-arm.sh"',

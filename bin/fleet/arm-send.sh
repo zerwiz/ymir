@@ -52,7 +52,10 @@ case "${1:-}" in
     [ -n "$text" ] || { echo "arm-send: give the line to send" >&2; exit 2; }
     # the way back, written so it works on a machine that does not carry this script yet
     back="answer with one command: ssh $(road "$me" || true) 'cd ~/ymir-runtime && bash bin/voice/rodd-arm.sh tell --from YOUR-SEAT \"<your answer>\"' (or bin/fleet/arm-send.sh $me \"<your answer>\")"
-    door "$host" tell --from "$seat ($me)" "$text — $back"
+    from="$seat ($me)"   # with the sender's proved pane, so bin/agents/reply.sh can answer it
+    . "$ROOT/bin/agents/msg-origin.sh" 2>/dev/null && pane="$(_pane_of_self)"
+    [ -n "${pane:-}" ] && from="agent $from · herdr pane $pane · $me"
+    door "$host" tell --from "$from" "$text — $back"
     rc=$?
     case "$rc" in
       0) printf 'arm-send\thanded\t%s\tto the arm holder on %s; it is delivered when they answer (RULES/49)\n' "$seat" "$host" ;;
