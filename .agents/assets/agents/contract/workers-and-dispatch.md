@@ -134,3 +134,4 @@ isolated subagents. `bin/engine/hermes-ensure.sh` provisions it for any user who
 
 - **2026-11-25** — written when the contract was split by topic (plan 369 item 7); its text is folded from the
   sections of the prior `AGENTS.md`, kept verbatim in `docs/contract-history/AGENTS-2026-11-24.md`.
+- **2026-11-26** — plan 381: the mandate and its *Who / Does* row now say direct address belongs to an answer **to him**; an agent's or a script's turn is answered to that sender. The prior mandate is kept in `docs/contract-history/AGENTS-2026-11-26.md`.

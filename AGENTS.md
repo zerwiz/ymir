@@ -124,3 +124,4 @@ All topics live in `.agents/assets/agents/contract/`. The lines below are genera
 ## CHANGE LOG
 
 - 2026-11-25 — review-mend: added missing heading for #952
+- **2026-11-26** — plan 381: item 3 of *Who you are* now says every answer **to him**, and that a turn an agent or a script began is answered to that sender; the prior text is kept in `docs/contract-history/AGENTS-2026-11-26.md`.
