@@ -11,3 +11,7 @@ A new door, `bin/agents/reply.sh`, reads the stamp and answers on the same road.
 ## Proof
 
 `bin/agents/tests/test_reply.sh`. Real herdr panes: pi asked Claude and got the answer back, and pi asked pi and got the answer back. Nothing bounced further.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #966
