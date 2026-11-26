@@ -11,3 +11,7 @@ A thin hook for Claude Code (`.claude/hooks/reply-back.sh`), pi (`.pi/extensions
 ## Proof
 
 Claude Code and pi hooks answered in real panes. The OpenCode turn reader was checked in node; it has not run in a live OpenCode session.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #966
