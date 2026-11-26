@@ -11,3 +11,7 @@ The session hook handles `post_llm_call` and hands the message and answer to `re
 ## Proof
 
 `src/ymir_runtime/tests/test_hermes_session_hook.py`, with a fake reply door. Not yet seen in a live Hermes session.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #966
