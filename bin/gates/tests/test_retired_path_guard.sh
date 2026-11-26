@@ -28,10 +28,11 @@ done
 
 # 4. a waived line and the exempt shelves pass
 printf 'see hodd/state/ (retired-path-ok: quoting the old path in a history note)\n' > "$t/w.md"
-mkdir -p "$t/.agents/migrations" "$t/docs/fixes/hoard"
+mkdir -p "$t/.agents/migrations" "$t/docs/fixes/hoard" "$t/docs/contract-history"
 printf 'mv hodd/life life\n' > "$t/.agents/migrations/0099-x.sh"
 printf 'hodd/workspaces/ moved\n' > "$t/docs/fixes/hoard/note.md"
-git -C "$t" add w.md .agents/migrations/0099-x.sh docs/fixes/hoard/note.md
+printf 'the old contract sent notes to hodd/life/ (verbatim copy)\n' > "$t/docs/contract-history/AGENTS-old.md"
+git -C "$t" add w.md .agents/migrations/0099-x.sh docs/fixes/hoard/note.md docs/contract-history/AGENTS-old.md
 bash "$g" --repo "$t" >/dev/null 2>&1 || { echo "FAIL: a waived line or an exempt shelf was refused"; exit 1; }
 
 # 5. the range mode judges what a push adds

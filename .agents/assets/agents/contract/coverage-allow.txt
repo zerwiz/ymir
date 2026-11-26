@@ -1,0 +1,5 @@
+# contract-coverage allow-list: a token the live contract deliberately no longer carries, and why.
+# Format: <token><TAB><reason>. Read by bin/seat/contract-coverage.sh. Append; never delete a row (RULES/06).
+svartalfaheim/<realm>/workspace/<project>/plans	corrected: the plan ledger is svartalfaheim/<realm>/projects/<project>/plans/ (home-and-private-data.md)
+svartalfaheim/<realm>/workspace/ymir/plans	corrected: the ymir ledger is svartalfaheim/<realm>/projects/ymir/plans/ (home-and-private-data.md)
+plan 01	retired: "plans 01-42" was the ledger's count on 2026-09-22; the README index is the count now
