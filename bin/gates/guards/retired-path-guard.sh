@@ -22,6 +22,7 @@
 #   .agents/migrations/   the migration that moves them      docs/fixes/          the fix notes (append-only)
 #   hodd/reference/moves/ the home's move records            RULES/               the law (append-only)
 #   docs/contract-history/ the contract's verbatim prior text (plan 369 item 7)
+#   hodd/saves/           verbatim dated snapshots; rewriting one would falsify the record
 #   this guard and its test
 # A single line may be waived in writing with `retired-path-ok:` and a reason on the same line.
 #
@@ -34,7 +35,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --repo)  REPO="${2:?--repo needs a directory}"; shift 2 ;;
     --range) MODE=range; RANGE="${2:?--range needs A..B}"; shift 2 ;;
-    -h|--help) sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) printf 'error: unknown argument %s\n' "$1" >&2; exit 2 ;;
   esac
 done
@@ -46,6 +47,7 @@ exempt() {
   case "$1" in
     .agents/migrations/*|docs/fixes/*|hodd/reference/moves/*|RULES/*) return 0 ;;
     docs/contract-history/*) return 0 ;;   # the contract's verbatim prior text (RULES/06): a record, never edited
+    hodd/saves/*) return 0 ;;              # dated snapshots, copied verbatim: a record, never rewritten
     bin/gates/guards/retired-path-guard.sh|bin/gates/tests/test_retired_path_guard.sh) return 0 ;;
   esac
   return 1

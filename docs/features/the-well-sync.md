@@ -25,6 +25,8 @@ keeps the memory checkpointed.
 ## Notes and limits
 
 - **Stages only the named well files** — never `git add -A`; unapproved work must not ride.
+- **Commits only its log** (`hodd/memory/well/episodes.jsonl`). Files another job left staged stay
+  staged, and they cannot block the well's commit.
 - **Fast‑forward only.** It never forces, stashes, or merges; a diverged home is reported,
   not resolved for you.
 - **The engram is checkpointed** (`wal_checkpoint(TRUNCATE)`) so one binary carries the
@@ -44,3 +46,4 @@ keeps the memory checkpointed.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-26** — added: the sync commits only its log.
