@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[122]{file,does,kind,verdict,disposition,callers,lines}:
+bin[129]{file,does,kind,verdict,disposition,callers,lines}:
   "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",3,54
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",2,50
   "17-one-agent-one-worktree.md","17 — One task, one worktree, and it is closed when the task is","data","wired","keep",4,71
@@ -34,11 +34,12 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "LICENSE","MIT No Attribution License","data","wired","keep",3,8
   "LICENSE.MIT","MIT License","data","wired","keep",1,22
   "LICENSE.txt","The arc42 template and documentation is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.","data","wired","keep",1,19
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",69,-
-  "README.md","The collaboration kit — the same discipline in every repository, and nothing left behind","data","tested","keep",69,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",69,-
-  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",69,-
-  "TEMPLATE.md","---","data","wired","keep",5,48
+  "PLAN-ROAD.md","The plan road — how this project's plans reach its board","data","wired","keep",0,31
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",71,-
+  "README.md","The collaboration kit — the same discipline in every repository, and nothing left behind","data","tested","keep",71,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",71,-
+  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",71,-
+  "TEMPLATE.md","---","data","wired","keep",6,48
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "__init__.py","'''kitlib — the collaboration kit's modules, imported by scripts/kit.py.'''","tool","tested","migrate → src/ymir_runtime/tests/__init__.py",2,3
   "a-company-suite.md","---","data","wired","keep",2,123
@@ -55,6 +56,11 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "areas.md","---","data","wired","keep",2,100
   "areas.py","'''areas.py — a repository's own answer to the canon of areas.","tool","wired","keep",6,417
   "areas.sh","areas.sh — this repository's own answer to the canon of areas (a thin door; the craft is areas.py).","tool","wired","keep",12,18
+  "board-sync.md","---","data","wired","keep",0,105
+  "board-topics.yaml.example","Topic labels for plan cards: topic: words that, found in a plan's title or first section, label it.","data","wired","keep",1,21
+  "board.yaml.example","The board row of a project's registry entry (hodd/identity/projects.yaml).","data","wired","keep",1,12
+  "board_move.py","'''board_move.py — move a Plane card to another project (Plane Community cannot do this itself).","tool","wired","keep",2,106
+  "board_sync.py","'''board_sync.py — mirror the headers of plans, tickets and documents onto Plane cards.","tool","wired","keep",3,351
   "canon.yaml","areas/canon.yaml — the plain face of the canon: what every project must answer for.","data","wired","keep",6,138
   "check-host.sh","check-host.sh — a read-only report on this machine: disk, worktrees per repository, containers, images.","tool","wired","keep",3,10
   "checks.sh","checks.sh — run this repository's own cheap checks, whatever language it is written in.","tool","wired","keep",8,118
@@ -82,7 +88,7 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "handoff-check-wrapper.sh","handoff/check.sh — the stable door for the handoff, in any project.","tool","wired","keep",1,12
   "handoff-check.py","'''handoff/check.sh — the handoff: is it there, complete, fresh, and honest about the paths it names?","tool","wired","keep",1,211
   "harness-hooks.md","---","data","wired","keep",2,81
-  "headers.md","---","data","wired","keep",8,68
+  "headers.md","---","data","wired","keep",9,92
   "hooks-chain.sh","hooks-chain.sh <hook> [args…] — run the repository's own hooks after the kit's, never instead of them.","tool","wired","keep",3,41
   "hooks.py","'''hooks — seat the kit's hooks without taking anyone else's.","tool","wired","keep",1,116
   "host.py","'''host — read-only reports about a machine: check-host, doctor (at session start), and the weekly summary.","tool","wired","keep",1,149
@@ -98,10 +104,10 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "languages.py","'''languages — the project's tongue for the work; a client's tongue only where a client reads it.","tool","wired","keep",2,133
   "leftovers.py","'''leftovers — everything a development task leaves behind, each class declared in project.yaml with its rule.","tool","wired","keep",2,248
   "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",3,81
-  "maker-allow.txt","maker-allow.txt — the one allow file for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,8
+  "maker-allow.txt","maker-allow.txt — the one allow file for bin/forge/maker-names.py (RULES/53).","data","wired","keep",8,8
   "maker-guard.sh","maker-guard.sh — the ward over what a commit or a pull request SAYS (RULES/53).","tool","wired","keep",11,58
-  "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",11,155
-  "maker-words.txt","maker-words.txt — the word list for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,36
+  "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",12,155
+  "maker-words.txt","maker-words.txt — the word list for bin/forge/maker-names.py (RULES/53).","data","wired","keep",8,36
   "miniyaml.py","'''miniyaml — the small YAML subset project.yaml is written in, read with the standard library only.","tool","wired","keep",1,170
   "monorepo-bun-uv-mix.yaml","project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).","data","wired","keep",0,94
   "monorepo.yaml","project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).","data","wired","keep",0,63
@@ -127,24 +133,25 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "reviews.sh","reviews.sh — a review is a file in the repository, so the next hand gets it without asking anyone.","tool","wired","keep",2,70
   "rule.md","{NN} — {The rule, said as a sentence}","data","tested","keep",2,32
   "runbook.md","Runbook template","data","wired","keep",2,146
-  "secret-scan.sh","secret-scan — a credential must never enter this repository, and a hook is cheaper than a history rewrite.","tool","wired","keep",4,37
+  "secret-scan.sh","secret-scan — a credential must never enter this repository, and a hook is cheaper than a history rewrite.","tool","wired","keep",7,37
   "ship.sh","ship.sh — the house's git discipline as one door: branch, commit named paths, merge to the base, push.","tool","wired","keep",6,63
   "stack.py","'''stack — turn an app's development stack on and off; never touch what runs in production.","tool","wired","keep",1,182
   "stack.sh","stack.sh — turn an app's development stack on and off; production pieces are never stopped.","tool","wired","keep",4,11
-  "standardise.py","'''standardise.py — put the collaboration kit into a repository, upgrade an older one, or say what is missing.","tool","wired","keep",2,359
-  "standardise.sh","standardise.sh — put the collaboration kit into a repository, upgrade an older one, or say what is missing.","tool","wired","keep",4,15
-  "status.py","'''status.py — the status of every plan, ticket and document in this repository, read from their headers.","tool","wired","migrate → src/ymir_runtime/status.py",3,310
+  "standardise.py","'''standardise.py — put the collaboration kit into a repository, upgrade an older one, or say what is missing.","tool","wired","keep",3,373
+  "standardise.sh","standardise.sh — put the collaboration kit into a repository, upgrade an older one, or say what is missing.","tool","wired","keep",5,15
+  "status.py","'''status.py — the status of every plan, ticket and document in this repository, read from their headers.","tool","wired","migrate → src/ymir_runtime/status.py",12,316
+  "test_board_sync.py","'''test_board_sync.py — the proofs for scripts/board_sync.py against a fake Plane served from memory.","tool","wired","keep",0,253
   "test_collab.sh","test_collab.sh — the proofs for bin/collab (Vingólf).","tool","wired","keep",0,150
   "test_kit.py","'''test_kit.py — the proofs for kit 2.0.0 (plan 267 K-1…K-13 and RULES/24).","tool","wired","keep",1,715
   "test_work.py","'''test_work.py — the proofs for work start/stop/sweep, the stack switch and the deploy door (kit 2.0.0).","tool","wired","keep",1,320
   "troubleshooting.md","Troubleshooting {product name, feature, or task}","data","wired","keep",1,49
   "tutorial.md","Title","data","wired","keep",1,92
   "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",4,390
-  "work.py","'''work — start, stop and sweep: the three moments a task begins, ends, and is cleaned up after.","tool","wired","keep",4,278
-  "work.sh","work.sh — start, stop and sweep a task, so nothing it used is left behind (docs/how-we-work.md).","tool","tested","keep",15,10
+  "work.py","'''work — start, stop and sweep: the three moments a task begins, ends, and is cleaned up after.","tool","wired","keep",9,278
+  "work.sh","work.sh — start, stop and sweep a task, so nothing it used is left behind (docs/how-we-work.md).","tool","tested","keep",18,10
   "worktree.sh","worktree.sh — one task, one worktree, and nothing left behind when it is finished (RULES/17, RULES/24).","tool","wired","migrate → src/ymir_runtime/worktree.py",7,13
   "worktrees.py","'''worktrees — one task, one worktree, and a lifecycle the kit enforces from creation to removal.","tool","wired","keep",2,415
 
-**Tally.** verdict: wired=110, tested=12
+**Tally.** verdict: wired=117, tested=12
 
-**Tally.** disposition: keep=119, migrate → src/ymir_runtime/tests/__init__.py=1, migrate → src/ymir_runtime/status.py=1, migrate → src/ymir_runtime/worktree.py=1
+**Tally.** disposition: keep=126, migrate → src/ymir_runtime/tests/__init__.py=1, migrate → src/ymir_runtime/status.py=1, migrate → src/ymir_runtime/worktree.py=1

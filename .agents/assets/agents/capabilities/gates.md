@@ -70,8 +70,10 @@
 | hypr-door-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | identity-guard.sh | identity-guard.sh — a commit that leaves by push must not publish a pr | tested | keep (a human or a cron row must run it) |
 | inventory-guard.sh | inventory-guard.sh — a register that runs in no gate is a capability t | tested | keep (a human or a cron row must run it) |
-| language-guard.sh | language-guard.sh — two tongues: English for the work, Old Norse for t | tested+named | keep (a human or a cron row must run it) |
+| language-guard.sh | language-guard.sh — two tongues: English for the work, Old Norse for t | tested | keep (a human or a cron row must run it) |
 | maker-guard.sh | maker-guard.sh — the ward over what a commit or a pull request SAYS (R | tested | keep (a human or a cron row must run it) |
+| mcp-parity-guard.sh | mcp-parity-guard.sh — every door in bin/mcp/doors.yaml has its MCP too | tested | keep (a human or a cron row must run it) |
+| merge-guard.sh | merge-guard.sh — the arm holder alone merges; a worker never merges it | tested | keep (a human or a cron row must run it) |
 | model-rows-guard.sh | model-rows-guard.sh — every agent row names a model THIS machine can a | tested | keep (a human or a cron row must run it) |
 | nda-guard.sh | nda-guard.sh — company, client and NDA-project names never reach the p | tested | keep (a human or a cron row must run it) |
 | packaging-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
@@ -86,7 +88,7 @@
 | public-data-guard.sh | public-data-guard.sh — the TREE scan for RULES/04: templates and logic | tested | keep (a human or a cron row must run it) |
 | public-guard.sh | public-guard.sh — the OLDER door to RULES/04's judgement: templates an | tested+named | keep (a human or a cron row must run it) |
 | registers-guard.sh | registers-guard.sh — every generated register is current. | tested | keep (a human or a cron row must run it) |
-| retired-path-guard.sh | retired-path-guard.sh — a NEW file may not name a retired home path (p | tested+named | keep (a human or a cron row must run it) |
+| retired-path-guard.sh | retired-path-guard.sh — a NEW file may not name a retired home path (p | tested | keep (a human or a cron row must run it) |
 | rules-compliance-guard.sh | rules-compliance-guard.sh — a push proves the house's own rules were f | tested | keep (a human or a cron row must run it) |
 | rules-number-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | runtime-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
@@ -99,10 +101,15 @@
 | subsystem-docs-guard.sh | subsystem-docs-guard.sh — the books a subsystem names must exist, and  | tested | keep (a human or a cron row must run it) |
 | syn-turnend-guard.sh | syn-turnend-guard.sh - refuse to let a Brokk turn end blind. | tested+named | keep (a human or a cron row must run it) |
 | unit-writer-guard.sh | unit-writer-guard.sh — no script writes a systemd user unit without ha | tested | keep (a human or a cron row must run it) |
-| vault-guard.sh | vault-guard.sh — nothing may copy content OUT of the vault (Rule 15). | tested+named | keep (a human or a cron row must run it) |
+| vault-guard.sh | vault-guard.sh — nothing may copy content OUT of the vault (Rule 15). | tested | keep (a human or a cron row must run it) |
 | weave-guard.sh | weave-guard.sh — an index that does not name every file it indexes is  | tested | keep (a human or a cron row must run it) |
 | main-red.sh | main-red.sh — ONE issue names a red main, and it names the hand that b | tested | keep (a human or a cron row must run it) |
 | nidhogg.sh | nidhogg.sh — Níðhöggr, the gnawer at the root. The hallucination fi | tested | keep (a human or a cron row must run it) |
+| pack.sh | pack.sh — Ymir's gate pack: one set of gates, kept here, seated byte f | tested | keep (a human or a cron row must run it) |
+| install-hooks.sh | install-hooks.sh — seat this repository's hooks (.githooks/) so every  | tested | keep (a human or a cron row must run it) |
+| run-gates.sh | run-gates.sh — the one door to this repository's gates. The hooks and  | tested | keep (a human or a cron row must run it) |
+| vendor-sync.sh | vendor-sync.sh — keep Ymir's gate pack in step with Ymir. Part of the  | tested | keep (a human or a cron row must run it) |
+| gates.test.sh | gates.test.sh — every gate refuses its planted fault, and lets a clean | tested | keep (a human or a cron row must run it) |
 | plan-audit.sh | plan-audit.sh — the plan CONTRACT, as a check over the ledger shelf. | tested | keep (a human or a cron row must run it) |
 | registers.sh | registers.sh — every generated register, through one door. | tested | keep (a human or a cron row must run it) |
 | repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
@@ -127,6 +134,7 @@
 | test_fleet_roads.sh | test_fleet_roads.sh — the ssh-roads ward judges the marked block, and  | tested | keep (a human or a cron row must run it) |
 | test_four_shelves.sh | test_four_shelves.sh — the readers work with the ONE-CYCLE LINKS REMOV | tested | keep (a human or a cron row must run it) |
 | test_gate_directory.sh | test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY | tested | keep (a human or a cron row must run it) |
+| test_gate_pack.sh | test_gate_pack.sh — Ymir's gate pack seats, judges and reports (plan 3 | tested | keep (a human or a cron row must run it) |
 | test_gather_merge_guard.sh | test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that l | tested | keep (a human or a cron row must run it) |
 | test_gather_orders_by_base.sh | test_gather_orders_by_base.sh — plan 293 part 7: a packet names the br | tested | keep (a human or a cron row must run it) |
 | test_groa_steps.sh | test_groa_steps.sh — plan 272 fault 5: every Gróa step has a limit an | tested | keep (a human or a cron row must run it) |
@@ -137,6 +145,7 @@
 | test_hypr_door_guard.sh | test_hypr_door_guard.sh — the ward that keeps every Hyprland act in di | tested | keep (a human or a cron row must run it) |
 | test_main_red.sh | test_main_red.sh — the alarm BITES, and it stays quiet where it must. | tested | keep (a human or a cron row must run it) |
 | test_maker_names.sh | test_maker_names.sh — RULES/53: the maker ward refuses a model, a make | tested | keep (a human or a cron row must run it) |
+| test_mcp_parity_guard.sh | test_mcp_parity_guard.sh — a door in the register with no MCP tool fai | tested | keep (a human or a cron row must run it) |
 | test_merge_method.sh | test_merge_method.sh — the merge flag follows the PR's kind (RULES/08, | tested | keep (a human or a cron row must run it) |
 | test_mjollnir_clone.sh | test_mjollnir_clone.sh — the door that turns a FAR repo into a workabl | tested | keep (a human or a cron row must run it) |
 | test_mjollnir_intake.sh | test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved  | tested | keep (a human or a cron row must run it) |

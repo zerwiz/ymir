@@ -21,24 +21,26 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[58]{file,does,kind,verdict,disposition,callers,lines}:
+bin[67]{file,does,kind,verdict,disposition,callers,lines}:
   "brokk-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",0,128
   "brokk-wake-lib.sh","Shared durable wake queue and portable lock helpers.","lib","tested","keep",4,1883
+  "calendar-ask.sh","bin/time/managandr/calendar-ask.sh -> systems/snotra/services/calendar/calendar-ask.sh — Mánagandr's read door (plan 374 A6).","tool","tested","keep",4,21
   "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",0,81
-  "calendar-write.sh","bin/time/snotra/calendar-write.sh -> systems/snotra/services/calendar/calendar-write.sh — a shim, plan 231 R2","tool","wired","keep",1,22
+  "calendar-write.sh","bin/time/managandr/calendar-write.sh -> systems/snotra/services/calendar/calendar-write.sh — Mánagandr's write door (plan 231 R2; moved her…","tool","wired","keep",1,22
   "cron-fail-lib.sh","cron-fail-lib.sh — the ONE sentence a failed scheduled row gets (plan 292).","lib","wired","keep",3,72
   "daily-line.sh","daily-line.sh — THE daily line: what moved, what is blocked, what is owed — written from the record,","tool","wired","keep",1,135
   "daily_moved.py","'''daily_moved.py — what moved today, read from the record (plan 252).","tool","wired","keep",1,214
   "event-trigger-resolve.py","'''event-trigger-resolve — who may start a smithy, and when.","tool","wired","keep",2,171
   "event-trigger.sh","event-trigger.sh — the one door that starts a smithy without a person typing.","tool","wired","keep",2,479
+  "forge-dark.sh","forge-dark.sh — has the forge been dark for more than 24 hours?","tool","wired","keep",1,53
   "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",1,139
-  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",13,507
+  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",17,577
   "nornir-fleet.py","'''nornir-fleet.py — the Nornir board for every machine, with an honest row for one that cannot be reached.","tool","wired","keep",1,100
   "nornir-job-agnostic-audit.sh","nornir-job-agnostic-audit.sh — is what we PUBLISHED still free of the words the operator refuses to publish?","tool","wired","keep",1,104
   "nornir-job-asken-handoff.sh","nornir-job-asken-handoff.sh — the rollover, on the schedule.","tool","wired","keep",0,63
   "nornir-job-bragi-scrape.sh","nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape round.","tool","wired","keep",0,154
   "nornir-job-brief-watch.sh","nornir-job-brief-watch.sh — if the morning brief failed or is not clean, say why and what to do.","tool","wired","keep",1,297
-  "nornir-job-daily-briefing.sh","nornir-job-daily-briefing.sh - the 07:00 Sága daily seeing.","tool","wired","keep",5,305
+  "nornir-job-daily-briefing.sh","nornir-job-daily-briefing.sh - the 07:00 Sága daily seeing.","tool","wired","keep",5,317
   "nornir-job-dispatch.sh","nornir-job-dispatch.sh — the dispatcher's clock: one run, one record, one verdict.","tool","wired","keep",2,70
   "nornir-job-doctor.sh","nornir-job-doctor.sh — Eir, the healer, on the schedule.","tool","wired","keep",0,35
   "nornir-job-eindri-stall.sh","nornir-job-eindri-stall.sh — the arm's ten-minute question: is a WORKING errand still MOVING?","tool","wired","keep",0,52
@@ -59,28 +61,35 @@ bin[58]{file,does,kind,verdict,disposition,callers,lines}:
   "nornir-job-week-mail.sh","nornir-job-week-mail.sh — the week's mail balance: how many conversations wait on US?","tool","wired","keep",1,120
   "nornir-job-week-pin.sh","nornir-job-week-pin.sh — the week's pin distance: how far is the PINNED runtime from main?","tool","wired","keep",1,113
   "nornir-job-week-tunnels.sh","nornir-job-week-tunnels.sh — the week's tunnel uptime: how many Gimlé surfaces answer, how many fail?","tool","wired","keep",1,97
+  "nornir-job-work-intake.sh","nornir-job-work-intake.sh — the work road's intake tick (plan 365 phase 3).","tool","wired","keep",0,9
   "nornir-job-worktree-housekeeping.sh","nornir-job-worktree-housekeeping.sh — the daily reckoning of what the worktrees cost.","tool","wired","keep",0,40
   "nornir-jobs.py","'''nornir-jobs.py — every Nornir job, one row each: its schedule, whose role runs it, when it last ran, how that run","tool","wired","keep",2,167
+  "nornir-status.py","'''nornir-status.py — judge every Nornir job on the machine that OWNS it (plan 365).","tool","wired","keep",1,251
+  "nornir-status.sh","nornir-status.sh — every Nornir job judged on the seat that owns it (plan 365).","tool","wired","keep",4,22
   "saga-head-core.md","FIXED CORE — every worker knows this (plan 275 §04:15/04:20/04:25).","data","wired","keep",4,15
   "saga-head-lib.sh","saga-head-lib.sh — what is NEWS in Sága's short head (plan 275, item 28 §3).","lib","wired","keep",3,159
   "saga-land-warnings.sh","saga-land-warnings.sh — Sága's eye on work that finished and never landed.","tool","wired","keep",2,311
-  "saga-session-start.sh","saga-session-start.sh — Sága: the SHORT HEAD at session start, everything else on demand.","tool","tested","keep",13,605
+  "saga-session-start.sh","saga-session-start.sh — Sága: the SHORT HEAD at session start, everything else on demand.","tool","tested","keep",14,611
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",1,117
-  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","tested","keep",10,337
+  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","tested","keep",12,353
   "sol-lib.sh","sol-lib.sh — Sól's stamp for shell roads.","lib","wired","keep",11,44
-  "sol.sh","sol.sh — Sól, the sun's wheel: THE clock and date door.","tool","tested","keep",6,248
+  "sol.sh","sol.sh — Sól, the sun's wheel: THE clock and date door.","tool","tested","keep",7,248
   "test_ack_holder.sh","test_ack_holder.sh — the arm's ack door answers its own holder and still refuses a stranger (plan 325 step 3).","tool","wired","keep",0,43
   "test_brief_watch.sh","test_brief_watch.sh — the morning brief is judged, not just run.","tool","wired","keep",0,198
+  "test_clock_lock.sh","test_clock_lock.sh — the Nornir clock watches the right lock, says why it stops, and is started once","tool","wired","keep",1,83
+  "test_cron_invalid.sh","test_cron_invalid.sh — `--status` counts the invalid rows of the schedule as it is NOW, and a clock that","tool","wired","keep",1,38
   "test_event_trigger.sh","test_event_trigger.sh — a smithy may be started by a person, the clock, or an","tool","wired","keep",1,251
   "test_nornir_mend.sh","test_nornir_mend.sh — the board dedupes a row declared twice, shows a skip as a skip, and names an unreachable machine.","tool","wired","keep",0,30
-  "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",1,501
+  "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",1,506
   "test_private_scan_exit.sh","test_private_scan_exit.sh — a finding is work in the queue, not a broken job; a scan that cannot run still says so.","tool","wired","keep",1,94
   "test_saga_head.sh","test_saga_head.sh — Sága's head fits, means what it says, and forgets what is finished","tool","wired","keep",1,152
   "test_saga_land_warnings.sh","test_saga_land_warnings.sh — the digest SEES work that finished and never landed.","tool","wired","keep",1,201
+  "test_wake_seq.sh","test_wake_seq.sh — a wake the helm was not shown is never acknowledged away (plan 369 item 16).","tool","wired","keep",1,61
   "test_week_passes.sh","test_week_passes.sh — the three weekly passes keep their four promises, on every path.","tool","wired","keep",0,238
+  "test_well_sync_own_path.sh","well-vault-sync commits only the well's log: files another job left staged — even ones the home's","tool","wired","keep",1,38
   "week-pass-lib.sh","week-pass-lib.sh — the one law the three weekly passes share.","lib","wired","keep",3,135
-  "well-vault-sync.sh","well-vault-sync.sh — Völundr's memory across the Allfather's machines.","tool","wired","keep",1,105
+  "well-vault-sync.sh","well-vault-sync.sh — Völundr's memory across the Allfather's machines.","tool","wired","keep",2,107
 
-**Tally.** verdict: wired=53, tested=5
+**Tally.** verdict: wired=61, tested=6
 
-**Tally.** disposition: keep=58
+**Tally.** disposition: keep=67

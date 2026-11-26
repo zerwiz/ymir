@@ -21,21 +21,28 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[35]{file,does,kind,verdict,disposition,callers,lines}:
+bin[43]{file,does,kind,verdict,disposition,callers,lines}:
+  "10-nightly-renewal.sh","The nightly renewal ran, and finished, on this machine: Gróa's unit is not failed, and Eir's last night is recent","tool","orphan","retire",0,23
+  "20-house-units.sh","No user unit of the house sits `failed`.","tool","orphan","retire",0,8
+  "30-review-once-per-head.sh","The review watcher hands one head to review once.","tool","wired","keep",1,39
+  "40-arm-receipts.sh","A report handed to the arm gets its RECEIVED (plan 350 B): none waits past VEIL_RED_S (600) seconds.","tool","orphan","retire",0,17
+  "50-well-recall.sh","A recall from the well returns episodes (plan 350 E): the well is not merely running, it answers.","tool","orphan","retire",0,9
   "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",1,250
   "browserkill-install.sh","browserkill-install.sh — seat the kill tracer and its GPU note (plan 152 / 271).","tool","wired","keep",0,43
   "browserkill-note.sh","browserkill-note.sh — at every browser/Discord death, write down the GPU's side of it (plan 271 piece 5).","tool","wired","keep",2,33
   "browserkill.bt","/* plan 242 + 0002 phase 1 (2026-11-11): NAME THE SENDER.","data","wired","keep",4,75
   "common.py","'''common.py — the one resolver for Garmr's settings and paths (Rule 07).","tool","wired","migrate → src/ymir_runtime/hermes/common.py",1,223
+  "contracts.sh","contracts.sh — is every system BEHAVING as it should, today, on this machine?","tool","wired","keep",3,113
   "escalate.py","'''escalate.py — the severity ladder (plan 98 §'the severity ladder').","tool","tested","keep",1,224
   "garmr-bite-test.sh","garmr-bite-test.sh — the laws of the bite, proven offline (no real bite is ever taken here).","tool","wired","keep",0,94
   "garmr-bite.sh","garmr-bite.sh — GARMR'S TEETH.","tool","wired","keep",3,419
   "garmr-canary.sh","garmr-canary.sh — the deletion tripwire: files that must never vanish.","tool","wired","keep",0,81
+  "garmr-hound.service.example","An example of the hound's unit, with the heartbeat watchdog.","data","wired","keep",0,25
   "garmr-smoke.sh","garmr-smoke.sh — GARMR's smoke test.","tool","wired","keep",0,187
-  "garmr.sh","garmr.sh — GARMR, the hound at the gate: the door to Ymir's guardian.","tool","wired","keep",8,384
+  "garmr.sh","garmr.sh — GARMR, the hound at the gate: the door to Ymir's guardian.","tool","wired","keep",9,384
   "harden.sh","harden.sh — Vörðr's hands: the MENDS, written out, and the safe ones applied.","tool","tested","keep",5,151
   "host-watch.sh","host-watch.sh — the watcher a hand can actually have.","tool","wired","keep",1,154
-  "hound.py","'''hound.py — Garmr's senses: what executes, who touches the sensitive shelves,","tool","tested","keep",1,531
+  "hound.py","'''hound.py — Garmr's senses: what executes, who touches the sensitive shelves,","tool","tested","keep",2,531
   "house-status.sh","house-status.sh — the heart's answer: what it hosts, and whether it is up.","tool","wired","keep",0,227
   "notify.py","'''notify.py — the hound's mouth: one message to the phone, and a record that it landed.","tool","tested","keep",6,230
   "redact.py","'''redact.py — the guardian's own ward (plan 98 §6, §'the redaction rule').","tool","wired","keep",5,113
@@ -45,19 +52,20 @@ bin[35]{file,does,kind,verdict,disposition,callers,lines}:
   "services-register.sh","services-register.sh — is the register of doors READ, or is it prose?","tool","wired","keep",1,173
   "soak-sampler.sh","soak-sampler.sh — the leak ledger: one row per house service and per Electron app, every five","tool","wired","keep",2,645
   "test_browserkill_note.sh","test_browserkill_note.sh — plan 271 piece 5: a planted scope stop is named, with the GPU's side.","tool","wired","keep",0,27
+  "test_contracts.sh","test_contracts.sh — plan 350 F: the behaviour contracts.","tool","wired","keep",1,44
   "test_garmr_identity_named.sh","test_garmr_identity_named.sh — a CRITICAL must name what changed, or it is not a CRITICAL.","tool","wired","keep",1,40
   "test_restart_storm.sh","test_restart_storm.sh — the storm ward's proof, with no real fault (plan 286 P4).","tool","wired","keep",0,183
   "test_soak_sampler.sh","test_soak_sampler.sh — the leak ledger's proof, without a real leak (plan 286 P0).","tool","wired","keep",0,204
-  "test_trouble.sh","test_trouble.sh — the trouble panel's proof, with no real fault (plan 339.5, 341.4).","tool","wired","keep",1,241
+  "test_trouble.sh","test_trouble.sh — the trouble panel's proof, with no real fault (plan 339.5, 341.4).","tool","wired","keep",1,254
   "test_trouble_veil.sh","test_trouble_veil.sh — plan 350 B in the trouble panel: a Veil report with no RECEIVED past its","tool","wired","keep",1,60
-  "trouble.py","'''trouble.py — the house says it is in trouble before it is asked (plan 339.5, 339.6, 341.4).","tool","wired","keep",2,808
-  "trouble.sh","trouble.sh — the trouble panel: the house says it is in trouble before it is asked (plan 339.5).","tool","wired","keep",3,40
+  "trouble.py","'''trouble.py — the house says it is in trouble before it is asked (plan 339.5, 339.6, 341.4).","tool","wired","keep",3,911
+  "trouble.sh","trouble.sh — the trouble panel: the house says it is in trouble before it is asked (plan 339.5).","tool","wired","keep",5,41
   "verdr.sh","verdr.sh — VÖRÐR, the warden: the standing report.","tool","tested","keep",1,135
   "vidarr-agent.sh","vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast road.","tool","wired","keep",0,71
   "vidarr.sh","vidarr.sh — VÍÐARR, the silent avenger: the defender's own door.","tool","wired","keep",1,249
   "ward-answer.sh","ward-answer.sh — answer a ward decision.","tool","wired","keep",0,82
   "ward-ask.sh","ward-ask.sh — Vörðr reports, then ASKS.","tool","wired","keep",1,82
 
-**Tally.** verdict: wired=28, tested=7
+**Tally.** verdict: wired=32, tested=7, orphan=4
 
-**Tally.** disposition: keep=34, migrate → src/ymir_runtime/hermes/common.py=1
+**Tally.** disposition: keep=38, retire=4, migrate → src/ymir_runtime/hermes/common.py=1

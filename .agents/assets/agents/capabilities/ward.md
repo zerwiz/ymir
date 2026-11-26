@@ -10,6 +10,12 @@
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | browserkill-install.sh | browserkill-install.sh — seat the kill tracer and its GPU note (plan 1 | tested | keep (a human or a cron row must run it) |
 | browserkill-note.sh | browserkill-note.sh — at every browser/Discord death, write down the G | tested | keep (a human or a cron row must run it) |
+| 10-nightly-renewal.sh | The nightly renewal ran, and finished, on this machine: Gróa's unit is  | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| 20-house-units.sh | No user unit of the house sits `failed`. Caught on 2026-11-22: housewatc | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| 30-review-once-per-head.sh | The review watcher hands one head to review once. Caught on 2026-11-22:  | tested | keep (a human or a cron row must run it) |
+| 40-arm-receipts.sh | A report handed to the arm gets its RECEIVED (plan 350 B): none waits pa | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| 50-well-recall.sh | A recall from the well returns episodes (plan 350 E): the well is not me | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| contracts.sh | contracts.sh — is every system BEHAVING as it should, today, on this m | tested | keep (a human or a cron row must run it) |
 | garmr-bite-test.sh | garmr-bite-test.sh — the laws of the bite, proven offline (no real bit | tested | keep (a human or a cron row must run it) |
 | garmr-bite.sh | garmr-bite.sh — GARMR'S TEETH. The hound may contain, within a written | tested | keep (a human or a cron row must run it) |
 | garmr-canary.sh | garmr-canary.sh — the deletion tripwire: files that must never vanish. | tested | keep (a human or a cron row must run it) |
@@ -23,14 +29,15 @@
 | services-register.sh | services-register.sh — is the register of doors READ, or is it prose? | tested | keep (a human or a cron row must run it) |
 | soak-sampler.sh | soak-sampler.sh — the leak ledger: one row per house service and per E | tested+named | keep (a human or a cron row must run it) |
 | test_browserkill_note.sh | test_browserkill_note.sh — plan 271 piece 5: a planted scope stop is n | tested | keep (a human or a cron row must run it) |
+| test_contracts.sh | test_contracts.sh — plan 350 F: the behaviour contracts. | tested | keep (a human or a cron row must run it) |
 | test_garmr_identity_named.sh | test_garmr_identity_named.sh — a CRITICAL must name what changed, or i | tested | keep (a human or a cron row must run it) |
 | test_restart_storm.sh | test_restart_storm.sh — the storm ward's proof, with no real fault (pl | tested | keep (a human or a cron row must run it) |
 | test_soak_sampler.sh | test_soak_sampler.sh — the leak ledger's proof, without a real leak (p | tested | keep (a human or a cron row must run it) |
 | test_trouble.sh | test_trouble.sh — the trouble panel's proof, with no real fault (plan  | tested | keep (a human or a cron row must run it) |
 | test_trouble_veil.sh | test_trouble_veil.sh — plan 350 B in the trouble panel: a Veil report  | tested | keep (a human or a cron row must run it) |
-| trouble.sh | trouble.sh — the trouble panel: the house says it is in trouble before | tested | keep (a human or a cron row must run it) |
+| trouble.sh | trouble.sh — the trouble panel: the house says it is in trouble before | tested+named | keep (a human or a cron row must run it) |
 | verdr.sh | verdr.sh — VÖRÐR, the warden: the standing report. | tested | keep (a human or a cron row must run it) |
 | vidarr-agent.sh | vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast roa | tested | keep (a human or a cron row must run it) |
-| vidarr.sh | vidarr.sh — VÍÐARR, the silent avenger: the defender's own door. | tested+named | keep (a human or a cron row must run it) |
+| vidarr.sh | vidarr.sh — VÍÐARR, the silent avenger: the defender's own door. | tested | keep (a human or a cron row must run it) |
 | ward-answer.sh | ward-answer.sh — answer a ward decision. close · keep (with a reason) | tested | keep (a human or a cron row must run it) |
 | ward-ask.sh | ward-ask.sh — Vörðr reports, then ASKS. A finding is not a decision. | tested | keep (a human or a cron row must run it) |

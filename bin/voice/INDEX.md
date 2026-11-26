@@ -21,24 +21,26 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[35]{file,does,kind,verdict,disposition,callers,lines}:
+bin[37]{file,does,kind,verdict,disposition,callers,lines}:
   "ear.sh","ear.sh — turn a recording into words, with whichever engine this machine has.","tool","wired","keep",1,57
   "echo-cancel.sh","echo-cancel.sh — Ymir's own microphone without the speakers in it (plan 275 S22).","tool","wired","keep",0,76
   "head-proxy.py","'''head-proxy.py — a loopback OpenAI-compatible door in front of an online head.","tool","wired","keep",1,245
+  "hermes-arm-wake.sh","hermes-arm-wake.sh — wake a Hermes session that holds the Gná arm, and show it the wakes.","tool","wired","keep",3,49
   "house.css","/* house.css — Rödd's face, in the Allfather's hall.","data","wired","keep",1,54
   "kokoro-lib.sh","kokoro-lib.sh — where the Kokoro speech engine listens: ONE value, read by the unit and every client","lib","wired","keep",3,79
   "kokoro_url.py","'''kokoro_url.py — the Python face of bin/voice/kokoro-lib.sh (plan 326.0, Rule 07).","tool","wired","keep",0,55
   "mic-check.sh","mic-check.sh — what the microphone gives the machine, measured, never guessed (plan 326.6).","tool","wired","keep",1,98
   "model-sync.sh","model-sync.sh — take the voice models over the LOCAL NETWORK, never from the internet.","tool","wired","keep",0,99
-  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","tested","keep",22,676
+  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","tested","keep",26,691
   "rodd-head.py","'''rodd-head.py — whose mind answers in Rödd's window, and where that key lives.","tool","tested","keep",3,234
-  "rodd-helm.sh","rodd-helm.sh — Nanna's duty loop: she holds the helm and carries its five duties.","tool","wired","keep",2,227
-  "rodd-room.sh","rodd-room.sh — the ARM HOLDER's half of Rödd's room: the one writer of <state>/rodd/room.jsonl.","tool","wired","keep",1,43
+  "rodd-helm.sh","rodd-helm.sh — Nanna's duty loop: she holds the helm and carries its five duties.","tool","wired","keep",3,231
+  "rodd-room.sh","rodd-room.sh — the ARM HOLDER's half of Rödd's room: the one writer of <state>/rodd/room.jsonl.","tool","wired","keep",2,47
   "rodd-tell-deadline.sh","rodd-tell-deadline.sh — a tell that nobody answers does not wait forever: it escalates.","tool","wired","keep",1,158
   "search-ensure.sh","search-ensure.sh — keep the house's own web search standing: a SearXNG container on loopback (plan 275).","tool","wired","keep",0,60
+  "test_arm_wake_harness.sh","test_arm_wake_harness.sh — plan 369 item 1: a tell says honestly how (and whether) the holder is woken.","tool","wired","keep",0,36
   "test_mic_check.sh","test_mic_check.sh — the level door tells a steady voice from a pumping one, and names its band.","tool","wired","keep",0,39
   "test_rodd_arm.sh","test_rodd_arm.sh — Rödd may knock on the arm, and only on a LIVE arm: the whole point of","tool","wired","keep",2,249
-  "test_rodd_helm.sh","test_rodd_helm.sh — Nanna's duty loop and the one-client role claim, headless (plan 254).","tool","wired","keep",0,187
+  "test_rodd_helm.sh","test_rodd_helm.sh — Nanna's duty loop and the one-client role claim, headless (plan 254).","tool","wired","keep",1,199
   "test_rodd_pin.sh","test_rodd_pin.sh — plan 257 H7: Rödd runs the PINNED runtime, never a working tree.","tool","wired","keep",0,61
   "test_todo_write_race.sh","test_todo_write_race.sh — two writers of the to-do list no longer collide on one temp file (2026-11-19).","tool","wired","keep",0,42
   "test_todos_digest.sh","test_todos_digest.sh — the session digest counts HIS list, and names the halves apart.","tool","wired","keep",1,111
@@ -53,11 +55,11 @@ bin[35]{file,does,kind,verdict,disposition,callers,lines}:
   "voice-model-lib.sh","voice-model-lib.sh — WHERE THE VOICE'S MODEL WEIGHTS LIVE, and the one pinned upstream.","lib","wired","keep",3,72
   "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",1,434
   "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,407
-  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",5,3335
+  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",5,3338
   "voices.py","'''voices.py — every Kokoro voice this machine holds, by id and by name (plan 326.1–326.5).","tool","wired","keep",1,371
   "voices.sh","voices.sh — the door to every Kokoro voice on this machine (plan 326.1–326.5).","tool","wired","keep",3,41
   "ymir-vad.py","'''","tool","wired","keep",3,183
 
-**Tally.** verdict: wired=32, tested=3
+**Tally.** verdict: wired=34, tested=3
 
-**Tally.** disposition: keep=35
+**Tally.** disposition: keep=37

@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[64]{file,does,kind,verdict,disposition,callers,lines}:
+bin[67]{file,does,kind,verdict,disposition,callers,lines}:
   "conflict-errand.md","conflict-errand.md — the brief a SMITH is handed when a PR cannot merge (plan 203 + 206 §12).","data","wired","keep",1,56
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
   "exec-bits.sh","exec-bits.sh — a new door leaves the errand executable, or the errand says so before the push.","tool","wired","keep",2,62
@@ -29,12 +29,12 @@ bin[64]{file,does,kind,verdict,disposition,callers,lines}:
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,143
   "gather-notice.sh","gather-notice.sh — when the LAST errand of a batch finishes, the helm is told to gather it.","tool","wired","keep",3,186
   "gather.sh","gather.sh — gather a batch of errand branches into ONE push and ONE PR.","tool","tested","keep",13,362
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",669,168
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",710,168
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","tool","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
   "gjallarhorn-publish.py","'''gjallarhorn-publish — put an app on a public name BEHIND the hall's login, by config alone.","tool","wired","keep",2,340
-  "gjallarhorn-publish.sh","gjallarhorn-publish.sh — put an app on a public name BEHIND the hall's login, by config alone.","tool","wired","keep",2,22
+  "gjallarhorn-publish.sh","gjallarhorn-publish.sh — put an app on a public name BEHIND the hall's login, by config alone.","tool","wired","keep",4,22
   "gjallarhorn-purge.sh","gjallarhorn-purge.sh — purge the Cloudflare edge cache for a hostname.","tool","wired","keep",1,69
   "gjallarhorn-tunnel.sh","gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjallarhorn).","tool","wired","keep",1,185
   "handoff-packet.py","'''handoff-packet.py — the door to the one artefact that crosses from a smith to the reviewer.","tool","wired","keep",3,481
@@ -42,22 +42,25 @@ bin[64]{file,does,kind,verdict,disposition,callers,lines}:
   "intake.py","'''intake.py — read every registered repo once, and say honestly what could not be read.","tool","wired","keep",2,433
   "issue-watch.sh","issue-watch.sh — READ THE ISSUES, and close the ones that are already solved.","tool","wired","keep",0,106
   "judge-carry.py","'''judge-carry.py — may the judge's approval of one head carry over to a newer head?","tool","wired","keep",2,173
-  "judge-merge.sh","judge-merge.sh — the judge's verdict is the seal: APPROVE merges at once, NEEDS-REWORK goes home.","tool","tested","keep",5,350
-  "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",11,155
+  "judge-merge.sh","judge-merge.sh — the judge's verdict is the seal: APPROVE merges at once, NEEDS-REWORK goes home.","tool","tested","keep",5,365
+  "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",12,155
   "merge-method.sh","merge-method.sh — which `gh pr merge` flag a pull request takes (RULES/08, batch road).","tool","wired","keep",6,58
+  "merge-tier.py","'''merge-tier.py — which merge tier does a pull request fall in?","tool","wired","keep",1,74
   "merge-verdict.sh","merge-verdict.sh — may this PR be merged right now?","tool","wired","keep",5,75
   "mjollnir-webhook.sh","mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018).","tool","wired","keep",0,74
-  "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",4,215
+  "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",5,215
   "npm-install-local-test.sh","npm-install-local-test.sh — the REAL local installation test.","tool","wired","keep",0,116
-  "npm-pretest.sh","npm-pretest.sh — the pre-publish test gate (the Allfather's decree):","tool","wired","keep",3,249
+  "npm-pretest.sh","npm-pretest.sh — the pre-publish test gate (the Allfather's decree):","tool","wired","keep",4,249
   "npm-publish.sh","npm-publish.sh — publish through the HOARD's npm token, every single time.","tool","wired","keep",0,166
+  "pack-links.sh","pack-links.sh — make the tarball carry what the tree's symlinks point at.","tool","wired","keep",0,63
   "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",0,103
   "park.sh","park.sh — the SURVIVAL push: an errand's commits leave this disk without paying the whole gate.","tool","wired","keep",1,111
   "pr-open.sh","source '$(dirname '$0')/pr-patterns.sh'","tool","tested","keep",5,65
-  "pr-patterns.sh","pr-patterns.sh — the ONE place the forbidden-pattern list lives.","tool","wired","keep",6,102
+  "pr-patterns.sh","pr-patterns.sh — the ONE place the forbidden-pattern list lives.","tool","wired","keep",7,102
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",2,59
   "pr-watch.sh","pr-watch.sh — TELL HIM a PR arrived.","tool","wired","keep",1,117
   "queue-warden.sh","queue-warden.sh — PR HYGIENE: five open at most, the stale ones named, a conflicting branch","tool","wired","keep",3,429
+  "release-npm.sh","release-npm.sh — `ymir release npm <version>`: the npm runbook as one door (plan 365 phase 5).","tool","wired","keep",1,87
   "repair-errand.md","repair-errand.md — the brief a SMITH is handed when a verdict refuses a PR (plan 206 §12.1).","data","wired","keep",2,73
   "review-mend.sh","review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b)","tool","wired","keep",1,152
   "review-rules.sh","review-rules.sh — the rules floor: load what a reviewer MUST know, or refuse to review.","tool","wired","keep",4,139
@@ -87,6 +90,6 @@ bin[64]{file,does,kind,verdict,disposition,callers,lines}:
   "worktree-reap.py","'''worktree-reap.py — the road that made a worktree is the road that reaps it (plan 339.4).","tool","wired","keep",6,550
   "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",10,233
 
-**Tally.** verdict: wired=58, tested=6
+**Tally.** verdict: wired=61, tested=6
 
-**Tally.** disposition: keep=64
+**Tally.** disposition: keep=67
