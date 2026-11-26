@@ -16,3 +16,7 @@ it would falsify it. Every other new file is judged as before.
 
 `bin/gates/tests/test_retired_path_guard.sh` (gate `retired-path-snapshot`): the snapshot commits, and the
 same text outside `hodd/saves/` is refused.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #965
