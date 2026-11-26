@@ -5,3 +5,7 @@ the reader crashed with a traceback. It now says the file is not this door's map
 is no map.
 
 Not changed: a refresh writes to the same path and would replace that file.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #964
