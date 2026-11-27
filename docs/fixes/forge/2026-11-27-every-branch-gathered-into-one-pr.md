@@ -54,3 +54,7 @@ guards --full        17 findings, all INHERITED (files this change does not touc
 ## The road
 
 One pull request against `main`. The Allfather's word seals the merge; no agent merges.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #969
