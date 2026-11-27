@@ -27,3 +27,7 @@
 
 `bin/time/tests/test_clock_lock.sh` PASS (12 ok), `test_cron_invalid.sh` PASS, `test_nornir_mend.sh` 4 passed.
 `compliance-check.sh`: every row PASS.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #967
