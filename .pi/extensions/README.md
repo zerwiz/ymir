@@ -77,3 +77,7 @@ OpenCode, Claude Code, Codex, and Cursor adapters are wired too; see
 
 Agents live in `.agents/agents/` and are bound per tool by `bin/seat/valknut-load.sh`
 (OpenCode reads `.opencode/agents/`; Pi links resolve under `.pi/agents/`).
+
+## CHANGE LOG
+
+- 2026-11-27 — review-mend: added missing heading for #970
