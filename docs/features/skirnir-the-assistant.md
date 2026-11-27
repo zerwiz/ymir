@@ -260,3 +260,18 @@ it in my own words just now."
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Is he working? The smoke test (2026-11-26)
+
+```sh
+systems/skirnir/services/smoke.sh          # every check, one verdict each
+systems/skirnir/services/smoke.sh --quiet  # failures only, as the nightly row runs it
+```
+
+It exits 0 when every check passes or prints a skip with its reason. It restarts the voice engine, so do not run it
+during a call. If it says a port "is held by another program", stop that program and restart `kokoro-serve`.
+
+Asked "what is Ymir", he answers from approved public facts only. A record of something retired or moved away is
+never used as an answer.
+
+- **2026-11-26** — the smoke test's verdicts, the Ymir pitch and archived records.

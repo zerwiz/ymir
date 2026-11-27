@@ -28,10 +28,19 @@ ymir_home_root H 2>/dev/null || true
 QUICK=0; QUIET=0
 for a in "$@"; do case "$a" in --quick) QUICK=1 ;; --quiet) QUIET=1 ;; esac; done
 PASS=0; SKIP=0; FAIL=0
-ok()   { PASS=$((PASS+1)); [ "$QUIET" = 0 ] && printf '  PASS  %s\n' "$1"; }
-skip() { SKIP=$((SKIP+1)); [ "$QUIET" = 0 ] && printf '  SKIP  %s — %s\n' "$1" "$2"; }
+# Both must RETURN 0: every check reads `test && ok … || bad …`, so a verdict that returns non-zero
+# (as `[ "$QUIET" = 0 ] && printf` does under --quiet) books the same check as a failure too.
+ok()   { PASS=$((PASS+1)); [ "$QUIET" = 1 ] || printf '  PASS  %s\n' "$1"; return 0; }
+skip() { SKIP=$((SKIP+1)); [ "$QUIET" = 1 ] || printf '  SKIP  %s — %s\n' "$1" "$2"; return 0; }
 bad()  { FAIL=$((FAIL+1)); printf '  FAIL  %s — %s\n' "$1" "$2" >&2; }
 j() { python3 -c "import sys,json;d=json.load(sys.stdin);print(eval(sys.argv[1]))" "$1" 2>/dev/null; }
+# every note this run makes lives here, so yesterday's note can never pass today's check
+NOTES="$(mktemp -d "${TMPDIR:-/tmp}/skirnir-smoke.XXXXXX")" || exit 1
+trap 'rm -rf "$NOTES"' EXIT
+# a synthesiser is an endpoint that returns speech: `curl` alone is happy with any server's 501
+speaks() { curl -sf -m 60 -o "$NOTES/probe.wav" -X POST "$KBASE/v1/audio/speech" -H 'content-type: application/json' \
+             -d '{"model":"kokoro","input":"x","voice":"af_nicole","response_format":"wav"}' 2>/dev/null \
+           && [ -s "$NOTES/probe.wav" ]; }
 
 echo "smoke — Skírnir and Snotra, end to end"
 
@@ -42,9 +51,18 @@ R="$(ASK 'what is ymir')"
 [ -n "$R" ] && ok "the engine answers" || bad "the engine" "no output at all"
 [ "$(printf '%s' "$R" | j "d.get('intent','')")" != "" ] && ok "the answer carries an intent" \
   || bad "intent" "$R"
-U="$(ASK 'what is gimle')"
+# the subject is INVENTED: a real name (`gimle`, until 2026-11-26) stops being unheld the day the house
+# writes about it
+U="$(ASK 'what is vzorblum')"
 [ "$(printf '%s' "$U" | j "d.get('intent','')")" = "unknown" ] \
   && ok "an unheld subject is refused, not answered as another fact" || bad "matcher" "$U"
+G="$(ASK 'what is gimle')"
+case "$(printf '%s' "$G" | j "d.get('intent','')+' '+' '.join(d.get('facts') or [])")" in
+  '') bad "matcher" "no answer for a near-miss subject: $G" ;;
+  *ymir_pitch*|*"what is ymir"*|*home-doc-hodd-saves-*|*home-doc-hodd-reference-*retired*|*home-doc-hodd-reference-*moved*)
+    bad "matcher" "answered from another subject or an archived record: $G" ;;
+  *) ok "a different subject is neither the Ymir pitch nor an archived record" ;;
+esac
 
 # ── 1b · the pitch: asked about Ymir, he must TEACH, not label (his word, 2026-10-23) ────────
 P="$(ASK 'what is ymir')"
@@ -56,6 +74,10 @@ esac
 case "$(printf '%s' "$P" | j "d.get('answer','')")" in
   *Brokk*|*Eindri*|*Völundr*) ok "the pitch names the fleet" ;;
   *) bad "the pitch" "does not name the fleet (Brokk, Eindri, Völundr)" ;;
+esac
+case "$(printf '%s' "$P" | j "' '.join(d.get('facts') or [])")" in
+  *home-*|*site-*|*capabilities*) bad "the pitch" "built from document titles or page scraps, not facts about Ymir" ;;
+  *) ok "the pitch is built from facts, not document titles" ;;
 esac
 
 # ── 2 · the digest is the operator's, and it is not empty ─────────────────────────────────────
@@ -73,22 +95,22 @@ if ! curl -s -m 3 -o /dev/null "$KBASE/" 2>/dev/null; then
     curl -s -m 3 -o /dev/null "$KBASE/" 2>/dev/null && break
   done
 fi
-if curl -s -m 6 -o /dev/null -X POST "$KBASE/v1/audio/speech" \
-     -H 'content-type: application/json' -d '{"input":"x","voice":"af_nicole","response_format":"wav"}' 2>/dev/null; then
+if speaks; then
   ok "kokoro answers on :$KPORT"
   bash "$ROOT/systems/snotra/services/tts-lease/tts-lease.sh" touch >/dev/null 2>&1
   if [ -f "$HOME/.local/share/skirnir/tts.lease" ]; then ok "the TTS lease is held"; else bad "tts lease" "no lease file"; fi
-  if bash "$SCRIPT_DIR/mouth.sh" "smoke test of the voice" /tmp/smoke-voice.ogg >/dev/null 2>&1 \
-     && [ -s /tmp/smoke-voice.ogg ]; then
-    ok "the mouth makes a voice note ($(stat -c%s /tmp/smoke-voice.ogg) bytes)"
+  if bash "$SCRIPT_DIR/mouth.sh" "smoke test of the voice" "$NOTES/voice.ogg" >/dev/null 2>&1 \
+     && [ -s "$NOTES/voice.ogg" ]; then
+    ok "the mouth makes a voice note ($(stat -c%s "$NOTES/voice.ogg") bytes)"
   else bad "the mouth" "no voice note produced"; fi
 else
-  bad "kokoro" "no answer on :$KPORT — systemctl --user start kokoro-serve"
+  SQ="$(kokoro_port_squatter)"
+  bad "kokoro" "no speech on :$KPORT — ${SQ:-systemctl --user start kokoro-serve}"
 fi
 
 # ── 4 · the voice IN (the ear) ────────────────────────────────────────────────────────────────
-if [ -s /tmp/smoke-voice.ogg ]; then
-  HEARD="$(bash "$SCRIPT_DIR/ear.sh" /tmp/smoke-voice.ogg 2>/dev/null)"
+if [ -s "$NOTES/voice.ogg" ]; then
+  HEARD="$(bash "$SCRIPT_DIR/ear.sh" "$NOTES/voice.ogg" 2>/dev/null)"
   case "$HEARD" in *smoke*|*voice*|*Voice*) ok "the ear hears the note back" ;;
     "") skip "the ear" "no transcription returned" ;;
     *) bad "the ear" "heard: ${HEARD:0:60}" ;; esac
@@ -133,7 +155,10 @@ if [ -f "$H/hodd/identity/trello-map.yaml" ]; then
   ARI="$(python3 - "$H/hodd/identity/trello-map.yaml" "$ROOT" <<'PYMAP'
 import os, subprocess, sys, yaml
 m = yaml.safe_load(open(sys.argv[1], encoding="utf-8")) or {}
-pair = next(((b.get("name"), l.get("name")) for b in (m.get("boards") or [])
+boards = m.get("boards") or []
+if not isinstance(boards, list):        # a map that names boards but no lists: not trello-map.sh's shape
+    boards = []
+pair = next(((b.get("name"), l.get("name")) for b in boards if isinstance(b, dict)
              for l in (b.get("lists") or []) if b.get("name") and l.get("name")), None)
 if pair:
     door = os.path.join(sys.argv[2], "systems", "snotra", "services", "cron", "trello-map.sh")
@@ -254,14 +279,15 @@ fi
 # speaks. That was the fault of 2026-10-23: kokoro was lowered at 12:29 and every voice note until
 # 19:30 arrived as text. A mouth that cannot be raised must still SAY SO, and must not hang.
 systemctl --user stop kokoro-serve.service >/dev/null 2>&1; sleep 1
-if bash "$SCRIPT_DIR/mouth.sh" "the voice raises itself" /tmp/smoke-raise.ogg >/dev/null 2>&1 \
-   && [ -s /tmp/smoke-raise.ogg ]; then
-  ok "the mouth raises an idle-lowered voice and speaks ($(stat -c%s /tmp/smoke-raise.ogg) bytes)"
+if bash "$SCRIPT_DIR/mouth.sh" "the voice raises itself" "$NOTES/raise.ogg" >/dev/null 2>&1 \
+   && [ -s "$NOTES/raise.ogg" ]; then
+  ok "the mouth raises an idle-lowered voice and speaks ($(stat -c%s "$NOTES/raise.ogg") bytes)"
 else
-  bad "mouth raise" "the mouth did not raise kokoro — a voice note would arrive as text"
+  SQ="$(kokoro_port_squatter)"
+  bad "mouth raise" "the mouth did not raise kokoro — a voice note would arrive as text${SQ:+ ($SQ)}"
 fi
 if MOUTH_WAIT_SECONDS=3 KOKORO_URL=http://127.0.0.1:9/v1/audio/speech \
-   bash "$SCRIPT_DIR/mouth.sh" "the voice must refuse loudly" /tmp/smoke-down.ogg >/dev/null 2>&1; then
+   bash "$SCRIPT_DIR/mouth.sh" "the voice must refuse loudly" "$NOTES/down.ogg" >/dev/null 2>&1; then
   bad "mouth guard" "succeeded with no synthesiser"
 else
   RC=$?
@@ -269,7 +295,7 @@ else
 fi
 systemctl --user start kokoro-serve.service >/dev/null 2>&1
 for _i in $(seq 1 12); do sleep 2; curl -s -m 3 -o /dev/null "$KBASE/" 2>/dev/null && break; done
-bash "$SCRIPT_DIR/mouth.sh" "the voice is back" /tmp/smoke-up.ogg >/dev/null 2>&1 \
+bash "$SCRIPT_DIR/mouth.sh" "the voice is back" "$NOTES/up.ogg" >/dev/null 2>&1 \
   && ok "the voice comes back after a restart" || bad "voice restart" "no voice after restarting kokoro"
 
 # ── G · the idle-stop respects the lease, and lowers a truly idle card ──────────────────────

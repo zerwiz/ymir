@@ -65,6 +65,20 @@ kokoro_speech_url() {  # the OpenAI-style speech endpoint; an explicit KOKORO_UR
   printf '%s/v1/audio/speech\n' "$base"
 }
 
+kokoro_port_squatter() {  # says who holds the engine's port when it is NOT kokoro-serve; prints nothing otherwise
+  local port line pid main
+  port="$(kokoro_port)" || return 0
+  command -v ss >/dev/null 2>&1 || return 0
+  line="$(ss -Hltnp "sport = :$port" 2>/dev/null | head -1)"
+  pid="$(printf '%s' "$line" | sed -n 's/.*pid=\([0-9]*\).*/\1/p')"
+  [ -n "$pid" ] || return 0
+  main="$(systemctl --user show -p MainPID --value kokoro-serve.service 2>/dev/null)"
+  [ "$pid" = "$main" ] && return 0
+  case "$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)" in *kokoro*) return 0 ;; esac
+  printf 'port %s is held by another program, pid %s (%s) — stop it, then: systemctl --user restart kokoro-serve\n' \
+    "$port" "$pid" "$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | sed 's/ *$//' | cut -c1-80)"
+}
+
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   case "${1:-base}" in
     base) kokoro_base_url ;;
