@@ -83,8 +83,10 @@ dry_run() {  # <with|without> YMIR_HOME, in a closed environment -> the launch l
 wantdry="$("$LAUNCHER" print --model "$ALLOWED" --brief "$FIXHOME/hodd/data/parity/brief.md")"
 # The dry run prints a display line (no env prefix, no quotes); the same line, normalised, must match.
 wantdry="$(printf '%s' "$wantdry" | sed "s/^env OPENCODE_CONFIG_CONTENT='[^']*' //; s/'//g")"
-eq "einherjar-spawn --dry-run prints the launcher's line (opencode run --model M --auto <brief>, YMIR_HOME set)" "$wantdry" "$(dry_run with)"
-eq "einherjar-spawn --dry-run prints the same line with YMIR_HOME unset (a seat is not a split)" "$wantdry" "$(dry_run without)"
+# Both sides are normalised the same way: the spawner prints the env prefix and the quotes too.
+norm() { sed "s/^env OPENCODE_CONFIG_CONTENT='[^']*' //; s/'//g"; }
+eq "einherjar-spawn --dry-run prints the launcher's line (opencode run --model M --auto <brief>, YMIR_HOME set)" "$wantdry" "$(dry_run with | norm)"
+eq "einherjar-spawn --dry-run prints the same line with YMIR_HOME unset (a seat is not a split)" "$wantdry" "$(dry_run without | norm)"
 
 # ── door 3: the engine ──────────────────────────────────────────────────────────────────────────
 eng="$(cd "$ROOT/src" && python3 -I - "$MODEL" "$BRIEF" <<'PY'

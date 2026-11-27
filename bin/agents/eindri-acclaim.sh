@@ -310,10 +310,10 @@ elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
         detail="report healed from the terminal status line, replacing the sweep's snapshot and keeping its evidence ($STATE/eindri-reports/$AGENT.md)"
         corrected=1 ;;
       *)
-        detail="report filed at state/eindri-reports/$AGENT.md (the sweep's snapshot; no terminal word yet)" ;;
+        detail="report filed at $STATE/eindri-reports/$AGENT.md (the sweep's snapshot; no terminal word yet)" ;;
     esac
   else
-    detail="report filed at state/eindri-reports/$AGENT.md"
+    detail="report filed at $STATE/eindri-reports/$AGENT.md"
   fi
   [ "$TERMINAL" = unproven ] && { kind="UNPROVEN"; detail="UNPROVEN ($UNPROVEN_WHY) — $detail"; }
 else
@@ -324,7 +324,7 @@ else
   case "$last" in
     done:*|failed:*)
       printf '%s\n' "$last" >"$STATE/eindri-reports/$AGENT.md"
-      detail="report healed from the terminal status line (state/eindri-reports/$AGENT.md)" ;;
+      detail="report healed from the terminal status line ($STATE/eindri-reports/$AGENT.md)" ;;
     needs-decision:*)
       kind="QUESTION"
       printf '%s\n' "$last" >"$STATE/eindri-questions/$AGENT.md"
@@ -332,7 +332,7 @@ else
     *)
       if [ -n "$WORKTREE" ] && [ -f "$WORKTREE/REPORT.md" ]; then
         cp "$WORKTREE/REPORT.md" "$STATE/eindri-reports/$AGENT.md" 2>/dev/null || true
-        detail="report filed from $WORKTREE/REPORT.md (state/eindri-reports/$AGENT.md)"
+        detail="report filed from $WORKTREE/REPORT.md ($STATE/eindri-reports/$AGENT.md)"
       else
         detail="left working (herdr state flipped; read the pane: herdr agent read $AGENT)"
       fi ;;
