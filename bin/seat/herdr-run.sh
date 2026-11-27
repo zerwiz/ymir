@@ -440,8 +440,14 @@ $("$_sd" block "$NAME" ${SENDER:+--sender "$SENDER"})" ;;
     fi
     unset YMIR_SENDER
     if [ -n "$SENDER" ]; then
-      case "$PROMPT" in "[from $SENDER]"*) ;; *) PROMPT="[from $SENDER]
-$PROMPT" ;; esac
+      case "$PROMPT" in
+        "[from $SENDER]"*) ;;
+        *)
+          # one stamp: a leading one that is not the resolved sender (no road back) is replaced, never doubled
+          case "$PROMPT" in "[from "*) PROMPT="${PROMPT#*]}"; PROMPT="${PROMPT# }"; PROMPT="${PROMPT#$'\n'}" ;; esac
+          PROMPT="[from $SENDER]
+$PROMPT" ;;
+      esac
     fi
     KIND="${KIND_EXPLICIT:-${YMIR_HERDR_KIND:-pi}}"
 

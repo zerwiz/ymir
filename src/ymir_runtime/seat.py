@@ -163,9 +163,10 @@ def _sender_for(errand: "Errand", brief_text: str, *, runner: proc.Runner) -> st
     """
     if errand.sender:
         return errand.sender
+    # only a `[from …]` stamp names a sender: a `[reply from …]` line is an answer, never a dispatch
     held = _LEADING_STAMP.match(brief_text or "")
-    if held:
-        return held.group(1).split("]", 1)[0].split("from ", 1)[-1]
+    if held and held.group(1).startswith("[from "):
+        return held.group(1)[len("[from "):].split("]", 1)[0]
     # empty stdin: a dispatch typed at a terminal must not be stamped as a person's own line
     result = runner(["bash", str(_sender_door()), "origin"], input_text="")
     origin = proc.out(result) if proc.ok(result) else ""
@@ -198,6 +199,8 @@ def _prompt_for(
     body = brief_text.rstrip("\n") + "\n"
     # A stamp the brief already leads with is set aside, so the bearings cannot push it down.
     held = _LEADING_STAMP.match(body)
+    if held and not held.group(1).startswith("[from "):
+        held = None  # a reply stamp is not the sender's: it stays in the brief, under the sender's own
     if held:
         body = body[held.end():]
     # The bearings are PREPENDED, so they are read before the errand — and only when the brief does

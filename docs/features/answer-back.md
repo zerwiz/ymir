@@ -53,7 +53,7 @@ the sending machine.
 
 | Harness | The terminal act and `reply.sh` | The turn-end hook |
 |---|---|---|
-| Claude Code | works (a shell command) | tested |
+| Claude Code | works (a shell command) | tested with fakes |
 | pi | works | built and in use; not re-proven in this change |
 | OpenCode | works | built, not yet proven live |
 | Hermes | works | built, not yet proven live |
@@ -139,3 +139,5 @@ bin/agents/reply.sh --to <machine>:<pane> "<your answer>"
 - 2026-11-26 — appended: a turn of the operator's own answers the operator and agents get a receipt; a line sent by
   hand with `eindri-send.sh` is not copied.
 - 2026-11-27 — appended: a dispatched worker sends its result and its questions directly to the recorded sender.
+- 2026-11-27 — appended: the Claude Code hook row now reads "tested with fakes"; a brief carries one sender stamp, and a
+  reply stamp never names the sender.

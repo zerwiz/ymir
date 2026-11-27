@@ -174,6 +174,23 @@ got="$(bash "$ROOT/bin/agents/sender.sh" origin --sender "script cron · $ME")"
 got="$(bash "$ROOT/bin/agents/reply.sh" --parse "[from agent Ada ($ME) · arm $ME · $ME] go")"
 has "$got" "\"from\",\"arm\",\"$ME\"" && good "fleet-tell's paneless stamp names a road back" || bad "fleet stamp" "$got"
 
+# ── stamps: one on the brief, and a reply stamp never names the sender ─────────
+reset
+o="$(cd "$PROJ" && sender bash "$ROOT/bin/seat/herdr-run.sh" eindri --main --kind pi --role sindri road-roadless -- "[from script nightly · $ME] $TASK" 2>&1)"
+b="$BRIEFS/road-roadless"
+[ "$(head -1 "$b" 2>/dev/null)" = "[from $ORIGIN]" ] && ! sed -n 2p "$b" | grep -q '^\[from ' \
+  && ! grep -qF "[from script nightly · $ME]" "$b" \
+  && good "herdr-run: a roadless stamp is replaced by the sender's, never doubled" || bad "roadless stamp" "$(head -3 "$b" 2>&1) $o"
+got="$(PYTHONPATH="$ROOT/src" python3 -B -c 'import importlib
+seat = importlib.import_module("ymir_runtime.seat")
+class R: returncode, stdout, stderr = 0, "agent real\n", ""
+import types
+e = types.SimpleNamespace(sender="")
+for brief in ("[reply from agent other] done", "[from agent asker] go"):
+    print(seat._sender_for(e, brief, runner=lambda *a, **k: R()))' 2>&1)"
+[ "$got" = "agent real
+agent asker" ] && good "engine: a reply stamp is never taken as the sender" || bad "reply stamp" "$got"
+
 # ── by hand ────────────────────────────────────────────────────────────────────
 reset
 bash "$ROOT/bin/agents/sender.sh" record road-bare --sender "$ORIGIN" >/dev/null
