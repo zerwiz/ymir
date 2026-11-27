@@ -1,1 +1,1 @@
-../../.agents/agents/snotra-documenter.md
+../../.agents/agents/snotra-ear.md
