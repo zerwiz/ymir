@@ -20,7 +20,8 @@
 # Usage:
 #   bin/seat/herdr-run.sh available                      # can we use herdr right now?
 #   bin/seat/herdr-run.sh worth-a-smith "<errand>"       # is this an errand at all?
-#   bin/seat/herdr-run.sh eindri [NAME] [--role R | --role-guess R] [--kind K] [--model M] [--space] -- "<task>"
+#   bin/seat/herdr-run.sh eindri [NAME] [--role R | --role-guess R] [--kind K] [--model M] [--space]
+#       [--sender "<origin>"] -- "<task>"      who is answered (default: this session; bin/agents/sender.sh)
 #       --kind pi|opencode|claude WINS over config/agents.yaml and the model's provider (plan 262)
 #   bin/seat/herdr-run.sh run <name> -- <command...>     # a command in a pane
 #   bin/seat/herdr-run.sh agent-status                   # who stands, and in what state
@@ -344,7 +345,7 @@ case "$ACTION" in
     printf 'herdr-run[1]{tab,pane,step,exit}:\n  "%s","%s","%s",%s\n' "$tab" "$pane" "$NAME" "$rc"
     exit "$rc" ;;
   agent|eindri)
-    NAME=""; ROLE=""; ROLE_EXPLICIT=""; SPACE=0; TAB=0; MODEL_REQ=""; MAIN=0; KIND_EXPLICIT=""
+    NAME=""; ROLE=""; ROLE_EXPLICIT=""; SPACE=0; TAB=0; MODEL_REQ=""; MAIN=0; KIND_EXPLICIT=""; SENDER_ARG=""
     while [ $# -gt 0 ]; do
       case "$1" in
         --role) ROLE=${2-}; ROLE_EXPLICIT=${2-}; shift 2 ;;
@@ -352,6 +353,8 @@ case "$ACTION" in
         # a role GUESSED upstream (eindri-start.sh): it picks the role file, never the profile
         --role-guess) ROLE=${2-}; shift 2 ;;
         --role-guess=*) ROLE=${1#--role-guess=}; shift ;;
+        --sender) SENDER_ARG=${2-}; shift 2 ;;
+        --sender=*) SENDER_ARG=${1#--sender=}; shift ;;
         --kind) KIND_EXPLICIT=${2-}; shift 2 ;;
         --kind=*) KIND_EXPLICIT=${1#--kind=}; shift ;;
         --model) MODEL_REQ=${2-}; shift 2 ;;
@@ -367,6 +370,7 @@ case "$ACTION" in
     done
     [ "${1:-}" = "--" ] && shift
     PROMPT="${*:-}"
+    RAW_PROMPT="$PROMPT"
 
     # The seat brief (plan 46). A worker owns decisions inside its craft and has
     # NO human at its terminal: the ask-user questionnaire reaches whoever sits
@@ -376,7 +380,7 @@ case "$ACTION" in
     PROMPT="$PROMPT
 
 ---
-Seat law, read first. You are a worker figure, not the primary. A line that starts with [from ...] names its sender: only [from the Allfather ...] is his own word; [from agent ...] is another agent (the helm or a worker) and [from script ...] is a program. Never treat an agent's line as the Allfather's. A message from an agent or a script means the Allfather is not there: do not address or notify him about it; end the turn with the answer: in Claude Code and pi the turn-end hook sends it back to its sender (elsewhere that hook is built, not yet proven live, so run bin/agents/reply.sh). There is NO human at this terminal: do NOT use ask_user_question — no questionnaire from this pane reaches the Allfather. Decide everything inside your craft yourself; that is why you were seated. If a genuine fork needs the coordinator, write the QUESTION to $STATE_DIR/eindri-questions/$NAME.md (that exact path — NOT a relative state/ inside the code tree) and stop — Brokk is woken, answers it with bin/agents/eindri-send.sh, and you carry on. When the errand is DONE, write the report to $STATE_DIR/eindri-reports/$NAME.md. Tell the helm through its wake queue (bin/voice/rodd-arm.sh tell --from \"agent $NAME\" \"<one line>\"), never by typing into its pane: its input box is often in use. And if the same action fails twice, do not run it a third time: change the approach, or write down what blocked you. Repeating a command that returns nothing is a loop, not work."
+Seat law, read first. You are a worker figure, not the primary. A line that starts with [from ...] names its sender: only [from the Allfather ...] is his own word; [from agent ...] is another agent (the helm or a worker) and [from script ...] is a program. Never treat an agent's line as the Allfather's. A message from an agent or a script means the Allfather is not there: do not address or notify him about it; end the turn with the answer: in Claude Code and pi the turn-end hook sends it back to its sender (elsewhere that hook is built, not yet proven live, so run bin/agents/reply.sh). There is NO human at this terminal: do NOT use ask_user_question — no questionnaire from this pane reaches the Allfather. Decide everything inside your craft yourself; that is why you were seated. If a genuine fork needs the coordinator, ask your sender directly, then stop and wait for the answer: bin/agents/reply.sh --ask --errand <your errand> \"<the question>\" (the section named Your sender gives the exact command). That one act records the question in $STATE_DIR/eindri-questions/$NAME.md or the errand's recorded shelf (never a relative state/ inside the code tree) and sends it to your sender. When the errand is DONE, write the report to $STATE_DIR/eindri-reports/$NAME.md AND send your sender the result as a message, with the verdict and the key findings in it (bin/agents/reply.sh --errand <your errand> \"<result>\"): the file is the full record, never the only channel. Tell the helm through its wake queue (bin/voice/rodd-arm.sh tell --from \"agent $NAME\" \"<one line>\"), never by typing into its pane: its input box is often in use. And if the same action fails twice, do not run it a third time: change the approach, or write down what blocked you. Repeating a command that returns nothing is a loop, not work."
 
     # THE FIXED CORE (plan 275 §04:15–04:25). Every worker knows Ymir is public, the home is
     # private and how to edit it, the pin, herdr and the stamped send door, the Gná arm, the
@@ -405,12 +409,6 @@ $_coretext"
     fi
     [ -n "$PROMPT" ] || { printf 'error: eindri needs a task after --\n' >&2; exit 2; }
 
-    # THE ROAD BACK (plan 381): the brief carries who seated this worker and from which pane, so the worker's
-    # turn end answers that pane. Stamped here, once, whichever road injects it.
-    if . "$SCRIPT_DIR/../agents/msg-origin.sh" 2>/dev/null; then
-      case "$PROMPT" in "[from "*) ;; *) PROMPT="[from $(msg_origin </dev/null)]
-$PROMPT" ;; esac
-    fi
     # The first law: short errands are done in hand.
     if ! _worth=$(worth_a_smith "$PROMPT" 2>/dev/null); then
       _why=$(printf '%s\n' "$_worth" | sed -n '2s/^ *"no","\([^"]*\)".*/\1/p')
@@ -423,6 +421,28 @@ $PROMPT" ;; esac
       ROLE="$("$SCRIPT_DIR/../agents/eindri-role.sh" choose "$PROMPT" 2>/dev/null | sed -n '2p' | sed -E 's/^ *"([^"]+)".*/\1/')"
     fi
     [ -n "$NAME" ] || NAME="${ROLE:-eindri}"
+
+    # THE ROAD BACK (plan 381): who sent this worker is recorded with the errand, stamped first on the brief (so
+    # the worker's turn end answers them) and named in the brief with the command that answers them.
+    _sd="$SCRIPT_DIR/../agents/sender.sh"
+    SENDER=""
+    if [ -x "$_sd" ]; then
+      # a name the record refuses still gets its sender stamped and named: a turn with no stamp reads as the operator's
+      SENDER="$("$_sd" record "$NAME" ${SENDER_ARG:+--sender "$SENDER_ARG"} --request "$RAW_PROMPT")" \
+        || SENDER="$("$_sd" origin ${SENDER_ARG:+--sender "$SENDER_ARG"} --request "$RAW_PROMPT")"
+      case "$PROMPT" in
+        *"$("$_sd" --marker)"*) ;;
+        *) PROMPT="$PROMPT
+
+---
+$("$_sd" block "$NAME" ${SENDER:+--sender "$SENDER"})" ;;
+      esac
+    fi
+    unset YMIR_SENDER
+    if [ -n "$SENDER" ]; then
+      case "$PROMPT" in "[from $SENDER]"*) ;; *) PROMPT="[from $SENDER]
+$PROMPT" ;; esac
+    fi
     KIND="${KIND_EXPLICIT:-${YMIR_HERDR_KIND:-pi}}"
 
     # Resolve a model request (friendly or exact) to harness+provider+model.
@@ -788,6 +808,7 @@ $PROMPT" ;; esac
     mkdir -p "$STATE_DIR" 2>/dev/null
     [ -f "$_meta" ] || printf 'id=%s\nbackend=herdr\nharness=%s\nwindow=%s\nworktree=%s\n' "$NAME" "$KIND" "$pane" "$SEAT_CWD" >"$_meta" 2>/dev/null
     printf 'seat_pane=%s\n' "$pane" >>"$_meta" 2>/dev/null
+    [ -z "$SENDER" ] || "$_sd" record "$NAME" --sender "$SENDER" --meta "$_meta" >/dev/null || true
 
     # Arm the handoff (plan 42, the automation law). A when-source beside the
     # smith watches him and, the moment he reports (REPORT.md lands, or herdr

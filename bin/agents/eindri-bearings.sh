@@ -24,6 +24,8 @@
 #
 # Usage:
 #   eindri-bearings.sh [<path|id|alias>]          # the Bearings section (markdown)
+#   eindri-bearings.sh <path> --errand <id> [--sender "<origin>"]
+#                                                 # …with "Your sender": who sent the errand and how to answer them
 #   eindri-bearings.sh --marker                   # the marker line a brief is tested against
 #   eindri-bearings.sh --check                    # the doors this section reads, and whether each answers
 #
@@ -42,7 +44,18 @@ if [ -z "${YMIR_HOME:-}" ] && [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
   export YMIR_HOME
 fi
 
-usage() { sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,38p' "$0" | sed 's/^# \{0,1\}//'; }
+
+ERRAND=""; SENDER=""; REST=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --errand) ERRAND="${2-}"; shift 2 || shift ;;
+    --sender) SENDER="${2-}"; shift 2 || shift ;;
+    *) REST+=("$1"); shift ;;
+  esac
+done
+set -- ${REST[@]+"${REST[@]}"}
+[ $# -gt 0 ] || [ -z "$ERRAND" ] || set -- "$PWD"
 
 case "${1-}" in
   -h|--help|"") usage; exit 0 ;;
@@ -84,6 +97,13 @@ printf 'It carries the fixed core you work by, the records of the project you we
 printf 'map of where documents live in the home. Read it first; the errand follows below.\n\n'
 
 printf '**Where you work.** project `%s` — %s (%s), at `%s`.\n\n' "${PID:-unregistered}" "${KIND}" "${HOW}" "$PATH_"
+
+# ---- (0b) who sent this errand, and how it is answered -------------------------------------
+if [ -n "$ERRAND" ] && [ -x "$SELF/sender.sh" ]; then
+  "$SELF/sender.sh" block "$ERRAND" ${SENDER:+--sender "$SENDER"} \
+    || printf '> [!IMPORTANT]\n> The sender of this errand could not be read (`bin/agents/sender.sh`).\n'
+  printf '\n'
+fi
 
 # ---- (a) the fixed core ---------------------------------------------------------------------
 printf '### (a) The fixed core\n\n'
@@ -178,6 +198,7 @@ if [ -d "${YMIR_HOME:-}/svartalfaheim" ]; then
     printf -- '- no plan-ledger README found under `svartalfaheim/*/projects/*/plans/`\n'
   fi
 fi
-printf -- '- **your report**: `%s/state/eindri-reports/<errand>.md`, written by your terminal act; a question only the operator can answer goes to `%s/state/eindri-questions/<errand>.md`\n' "$YMIR_HOME" "$YMIR_HOME"
+printf -- '- **your report**: `%s/state/eindri-reports/<errand>.md`, written by your terminal act. It is the full record, never the only channel: send your sender the result as a message (`bin/agents/reply.sh --errand <errand> "<verdict and key findings>"`)\n' "$YMIR_HOME"
+printf -- '- **your questions**: ask your sender directly (`bin/agents/reply.sh --ask --errand <errand> "<question>"`) and wait; the same act files it at `%s/state/eindri-questions/<errand>.md`\n' "$YMIR_HOME"
 printf -- '- **the law**: `docs/fixes/<component>/` for what changed and why, `RULES/` for what is law\n'
 printf '\n'

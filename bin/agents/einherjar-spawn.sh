@@ -211,6 +211,7 @@ ISOLATION=auto
 FORCE=0
 DRY=0
 REPLY_TO=""
+SENDER_ARG=""
 POS=()
 want_value=
 for a in "$@"; do
@@ -228,6 +229,7 @@ for a in "$@"; do
       isolation) ISOLATION=$a ;;
       role) SEAT_ROLE=$a ;;
       reply_to) REPLY_TO=$a ;;
+      sender) SENDER_ARG=$a ;;
       *) echo "error: internal parser state for --$want_value" >&2; exit 1 ;;
     esac
     want_value=
@@ -252,6 +254,8 @@ for a in "$@"; do
     --isolation=*) ISOLATION=${a#--isolation=} ;;
     --role) want_value=role ;;
     --reply-to) want_value=reply_to ;;
+    --sender) want_value=sender ;;
+    --sender=*) SENDER_ARG=${a#--sender=} ;;
     --reply-to=*) REPLY_TO=${a#--reply-to=} ;;
     --role=*) SEAT_ROLE=${a#--role=} ;;
     --force) FORCE=1 ;;
@@ -296,6 +300,17 @@ if [ "$RELAUNCH" -eq 1 ]; then
 fi
 if [ "$SCOUT" -eq 1 ]; then
   KIND=scout
+fi
+
+# An explicit return address that names a place also names the sender (plan 365 R1 → the direct message).
+if [ -z "$SENDER_ARG" ] && [ -z "${YMIR_SENDER:-}" ]; then
+  _rh="$(hostname -s 2>/dev/null || uname -n)"
+  case "$REPLY_TO" in
+    herdr:w*:p*) SENDER_ARG="agent the dispatcher · herdr pane ${REPLY_TO#herdr:} · $_rh" ;;
+    hermes:*)    SENDER_ARG="agent hermes · hermes session ${REPLY_TO#hermes:} · $_rh" ;;
+    arm:*)       SENDER_ARG="agent the arm holder · arm ${REPLY_TO#arm:} · ${REPLY_TO#arm:}" ;;
+  esac
+  unset _rh
 fi
 
 # --- the return address (plan 365 R1): no real spawn without one --------------
@@ -934,6 +949,19 @@ if [ "$MODEL_LOCAL" = yes ] && [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ]
   esac
 fi
 
+# --- who sent it (bin/agents/sender.sh): recorded before any road seats the worker ---
+# A relaunch keeps the sender the errand was first sent by, unless one is named. $YMIR_SENDER is consumed here.
+SENDER=""
+if [ "$RELAUNCH" -eq 1 ] && [ -z "$SENDER_ARG" ]; then
+  SENDER="$("$SCRIPT_DIR/sender.sh" get "$ID" 2>/dev/null || true)"
+fi
+[ -n "$SENDER" ] || SENDER="$("$SCRIPT_DIR/sender.sh" origin ${SENDER_ARG:+--sender "$SENDER_ARG"} --request "$(head -n1 "$BRIEF" 2>/dev/null)" 2>/dev/null || true)"
+unset YMIR_SENDER
+if [ "$DRY" -eq 0 ] && [ -n "$SENDER" ]; then
+  "$SCRIPT_DIR/sender.sh" record "$ID" --sender "$SENDER" >/dev/null \
+    || echo "warning: the sender of $ID could not be recorded" >&2
+fi
+
 # --- engine-first (plan 58, Phase 1): the strangler's hinge -------------------
 # The engine (`src/ymir_runtime/`) owns an errand end to end — worktree, harness,
 # backend, record, heartbeat. When it says it CANNOT (exit 4: a sandbox seat, an
@@ -956,6 +984,7 @@ if [ "$DRY" -eq 0 ] && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/
     engine_args+=(--lock "$SCRIPT_DIR/../model/local-model-lock.sh")
   fi
   if [ "$FORCE" -eq 1 ]; then engine_args+=(--force); fi
+  if [ -n "$SENDER" ]; then engine_args+=(--sender "$SENDER"); fi
   engine_args+=(--compat)
   engine_rc=0
   BROKK_WT_ROOT="$WT_ROOT" "$SCRIPT_DIR/../engine/ymir-engine.sh" "${engine_args[@]}" || engine_rc=$?
@@ -988,6 +1017,7 @@ if [ "$DRY" -eq 1 ]; then
   [ "$ISOLATION_DECLARED" = utgard ] && [ "$ISOLATION_EFFECTIVE" != on ] && printf '  note: brief declares Isolation: utgard; effective %s. A declared utgard is never silently downgraded; the refusal above is the law, not a fallback.\n' "$ISOLATION_EFFECTIVE"
   [ "$ISOLATION_DECLARED" = herdr ] && [ "$ISOLATION_EFFECTIVE" = on ] && printf '  note: brief declares Isolation: herdr (the ordinary road) but --isolation on forced the sandbox\n'
   [ -n "$REUSE_PANE" ] && printf '  seat: reuses %s, the errand'"'"'s own pane (no second pane)\n' "$REUSE_PANE"
+  printf '  sender: %s\n' "${SENDER:-unknown}"
   printf '  dispatch_profile: %s\n' "${DISPATCH_ACTIVE:-<none active — the machine resolution governs>}"
   exit 0
 fi
@@ -1099,8 +1129,12 @@ fi
 PROMPT="$DATA/$ID/prompt.md"
 {
   # THE ROAD BACK (plan 381): who sent this errand and from which pane, so the worker's turn end answers it.
-  ( . "$SCRIPT_DIR/msg-origin.sh" && printf '[from %s]\n' "$(msg_origin </dev/null)" ) 2>/dev/null
+  [ -z "$SENDER" ] || printf '[from %s]\n' "$SENDER"
   cat "$BRIEF"
+  # who sent it and the command that answers them (skipped when the brief already carries the section)
+  if [ -n "$SENDER" ] && ! grep -qF "$("$SCRIPT_DIR/sender.sh" --marker)" "$BRIEF" 2>/dev/null; then
+    printf '\n\n---\n\n'; "$SCRIPT_DIR/sender.sh" block "$ID" --sender "$SENDER"
+  fi
   if [ -s "$CTX" ]; then printf '\n\n---\n\n'; cat "$CTX"; fi
   # THE FIXED CORE (plan 275 §04:15–04:25): Ymir is public, the home is private, the pin,
   # herdr and the stamped send door, the Gná arm, the finding tools, the desk guard, the
@@ -1512,6 +1546,8 @@ META_TMP="$STATE/.$ID.meta.${BASHPID:-$$}"
   printf 'spawn_gen=%s\n' "$SPAWN_GEN"
 } > "$META_TMP"
 mv "$META_TMP" "$META"
+# the errand's own record names its sender and the road back
+[ -z "$SENDER" ] || "$SCRIPT_DIR/sender.sh" record "$ID" --sender "$SENDER" --meta "$META" >/dev/null || true
 
 # --- arm the silence watch, AND PROVE IT ARMED -------------------------------
 # This used to be `|| true`, so a seat could be launched with no watchdog and nobody knew:

@@ -104,6 +104,19 @@ Every report carries a Veil id. The arm holder answers it with `bin/agents/veil.
 and later `accepted` or `rework`. With no answer in 2 minutes, the report is typed into the
 holder's pane. After 10 minutes, it is a red alarm.
 
+## Your sender is told directly
+
+Whoever sent you is recorded with your errand, and your brief names them under *Your sender*. This adds to every
+section above: a report file or a question file is the record, never the only channel.
+
+- **Result.** When you finish, done or failed, send it to your sender as a message with the verdict and the key
+  findings in it: `bin/agents/reply.sh --errand <id> "<result>"`. The terminal act sends its line to them too.
+- **Question.** When you need a decision, ask your sender and wait:
+  `bin/agents/reply.sh --ask --errand <id> "<question>"`. One act files the question and sends it.
+- **Roads.** A sender in a pane gets the pane; the arm holder gets its wake queue; another machine is reached over
+  the fleet road. The terminal act and `reply.sh` need only a shell, so they serve every harness. The turn-end
+  hooks of Claude Code and pi add the final answer; the OpenCode and Hermes hooks are built, not yet proven live.
+
 ## CHANGE LOG
 
 - **2026-11-14** — written: the shipped, agnostic core every errand's brief carries, and the home's overlay is printed after it (plan 291 part 2). This document carries its history from here; its earlier history is its git log. Everything above the CHANGE LOG is printed into a brief; nothing below it is.
@@ -111,3 +124,4 @@ holder's pane. After 10 minutes, it is a red alarm.
 - **2026-11-22** — appended: *Evidence or no done*, the Veil (plan 350 B): `--evidence` per claim, the `unproven` state, and the Veil id the arm holder answers.
 - **2026-11-26** — appended: *Answer the sender* (plan 381) — an agent's or a script's message is answered to its sender, by the turn-end hook or `bin/agents/reply.sh`.
 - **2026-11-26** — plan 381, second correction: a turn the operator is in answers him, and the agents heard in it get a short receipt; a line already sent by hand with `eindri-send.sh` or `reply.sh` is not copied by the hook.
+- **2026-11-27** — appended: *Your sender is told directly* — the result and every question go to the recorded sender as a message; the files stay as the record.
