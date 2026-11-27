@@ -16,7 +16,7 @@ SCHED="$ROOT/bin/time/nornir-cron-start.sh"
 [ -x "$SCHED" ] || { printf 'error: no scheduler at %s\n' "$SCHED" >&2; exit 2; }
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
-STATE="$WORK/state"; CONF="$WORK/conf"; FAKE="$WORK/bin"; LOCKD="$WORK/lock"
+STATE="$WORK/state"; CONF="$WORK/conf"; FAKE="$WORK/bin"; LOCKD="$STATE/lock"
 mkdir -p "$STATE" "$CONF" "$FAKE" "$LOCKD"
 MARK="$WORK/fired"
 printf '%s\n' "$$" >"$LOCKD/brokk.lock"
