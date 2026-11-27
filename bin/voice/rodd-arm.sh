@@ -586,6 +586,19 @@ hold_role_of() {  # <pid> -> the role its harness works
   esac
 }
 
+# The machine's Telegram bot is read by the arm holder's harness and nobody else. A fault here is
+# said, never fatal: the helm has already moved.
+telegram_follows_arm() {  # [--released]
+  local door="$ROOT/bin/notify/telegram-reader.sh" out
+  [ -x "$door" ] || return 0
+  # stderr, so the verb's own row stays the only thing on stdout; a machine that has not opted in is silent
+  if out="$(bash "$door" sync "$@" 2>&1)"; then
+    case "$out" in *'"off"'*|*'"private-seat"'*) ;; *) printf '%s\n' "$out" >&2 ;; esac
+  else
+    printf '%s\nrodd-arm: the Telegram reader did not move — bin/notify/telegram-reader.sh status\n' "$out" >&2
+  fi
+}
+
 cmd_hold() {
   local want_role="${BROKK_ARM_ROLE:-}"
   while [ $# -gt 0 ]; do
@@ -658,6 +671,7 @@ cmd_hold() {
   fi
   printf 'rodd-arm-hold[1]{verb,holder_pid,role,state_dir,speaks}:\n  "hold","%s","%s","%s","yes (session pid %s stands in the process tree)"\n' \
     "$sess" "$role" "$STATE_ROOT" "$_sp_sess"
+  telegram_follows_arm
   return 0
 }
 
@@ -685,6 +699,7 @@ cmd_release() {
     room_append "$STATE_ROOT" "Nanna" "release: the $role gives the helm back (session $sess)" || true
   fi
   printf 'rodd-arm-release[1]{verb,released,state_dir}:\n  "release","yes","%s"\n' "$STATE_ROOT"
+  telegram_follows_arm --released
   return 0
 }
 
