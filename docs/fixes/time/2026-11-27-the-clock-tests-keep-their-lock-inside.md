@@ -12,3 +12,7 @@ Both tests now keep the lock in `$STATE/lock`.
 
 **Proof:** both PASS with `XDG_STATE_HOME` and `HOME` pointed at an empty directory (no live lock anywhere); before the
 change `nornir-schedule-shapes` printed `16 FAILED` the same way.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #968
