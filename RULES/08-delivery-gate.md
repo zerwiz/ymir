@@ -295,3 +295,13 @@ own: **every PR in the house's repositories is reviewed by the judge, and the ju
 | **NEEDS-REWORK** | no merge; the verdict's items go back to the PR's author (the errand's seat, or the collaborator) as one line each |
 | **A red or pending gate** | no merge, even on approval; the judge names the failing row and waits for the next head |
 | **The operator** | may still merge anything from his hall with an explicit second click |
+
+## Who mends a pull request (2026-11-27)
+
+For every agent, on every seat:
+
+1. **Only the heart's judge mends.** Any other seat reviews and reports; it commits and pushes nothing to the pull request.
+2. **Another person's branch is theirs.** No commit lands on it unless its author asked.
+3. **A commit carries a GitHub no-reply address**, never a private mailbox.
+4. **Write the `## CHANGE LOG` heading yourself** in every document you add, so nothing has to be mended.
+5. Refused by `bin/forge/review-mend.sh`? That is the answer. Do not do the same thing by hand.
