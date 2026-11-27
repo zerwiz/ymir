@@ -20,3 +20,5 @@ The live run, `proof-971-live`, at head `aafa9bf8a`: the done line landed in a l
 ## CHANGE LOG
 
 - 2026-11-27 — the fallback run and the live run are recorded.
+- 2026-11-27 — appended: the handoff sweep's "finished without a terminal word" for a finished errand is recorded as an
+  open gap.

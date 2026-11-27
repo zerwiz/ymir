@@ -142,7 +142,12 @@ bin/agents/eindri-acclaim.sh proof-971-live --terminal done --line 'done: proof-
 ```
 
 The report named there, read on the second machine, shows the evidence command with exit 0, the commit `aafa9bf8a`
-and the release tree as its repository. The errand's status there reads `done: done: proof-971-live result rune`.
+and the release tree as its repository. The status in the worker's own seat shelf reads
+`done: done: proof-971-live result rune` (Veil id `veil-1795802417-10c7`).
+
+The second machine's handoff sweep still filed `proof-971-live` as "finished without a terminal word". The status it
+reads, in the helm's state shelf, held only the launch heartbeat. The first machine showed the same for the errand that
+sent this run: `done:` in the seat shelf, and the sweep's report in the helm's shelf.
 
 Also open:
 
@@ -150,6 +155,9 @@ Also open:
 - The seat reaper can close a finished worker's pane before anyone reads it.
 - A worker that is idle while it waits for a reply can be taken as finished without a terminal word. In the live run
   the sender kept its pane by appending `working:` status lines.
+- The terminal act writes to the worker's seat shelf and the handoff sweep reads the helm's shelf, so a finished
+  errand can be filed as silent. A release that differs from the pin was suggested as the cause, and that is not
+  confirmed. This change does not edit the sweep, its state resolver, or the line that picks the act's shelf.
 - An answer sent to a pane the send door could not verify was reported as not delivered although it arrived, and the
   worker saw it more than once.
 
@@ -162,3 +170,5 @@ Also open:
 - 2026-11-27 — appended: two more two-machine runs. `proof-971-far2`: a no-line done for a pane that was gone came
   back to that machine's arm holder. `proof-971-live`: the done line landed in a live pane on the other machine. The
   second-machine summary that said "not proven" and "open gap" is replaced.
+- 2026-11-27 — appended: the handoff sweep filed a finished errand as silent, because the two shelves differ. Observed,
+  not fixed here.
