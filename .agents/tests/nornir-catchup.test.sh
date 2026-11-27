@@ -5,7 +5,7 @@ set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SCHED="$ROOT/bin/time/nornir-cron-start.sh"
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
-STATE="$WORK/state"; CONF="$WORK/conf"; FAKE="$WORK/bin"; LOCKD="$WORK/lock"; MARK="$WORK/fired"
+STATE="$WORK/state"; CONF="$WORK/conf"; FAKE="$WORK/bin"; LOCKD="$STATE/lock"; MARK="$WORK/fired"
 mkdir -p "$STATE" "$CONF" "$FAKE" "$LOCKD"; : >"$MARK"
 printf '%s\n' "$$" >"$LOCKD/brokk.lock"; printf '%s\n' "$LOCKD/brokk.lock" >"$STATE/.lock-path"
 cat >"$FAKE/date" <<'EOS'
