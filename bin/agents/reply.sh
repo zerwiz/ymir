@@ -3,6 +3,8 @@
 #
 #   reply.sh "<text>"                      answer the last stamped message that reached this pane
 #   reply.sh --to <stamp|pane|machine:pane> "<text>"   answer a named sender
+#   reply.sh --errand <id> "<text>"        send to whoever sent that errand (recorded by sender.sh at dispatch)
+#   reply.sh --ask [--errand <id>] "<q>"   file the question under eindri-questions AND send it to that sender
 #   reply.sh --turn-end                    harness hook: {"session","answer","messages":[{"id","text","since"}]} on stdin
 #   reply.sh --claude-stop                 Claude Code Stop hook: its own JSON on stdin
 #   reply.sh --owe                         the wake drain: queue lines on stdin whose senders the holder owes an answer
@@ -12,7 +14,9 @@
 # A message stamped from an agent or a script means the operator is NOT there: the answer goes to the sender and
 # nothing is written to him, spoken to him or notified. Only a stamp of his own (the Allfather, Rödd, a person at a
 # terminal) opens the roads that reach him.
-# Roads back, read from the stamp (bin/agents/msg-origin.sh): a herdr pane (this machine: eindri-send.sh; another:
+# A bare reply with no waiting message goes to the sender of this worker's errand ($YMIR_ERRAND_ID, $YMIR_SMITH or
+# the eindri/<id> branch).
+# Roads back, read from the stamp (bin/agents/msg-origin.sh): an arm holder ("arm <machine>": its wake queue) · a herdr pane (this machine: eindri-send.sh; another:
 # fleet-tell.sh machine:pane) · Rödd (rodd-room.sh, or relayed by the arm holder) · a terminal · Telegram · a Hermes
 # session. A script, or a person with no stamped road, has nothing to answer: it is said in words, nothing is sent.
 # A pane that cannot take the line is never silent: the arm holder of that machine gets it in the wake queue.
@@ -24,7 +28,7 @@
 # Exit: 0 delivered, or nothing to do for a hook · 1 not delivered · 2 usage · 3 no way back.
 set -u
 HERE="$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-case "${1-}" in -h|--help|"") sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;; esac
+case "${1-}" in -h|--help|"") sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;; esac
 if [ "${1-}" != --parse ]; then
   # shellcheck source=bin/agents/msg-origin.sh
   . "$HERE/msg-origin.sh"

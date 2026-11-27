@@ -25,6 +25,8 @@
 #     hodd/identity/projects.yaml (bin/agents/project-target.sh). A worker for another
 #     project is seated in THAT project's folder, in a worktree of THAT repository — never
 #     in a worktree of Ymir's tree. A row with no clone on this machine is refused, named.
+#   --sender "<origin>" (or $YMIR_SENDER) names who sent the worker when that is not this session — a dispatch
+#   carried in from another machine. The worker answers them (bin/agents/sender.sh).
 #   eindri-start.sh --version
 set -u
 
@@ -64,13 +66,14 @@ STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
 SEATS="$STATE/herdr-seats"
 SESSION="${YMIR_HERDR_SESSION:-brokk}"
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-REQ=""; ROLE=""; ROLE_GIVEN=""; SEAT=""; MODEL=""; EFFORT=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""; PROJECT_EXPLICIT=""; DRY=0; KIND_EXPLICIT=""; MODEL_EXPLICIT=""; CLAIM_PR=""; CLAIM_PLAN=""
+REQ=""; ROLE=""; ROLE_GIVEN=""; SEAT=""; MODEL=""; EFFORT=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""; PROJECT_EXPLICIT=""; DRY=0; KIND_EXPLICIT=""; MODEL_EXPLICIT=""; CLAIM_PR=""; CLAIM_PLAN=""; SENDER_ARG=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --role) ROLE=${2-}; ROLE_GIVEN=${2-}; shift 2 ;;
     --kind) KIND=${2-}; KIND_EXPLICIT=$KIND; shift 2 ;;
+    --sender) SENDER_ARG=${2-}; shift 2 ;;
     --model) MODEL=${2-}; MODEL_EXPLICIT=$MODEL; shift 2 ;;
     --effort) EFFORT=${2-}; shift 2 ;;
     --id) TASK_ID=${2-}; shift 2 ;;
@@ -86,6 +89,7 @@ while [ $# -gt 0 ]; do
     *) [ -z "$REQ" ] && REQ="$1" || REQ="$REQ $1"; shift ;;
   esac
 done
+RAW_REQ="$REQ"
 [ -n "$REQ" ] || { printf 'error: eindri-start needs a request\nhelp: bin/agents/eindri-start.sh "build the login page"\n' >&2; exit 2; }
 
 # 1. Backend: ensure herdr (or a usable backend) exists.
@@ -213,15 +217,31 @@ $_well" ;;
   unset _wm _well
 fi
 
+# 2d''. WHO SENT IT (bin/agents/sender.sh): resolved once, from the request as the caller wrote it, and handed
+#      to whichever road seats the worker. $YMIR_SENDER is consumed here, so a worker's own errands never inherit it.
+ERRAND="${TASK_ID:-$LABEL}"; SENDER=""
+if [ -x "$SCRIPT_DIR/sender.sh" ]; then
+  SENDER="$("$SCRIPT_DIR/sender.sh" origin ${SENDER_ARG:+--sender "$SENDER_ARG"} --request "$RAW_REQ")" || SENDER=""
+fi
+unset YMIR_SENDER
+
 # 2e. THE BEARINGS every brief carries (plan 291 part 2): the shipped fixed core and the home's
 #     overlay, the project's records, and the home's document map. Prepended, so it is read before
 #     the errand; skipped when the brief already carries it, so a brief is never doubled.
 if [ -x "$SCRIPT_DIR/eindri-bearings.sh" ]; then
   marker="$("$SCRIPT_DIR/eindri-bearings.sh" --marker 2>/dev/null || true)"
   case "$REQ" in
-    *"${marker:-no-bearings-marker}"*) ;;
+    *"${marker:-no-bearings-marker}"*)
+      # a brief that carries its bearings already is still told who sent it
+      if [ -n "$SENDER" ]; then
+        case "$REQ" in *"$("$SCRIPT_DIR/sender.sh" --marker)"*) ;; *) REQ="$REQ
+
+---
+
+$("$SCRIPT_DIR/sender.sh" block "$ERRAND" --sender "$SENDER")" ;; esac
+      fi ;;
     *)
-      bearings="$("$SCRIPT_DIR/eindri-bearings.sh" "$PROJECT_PATH" 2>/dev/null || true)"
+      bearings="$("$SCRIPT_DIR/eindri-bearings.sh" "$PROJECT_PATH" --errand "$ERRAND" ${SENDER:+--sender "$SENDER"} 2>/dev/null || true)"
       if [ -n "$bearings" ]; then
         REQ="$bearings
 
@@ -246,6 +266,7 @@ if [ "$DRY" = 1 ]; then
   printf 'seat_profile[1]{role_given,role_guessed,profile}:\n  "%s","%s","%s"\n' \
     "${ROLE_GIVEN:-none}" "$([ -n "$ROLE_GIVEN" ] && echo none || echo "$ROLE")" \
     "$(basename "$("$SCRIPT_DIR/../seat/claude-seat.sh" profile "$ROLE_GIVEN" 2>/dev/null || echo unknown)")"
+  printf 'sender[1]{errand,origin}:\n  "%s","%s"\n' "$ERRAND" "${SENDER:-unknown}"
   printf 'bearings[1]{marker,core_carried}:\n  "%s","%s"\n' \
     "$("$SCRIPT_DIR/eindri-bearings.sh" --marker 2>/dev/null || echo none)" \
     "$(case "$REQ" in *eindri-bearings*) echo yes;; *) echo no;; esac)"
@@ -299,6 +320,12 @@ if [ "$DRY" = 0 ] && [ -x "$CLAIM_SH" ] && [ "${YMIR_CLAIMS:-on}" != off ]; then
   unset _s _n _hb _wb _ws
 fi
 
+# 2h. THE SENDER IS KEPT WITH THE ERRAND, before the worker can finish.
+if [ -n "$SENDER" ]; then
+  "$SCRIPT_DIR/sender.sh" record "$ERRAND" --sender "$SENDER" >/dev/null \
+    || printf 'eindri-start: the sender of %s could not be recorded\n' "$ERRAND" >&2
+fi
+
 # 3. The engine owns the errand when the caller names one (plan 58, Phase 1).
 #    With --id an errand is a real seat — worktree, harness, record, heartbeat.
 #    A seat hint (--pane/--tab/--space/--main) is the old road's grain, so those
@@ -308,6 +335,7 @@ if [ -n "$TASK_ID" ] && [ -z "$SEAT" ] && [ -z "$MAIN" ] \
    && { [ "$PROJECT_RESOLVED" = 0 ] || [ "$PROJECT_KIND" = ymir ]; }; then
   PROJECT_DIR="$PROJECT_PATH"
   engine_args=(seat "$TASK_ID" --project "$PROJECT_DIR" --harness "$KIND" --request "$REQ" --role "$ROLE")
+  if [ -n "$SENDER" ]; then engine_args+=(--sender "$SENDER"); fi
   if [ -n "$MODEL" ]; then engine_args+=(--model "$MODEL"); fi
   if [ -n "$EFFORT" ]; then engine_args+=(--effort "$EFFORT"); fi
   engine_rc=0
@@ -360,7 +388,7 @@ if [ -x "$SCRIPT_DIR/../seat/herdr-run.sh" ] && [ "$HERDR_INSTALLED" = 1 ]; then
   # "verify the release" -> forseti) travels as --role-guess: it picks the pi role file and the
   # seat's name, and never the Claude permission profile — a guess must not open the merge door.
   if [ -n "$ROLE_GIVEN" ]; then _role_arg=(--role "$ROLE"); else _role_arg=(--role-guess "$ROLE"); fi
-  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $SEAT_MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} "${_role_arg[@]}" "$SEAT_NAME" -- "$REQ" >"$herdr_err.out" 2>"$herdr_err" || rc=$?
+  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $SEAT_MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} ${SENDER:+--sender "$SENDER"} "${_role_arg[@]}" "$SEAT_NAME" -- "$REQ" >"$herdr_err.out" 2>"$herdr_err" || rc=$?
 fi
 if [ "$HERDR_INSTALLED" = 1 ] && [ "$rc" != 0 ] && [ "$rc" != 3 ]; then
   printf 'eindri-start[1]{role,seat,errand}:\n  "%s","none","%s"\n' "$ROLE" "$SEAT_NAME"
@@ -379,10 +407,14 @@ else
   # The tmux fallback seats the same worker the herdr road does (plan 262): a bare `exec opencode`
   # started empty — no model, no brief — and sat idle. The shape comes from the launcher, never here.
   brief_dir="$STATE/eindri-briefs"; mkdir -p "$brief_dir"
-  brief_file="$brief_dir/$LABEL.md"; printf '%s\n' "$REQ" >"$brief_file"
+  brief_file="$brief_dir/$LABEL.md"
+  # stamped first, as on every other road, so the worker's turn end answers its sender
+  [ -z "$SENDER" ] || REQ_STAMPED="[from $SENDER]
+$REQ"
+  printf '%s\n' "${REQ_STAMPED:-$REQ}" >"$brief_file"
   case "$KIND" in
     opencode) tmux_cmd="$("$SCRIPT_DIR/../seat/opencode-launcher.sh" print ${MODEL:+--model "$MODEL"} --brief "$brief_file")" || tmux_cmd="" ;;
-    pi)       tmux_cmd="exec pi $(printf '%q' "$REQ")" ;;
+    pi)       tmux_cmd="exec pi $(printf '%q' "${REQ_STAMPED:-$REQ}")" ;;
     *)        tmux_cmd="exec $KIND" ;;
   esac
   if [ -z "$tmux_cmd" ]; then

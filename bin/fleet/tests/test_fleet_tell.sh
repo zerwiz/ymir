@@ -53,8 +53,10 @@ run() { : >"$LOG"; "$DOOR" "$@" 2>/dev/null; }
 
 o="$(run --to far "hello")"
 grep -q '"far","arm holder","tell","Ada,counsellor","handed","w1:p1","yes"' <<<"$o" && good "arm handed and pane typed" || bad "arm handed + pane typed" "$o"
-grep -q 'tell --from Ada (here) arm Ada (here) to the arm holder: hello' "$LOG" && good "the arm line is signed" || bad "signed line" "$(cat "$LOG")"
-grep -q 'send --from Ada (here) w1:p1 Ada (here) to the arm holder: hello' "$LOG" && good "the pane line is signed" || bad "pane signed" "$(cat "$LOG")"
+# a sender with no pane still names a road back: the arm holder of its machine
+FROM='agent Ada (here) · arm here · here'
+grep -qF "tell --from $FROM arm Ada (here) to the arm holder: hello" "$LOG" && good "the arm line is signed" || bad "signed line" "$(cat "$LOG")"
+grep -qF "send --from $FROM w1:p1 Ada (here) to the arm holder: hello" "$LOG" && good "the pane line is signed" || bad "pane signed" "$(cat "$LOG")"
 
 o="$(ARM_HELD=0 run --to far "hello")"
 grep -q '"refused","w1:p1","yes"' <<<"$o" && good "arm refused and pane typed" || bad "refused+typed" "$o"
@@ -75,11 +77,11 @@ o="$(run --all "hi")"
 
 # the other targets, and the steer verbs
 o="$(run --steer --to far:gimle-move "go left")"
-grep -q 'tell --from Ada (here) gimle-move steer: go left' "$LOG" && good "steer an errand on a machine through its own tell.sh" || bad "steer" "$(cat "$LOG")"
+grep -qF "tell --from $FROM gimle-move steer: go left" "$LOG" && good "steer an errand on a machine through its own tell.sh" || bad "steer" "$(cat "$LOG")"
 o="$(run --to far:wBA:p1 "hi")"
-grep -q 'tell --from Ada (here) wBA:p1 hi' "$LOG" && good "machine:pane target" || bad "machine:pane" "$(cat "$LOG")"
+grep -qF "tell --from $FROM wBA:p1 hi" "$LOG" && good "machine:pane target" || bad "machine:pane" "$(cat "$LOG")"
 o="$(ARM_HELD=0 run --steer --to rework-875 "x")"
-grep -q 'send --from Ada (here) rework-875 steer: x' "$LOG" && grep -q '"refused","rework-875","yes"' <<<"$o" && good "steer falls back to typing into the pane" || bad "steer fallback" "$o $(cat "$LOG")"
+grep -qF "send --from $FROM rework-875 steer: x" "$LOG" &&grep -q '"refused","rework-875","yes"' <<<"$o" && good "steer falls back to typing into the pane" || bad "steer fallback" "$o $(cat "$LOG")"
 o="$(run --answer --to far:q1 "use B")"
 grep -q 'answer --from Ada (here) q1 use B' "$LOG" && good "answer speaks and records through eindri-answer" || bad "answer" "$(cat "$LOG")"
 o="$(ANSWER_RC=1 run --answer --to q1 "use B")"

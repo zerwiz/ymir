@@ -218,7 +218,8 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
   fi
   status_file="$STATE/$AGENT.status"
   last="$(tail -n1 "$status_file" 2>/dev/null || true)"
-  [ "$last" = "$TERMINAL: $LINE" ] || printf '%s: %s\n' "$TERMINAL" "$LINE" >>"$status_file"
+  NEWS=0
+  [ "$last" = "$TERMINAL: $LINE" ] || { printf '%s: %s\n' "$TERMINAL" "$LINE" >>"$status_file"; NEWS=1; }
   case "$TERMINAL" in
     needs-decision) shelf="$STATE/eindri-questions/$AGENT.md" ;;
     *)              shelf="$STATE/eindri-reports/$AGENT.md" ;;
@@ -239,6 +240,26 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
   if { [ "$TERMINAL" = "done" ] || [ "$TERMINAL" = "unproven" ]; } && ! grep -q '^## Record' "$shelf" 2>/dev/null; then
     write_record "$shelf"
   fi
+fi
+
+# 1a. THE SENDER IS TOLD DIRECTLY, in this same act (the report file is the record, never the only channel).
+#     Only the worker's own new terminal line is sent, once, to whoever bin/agents/sender.sh recorded at dispatch.
+#     The verdict and the line travel in the message. A message that cannot be delivered is said loudly and never
+#     holds back the wake below.
+if [ "${NEWS:-0}" = 1 ] && [ "${YMIR_REPLY_AUTO:-1}" != 0 ] && [ -x "$SCRIPT_DIR/sender.sh" ] \
+   && "$SCRIPT_DIR/sender.sh" get "$AGENT" >/dev/null 2>&1; then
+  if [ "$TERMINAL" = needs-decision ]; then
+    _msg="QUESTION from errand $AGENT, waiting for your answer: $LINE — answer with bin/agents/eindri-answer.sh $AGENT \"<answer>\" · record: $shelf"
+  else
+    _msg="errand $AGENT $TERMINAL: $LINE — full record: $shelf"
+  fi
+  if _sent="$(bash "$SCRIPT_DIR/reply.sh" --errand "$AGENT" "$_msg" 2>&1)"; then
+    printf '%s\n' "$_sent"
+  else
+    printf 'WARNING: the sender of %s was NOT told directly: %s\nhelp: bin/agents/reply.sh --errand %s "<the result>"\n' \
+      "$AGENT" "$(printf '%s' "$_sent" | tail -n1)" "$AGENT" >&2
+  fi
+  unset _msg _sent
 fi
 
 # 1b. The well remembers what the errand did (the Allfather, 2026-11-12: "when they are DONE

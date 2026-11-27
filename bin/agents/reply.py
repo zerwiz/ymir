@@ -96,7 +96,12 @@ def road(origin: str) -> dict:
     out = {"road": "none", "address": "", "machine": machine, "who": who, "why": "", "him": False}
     him = present(who)
     out["him"] = him
+    # "arm <machine>" is the road to that machine's arm holder (bin/agents/sender.sh gives it to a dispatch that
+    # had no pane of its own). A pane, a session or a terminal in the same stamp is nearer and wins.
+    arm = next((m.group(1) for p in parts[1:] for m in [re.fullmatch(rf"arm ({MACHINE})", p)] if m), "")
     if who.startswith("script") or who.startswith("fleet-tell"):
+        if arm:
+            return {**out, "road": "arm", "address": "holder", "machine": arm}
         return {**out, "why": f"'{who}' is a script: nobody waits for an answer"}
     # The roads that reach HIM (the room, his chat, his terminal) open only for a message stamped as his own.
     if him and "Rödd" in who:
@@ -114,6 +119,8 @@ def road(origin: str) -> dict:
         m = re.fullmatch(rf"herdr pane ({PANE})", p)
         if m:
             return {**out, "road": "pane", "address": m.group(1)}
+    if arm:
+        return {**out, "road": "arm", "address": "holder", "machine": arm}
     return {**out, "why": f"the stamp '{origin}' names no pane, room, terminal, chat or session to answer"}
 
 
@@ -189,6 +196,8 @@ def deliver(r: dict, answer: str) -> tuple[bool, str]:
     line = f"[reply from {origin}] {body}"
     here = r["machine"] == me()
     kind = r["road"]
+    if kind == "arm":
+        return to_holder(r, line, origin)
     if kind == "pane":
         if is_holder(r):  # its input box is often in use: the wake queue is its road (the fixed core)
             return to_holder(r, line, origin)
@@ -260,6 +269,38 @@ def mark_manual(r: dict) -> None:
     marker.write_text(f"{time.time()}\n")
 
 
+def errand_record(errand: str) -> dict:
+    """What bin/agents/sender.sh recorded at dispatch: origin= (who sent it) and shelf= (where its question goes)."""
+    if not re.fullmatch(r"[A-Za-z0-9_-][A-Za-z0-9._-]*", errand or ""):
+        return {}
+    try:
+        text = (state() / "errands" / errand).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return {}
+    got = dict(line.split("=", 1) for line in text.splitlines() if "=" in line)
+    return got if got.get("origin") else {}
+
+
+def errand_here() -> str:
+    """The errand this process works for: its seat's variables, else its eindri/<id> branch. Recorded ones only."""
+    names = [os.environ.get("YMIR_ERRAND_ID"), os.environ.get("YMIR_SMITH")]
+    rc, branch = run(["git", "rev-parse", "--abbrev-ref", "HEAD"], 10)
+    if rc == 0 and branch.startswith("eindri/"):
+        names.append(branch[len("eindri/"):])
+    return next((n for n in names if n and errand_record(n)), "")
+
+
+def file_question(errand: str, shelf: str, question: str) -> Path:
+    box = Path(shelf) / "eindri-questions"
+    box.mkdir(parents=True, exist_ok=True)
+    path = box / f"{errand}.md"
+    new = not path.exists() or not path.stat().st_size
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(f"{question}\n" if new else f"\n{question}\n")
+        fh.write(f"\n(asked {datetime.now().astimezone().isoformat(timespec='seconds')})\n")
+    return path
+
+
 def report(rows: list[tuple[str, str, bool, str]]) -> None:
     q = lambda s: '"' + flat(str(s)).replace('"', "'") + '"'  # noqa: E731
     print(f"reply[{len(rows)}]{{road,to,delivered,why}}:")
@@ -318,7 +359,7 @@ def owe_wakes(lines: list[str], pane: str) -> None:
             continue
         origin, text = m.group(1).split("— ")[-1].strip(), m.group(2)
         r = road(origin)
-        if r["him"] or r["road"] not in ("pane", "hermes") or "[reply from " in text:
+        if r["him"] or r["road"] not in ("pane", "hermes", "arm") or "[reply from " in text:
             continue
         key = hashlib.sha256(line.encode()).hexdigest()[:32]
         (state() / "owed-seen").mkdir(exist_ok=True)
@@ -520,18 +561,54 @@ def main(argv: list[str]) -> int:
         except (OSError, ValueError, KeyError, AttributeError) as exc:
             print(f"reply: the turn could not be read, so nothing was answered — {exc}", file=sys.stderr)
             return 1
-    to, text, i = "", [], 0
+    to, errand, ask, text, i = "", "", False, [], 0
     while i < len(argv):
-        if argv[i] == "--to" and i + 1 < len(argv):
-            to, i = argv[i + 1], i + 2
+        if argv[i] in ("--to", "--errand") and i + 1 < len(argv):
+            if argv[i] == "--to":
+                to = argv[i + 1]
+            else:
+                errand = argv[i + 1]
+            i += 2
+            continue
+        if argv[i] == "--ask":
+            ask, i = True, i + 1
             continue
         text.append(argv[i])
         i += 1
     body = " ".join(text).strip()
     if not body:
-        print('reply: give the answer: reply.sh [--to <stamp|pane|machine:pane>] "<text>"', file=sys.stderr)
+        print('reply: give the answer: reply.sh [--to <stamp|pane|machine:pane> | --errand <id>] [--ask] "<text>"',
+              file=sys.stderr)
         return 2
-    if to:
+    if ask:
+        errand = errand or errand_here()
+        record = errand_record(errand)
+        if not record:
+            print("reply: no sender is recorded for this errand — name it with --errand <id>. Nothing was sent.",
+                  file=sys.stderr)
+            return 3
+        try:
+            filed = file_question(errand, record.get("shelf") or str(state()), body)
+        except OSError as exc:
+            print(f"reply: the question could not be filed, so nothing was sent — {exc}", file=sys.stderr)
+            return 1
+        print(f"reply: question filed at {filed}")
+        body = (f"QUESTION from errand {errand}, waiting for your answer: {body} — answer with "
+                f"bin/agents/eindri-answer.sh {errand} \"<answer>\" on {me()}")
+    pane = os.environ.get("YMIR_REPLY_PANE")
+    box = state() / "inbox" / pane if pane else None
+    if not to and not errand and not (box and box.exists()):
+        errand = errand_here()
+    if errand:
+        record = errand_record(errand)
+        if not record:
+            print(f"reply: no sender is recorded for the errand {errand}. Nothing was sent.", file=sys.stderr)
+            return 3
+        if os.environ.get("YMIR_REPLY_ORIGIN", "").startswith("agent in a session"):
+            os.environ["YMIR_REPLY_ORIGIN"] = os.environ["YMIR_REPLY_ORIGIN"].replace("in a session", errand, 1)
+    if errand:
+        r = road(record["origin"])
+    elif to:
         m = re.fullmatch(rf"(?:({MACHINE}):)?({PANE})", to)
         if m:
             r = road(f"agent · herdr pane {m.group(2)} · {m.group(1) or me()}")
@@ -539,8 +616,6 @@ def main(argv: list[str]) -> int:
             kind, origin = parse(to)
             r = road(origin if kind != "none" else to)
     else:
-        pane = os.environ.get("YMIR_REPLY_PANE")
-        box = state() / "inbox" / pane if pane else None
         if not box or not box.exists():
             print("reply: no stamped message is waiting for an answer here — name the sender with --to. "
                   "Nothing was sent.", file=sys.stderr)
