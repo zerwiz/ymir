@@ -79,7 +79,7 @@ def classify(line):
     if ASK.search(text):
         return "ask", line
     return "report", line
-ID = [re.compile(r"^(?:eindri|seat) (\S+?):? "), re.compile(r"^agent (\S+?) to the arm holder: ")]
+ID = [re.compile(r"^(?:eindri|seat) (\S+?):? "), re.compile(r"^agent (\S+?)(?: · .*?)? to the arm holder: ")]
 def report_id(line):
     text = body_of(line)
     for rx in ID:
@@ -205,7 +205,8 @@ case "${1:-drain}" in
     # session holds the arm) presents and says so; the queue is left for the holder.
     # --full: the ledger and the count hold EVERY line, never the collapsed report row; the
     # order is already people first, so the lines shown below lead with the voices.
-    _out="$(bash "$0" drain --full 2>&1)"
+    # the start drain presents a backlog: no one turn answers it, so nobody is owed by it
+    _out="$(SAGA_DRAIN_OWE=0 bash "$0" drain --full 2>&1)"
     _wakes="$(printf '%s\n' "$_out" | grep '^WAKE ' || true)"
     _n="$(printf '%s' "$_wakes" | grep -c '^WAKE ' || true)"
     if [ "${_n:-0}" = 0 ]; then
@@ -293,6 +294,16 @@ cp "$FMQ" "$_fmshow" 2>/dev/null || : >"$_fmshow"
 if [ "$RECORD" = 1 ]; then
   if [ -n "$_kept" ] && [ -s "$_kept" ]; then cp "$_kept" "$STATE/.wake-drained" 2>/dev/null; else rm -f "$STATE/.wake-drained"; fi
   if [ -s "$_fmshow" ]; then cp "$_fmshow" "$STATE/.wake-fmq-drained" 2>/dev/null; else rm -f "$STATE/.wake-fmq-drained"; fi
+fi
+
+# THE ROAD BACK (plan 381): only the holder, draining in its own pane, owes the agents whose lines it is shown;
+# its turn-end hook then answers them with no step of its own.
+if [ "$RECORD" = 1 ] && [ "${SAGA_DRAIN_OWE:-1}" = 1 ] && [ -s "$STATE/.wake-drained" ] && [ -s "$STATE/.arm.pane" ] \
+   && . "$ROOT/bin/agents/msg-origin.sh" 2>/dev/null; then
+  _mine="$(_pane_of_self)"
+  if [ -n "$_mine" ] && [ "$_mine" = "$(head -1 "$STATE/.arm.pane" | tr -dc '[:alnum:]:._-')" ]; then
+    YMIR_REPLY_PANE="$_mine" YMIR_REPLY_ORIGIN="agent the arm holder" bash "$ROOT/bin/agents/reply.sh" --owe <"$STATE/.wake-drained" >/dev/null 2>&1 || true
+  fi
 fi
 
 if [ -s "$_fmshow" ]; then

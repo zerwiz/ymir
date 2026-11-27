@@ -22,7 +22,7 @@ bad()  { fail=$((fail+1)); printf 'FAIL %s\n' "$1"; [ -n "${2-}" ] && printf '  
 
 T="$(mktemp -d)"
 trap 'rm -rf "$T"' EXIT
-export HOME="$T/home" YMIR_HOME="$T/home"
+export HOME="$T/home" YMIR_HOME="$T/home" XDG_STATE_HOME="$T/home/.local/state"
 mkdir -p "$HOME/hodd/data" "$T/bin" "$T/stub"
 export STUB_DIR="$T/stub"
 export EINDRI_SEND_WAIT=0          # the wait is the door's, and it is proven by the state it reads

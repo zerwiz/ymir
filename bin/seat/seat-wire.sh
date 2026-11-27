@@ -249,6 +249,8 @@ EOF
 
   ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   line="[seat ${mine:-unknown} via the wire, $ts] $text"
+  # the road back (plan 381): the sender's proved pane travels in front of the wire's own mark
+  . "$(dirname "${BASH_SOURCE[0]}")/../agents/msg-origin.sh" 2>/dev/null && line="$(msg_stamp "$line")"
 
   # The record first, then the word: a spoken line that leaves no trace is unrecoverable.
   local roomsh="$HOME_DIR/hodd/bin/room.sh"

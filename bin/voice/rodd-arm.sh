@@ -222,6 +222,20 @@ cmd_tell() {
   [ -n "${text//[[:space:]]/}" ] || die 'tell needs a message: rodd-arm.sh tell "the window is too wide"'
   case "$text" in *$'\e'*) die 'refusing a message carrying an escape sequence — one plain line only' ;; esac
   [ -n "$wclass" ] || wclass="$(tell_class "$from" "$text")"
+  # THE ROAD BACK: a sender speaking from a pane carries it, so the holder's turn end can answer that pane
+  # (bin/agents/reply.sh). Added after the class is read from the bare name. The operator's own voice, a
+  # script and a full origin are left as they are.
+  case "$from" in
+    *" · "*|Rödd*|script*|"the Allfather"*|"reply door") ;;
+    *)
+      if [ -n "${HERDR_PANE_ID:-}" ] && . "$ROOT/bin/agents/msg-origin.sh" 2>/dev/null; then
+        local pane; pane="$(_pane_of_self)"
+        if [ -n "$pane" ]; then
+          case "$from" in "agent "*) ;; *) from="agent $from" ;; esac
+          from="$from · herdr pane $pane · $(hostname -s 2>/dev/null || uname -n)"
+        fi
+      fi ;;
+  esac
   held_or_refuse
   [ -x "$STATE_DOOR" ] || die "the queue door is missing ($STATE_DOOR) — the message was NOT handed over"
 

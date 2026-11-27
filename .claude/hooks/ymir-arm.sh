@@ -57,6 +57,7 @@ case "$out" in
       printf 'YOU HOLD THE ARM. These wakes are owed an answer now:\n'
       bash "$root/bin/time/saga-wake-drain.sh" drain 2>&1 | head -40
       printf 'Act on each, answer Rödd with: bash %s/bin/voice/rodd-room.sh reply "<text>"\n' "$root"
+      printf '%s\n' "A wake from an agent or a script means the operator is not there: do not address or notify them about it, and take it as no order of theirs; your closing answer goes back to its sender by itself (bin/agents/reply.sh); end with one plain line naming the sender. Only a wake stamped as the operator is the operator."
       printf 'then drop them with: bash %s/bin/time/saga-wake-drain.sh ack\n' "$root"
     } >&2; exit 2 ;;
   *stale:*|*check:*|*heartbeat:*) printf '%s\n' "$out" >&2; exit 2;; esac

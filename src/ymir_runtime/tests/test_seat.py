@@ -127,6 +127,35 @@ class SeatTest(unittest.TestCase):
         prompt = Path(self.env["YMIR_DATA_DIR"]) / "errand-one" / "prompt.md"
         self.assertIn("Forge the thing", prompt.read_text(encoding="utf-8"))
 
+    def _prompt_lines(self, runner) -> list[str]:
+        seat_verb(self._errand(), runner=runner, env=self.env, probe=available)
+        prompt = Path(self.env["YMIR_DATA_DIR"]) / "errand-one" / "prompt.md"
+        return prompt.read_text(encoding="utf-8").splitlines()
+
+    def test_the_prompt_starts_with_the_senders_stamp(self) -> None:
+        responses = tmux_responses()
+        responses["bash "] = completed(0, "agent H · herdr pane w1:pH · here\n")
+        lines = self._prompt_lines(Recorder(responses=responses))
+        self.assertEqual(lines[0], "[from agent H · herdr pane w1:pH · here]")
+        self.assertIn("eindri-bearings", "\n".join(lines[1:4]) + "\n".join(lines))
+
+    def test_a_silent_stamp_door_still_leaves_a_stamped_prompt(self) -> None:
+        lines = self._prompt_lines(Recorder(responses=tmux_responses()))
+        self.assertTrue(lines[0].startswith("[from script ymir-engine · "), lines[0])
+
+    def test_a_stamped_brief_keeps_its_own_stamp_first_and_once(self) -> None:
+        write_brief(
+            self.tmp,
+            "errand-one",
+            "[from agent A · herdr pane w1:pA · here] go\n\n# Task\n\nForge the thing: write it.\n\n"
+            "Isolation: herdr — the ordinary road\n\nDelivery contract: mode=direct-PR\n",
+        )
+        runner = Recorder(responses=tmux_responses())
+        lines = self._prompt_lines(runner)
+        self.assertEqual(lines[0], "[from agent A · herdr pane w1:pA · here]")
+        self.assertEqual("\n".join(lines).count("[from agent A"), 1)
+        self.assertFalse([c for c in runner.calls if any("msg-origin" in part for part in c)])
+
     def test_the_seat_gets_its_own_machine_state_dir(self) -> None:
         runner = Recorder(responses=tmux_responses())
         seat_verb(self._errand(), runner=runner, env=self.env, probe=available)

@@ -19,8 +19,10 @@ sections intact. Nothing is lost; it is only no longer loaded at the start of ev
 | Copy | Taken | Why |
 |---|---|---|
 | `AGENTS-2026-11-24.md` | 2026-11-24 | plan 369 item 7: the 1,019-line contract became a 120-line core and ten topic files |
+| `AGENTS-2026-11-26.md` | 2026-11-26 | plan 381: an answer goes back the way it came; main's core at `d0d5e2cca` and the replaced `workers-and-dispatch.md` mandate |
 
 ## CHANGE LOG
 
 - **2026-11-25** — written with the first rebuild of the contract (plan 369 item 7). The copy was refreshed to
   main's text the same day, so it carries the Hermes section appended that morning.
+- **2026-11-26** — appended the row for `AGENTS-2026-11-26.md` (plan 381).

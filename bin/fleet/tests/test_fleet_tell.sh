@@ -8,7 +8,7 @@ ok=0; fail=0
 good() { ok=$((ok+1)); printf 'ok   %s\n' "$1"; }
 bad()  { fail=$((fail+1)); printf 'FAIL %s\n' "$1"; [ -n "${2-}" ] && printf '     %s\n' "$2"; }
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
-export HOME="$T/home"; mkdir -p "$HOME" "$T/bin" "$T/rt/bin/agents" "$T/rt/bin/fleet" "$T/rt/bin/voice"
+export HOME="$T/home" XDG_STATE_HOME="$T/home/.local/state"; mkdir -p "$HOME" "$T/bin" "$T/rt/bin/agents" "$T/rt/bin/fleet" "$T/rt/bin/voice"
 export LOG="$T/log"; : >"$LOG"
 export YMIR_RUNTIME_DIR="$T/rt" FLEET_TELL_ME=here FLEET_TELL_TIMEOUT=5 YMIR_SEAT_NAME=Ada
 cat >"$T/fleet.json" <<'J'
@@ -16,6 +16,8 @@ cat >"$T/fleet.json" <<'J'
 J
 export FLEET_TELL_REGISTRY="$T/fleet.json"
 export FLEET_TELL_WAKE_CMD='printf "WAKE %s\n" "$1" >>"$LOG"'
+# a fake herdr that knows no pane: the signed lines must not depend on the pane this test runs in
+printf '#!/usr/bin/env bash\nexit 1\n' >"$T/bin/herdr"; chmod +x "$T/bin/herdr"
 # fake ssh: logs, fails for the dead host, otherwise runs the remote command here
 cat >"$T/bin/ssh" <<'S'
 #!/usr/bin/env bash

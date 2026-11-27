@@ -21,7 +21,8 @@
 #   a terminal on stdin      "a person at terminal /dev/pts/3"
 #   otherwise                "script <parent command>"
 # Only a caller that KNOWS a person spoke may write "the Allfather"; everything else says agent, person or script.
-# A line that already starts with "[from " is left as it is, so a relayed message is never stamped twice.
+# A line that already starts with "[from " or "[reply from " is left as it is, so a relayed message is never
+# stamped twice. The stamp is also the ROAD BACK: bin/agents/reply.sh reads it and answers the sender there.
 
 # WHICH PANE REALLY HOLDS THIS PROCESS (2026-11-14).
 #
@@ -146,10 +147,16 @@ msg_origin() {
         who="agent ${seat:-the helm} (the helm${agent:+, $agent})"
       elif [ -n "$name" ]; then
         who="agent ${name}${agent:+ ($agent)}"
+      elif [ -z "$agent" ] && [ -t 0 ]; then
+        who="a person at terminal $(tty 2>/dev/null)"
       else
         who="agent ${agent:-in a pane}"
       fi
     fi
+  fi
+  # A Hermes session has no pane: its session id is its address, so an answer can find it.
+  if [ -z "$who" ] && [ -n "${HERMES_SESSION_ID:-}" ]; then
+    who="agent hermes · hermes session ${HERMES_SESSION_ID} · $(hostname -s 2>/dev/null || uname -n)"
   fi
   if [ -z "$who" ] && [ -t 0 ]; then who="a person at terminal $(tty 2>/dev/null)"; fi
   if [ -z "$who" ]; then who="script $(ps -o comm= -p "${PPID:-0}" 2>/dev/null | tr -d ' ')"; fi
@@ -163,14 +170,14 @@ msg_origin() {
 }
 
 msg_stamp() {  # <text> → "[from <origin>] <text>"
-  case "${1-}" in "[from "*) printf '%s' "$1"; return 0 ;; esac
+  case "${1-}" in "[from "*|"[reply from "*) printf '%s' "$1"; return 0 ;; esac
   printf '[from %s] %s' "$(msg_origin)" "${1-}"
 }
 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   case "${1-}" in
     --origin) msg_origin; printf '\n' ;;
-    -h|--help|"") sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//' ;;
+    -h|--help|"") sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//' ;;
     *) msg_stamp "$*"; printf '\n' ;;
   esac
 fi

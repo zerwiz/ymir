@@ -84,7 +84,7 @@ try:
 except Exception:
     raise SystemExit(1)
 have = {(e.get("event"), e.get("command")) for e in (d.get("approvals") or []) if isinstance(e, dict)}
-raise SystemExit(0 if {("on_session_start", cmd), ("pre_llm_call", cmd)} <= have else 1)
+raise SystemExit(0 if {("on_session_start", cmd), ("pre_llm_call", cmd), ("post_llm_call", cmd)} <= have else 1)
 PY
 }
 
@@ -97,9 +97,11 @@ hermes_print_hook() {
   printf 'hooks:\n'
   printf '  on_session_start:\n    - command: %s\n      timeout: 180\n' "$cmd"
   printf '  pre_llm_call:\n    - command: %s\n      timeout: 60\n' "$cmd"
+  printf '  post_llm_call:\n    - command: %s\n      timeout: 60\n' "$cmd"
   printf '\nconsent (each pair, once): %s\n' "$(hermes_allowlist)"
   printf '  {"approvals":[{"event":"on_session_start","command":"%s"},\n' "$cmd"
-  printf '                {"event":"pre_llm_call","command":"%s"}]}\n' "$cmd"
+  printf '                {"event":"pre_llm_call","command":"%s"},\n' "$cmd"
+  printf '                {"event":"post_llm_call","command":"%s"}]}\n' "$cmd"
 }
 
 hermes_install() {
@@ -111,7 +113,14 @@ hermes_install() {
   cmd="$(hermes_hook_command)"
   [ -x "$cmd" ] || { printf 'hermes: the shim is not executable at %s\n' "$cmd" >&2; return 1; }
 
-  if hermes_installed; then
+  if hermes_installed && ! grep -qE '^[[:space:]]+post_llm_call:' "$cfg"; then
+    # an older seat: the answer-back event is added under the existing hooks: key; nothing is rewritten
+    grep -qE '^hooks:[[:space:]]*$' "$cfg" || { printf 'hermes: cannot add post_llm_call to %s — add it by hand:\n' "$cfg" >&2; hermes_print_hook >&2; return 1; }
+    cp -p "$cfg" "$cfg.bak-ymir-reply" && CMD="$cmd" awk '{print} /^hooks:[[:space:]]*$/ && !done {print "  post_llm_call:\n    - command: " ENVIRON["CMD"] "\n      timeout: 60"; done=1}' "$cfg.bak-ymir-reply" > "$cfg" || return 1
+    printf 'hermes: post_llm_call added to %s (backup kept)\n' "$cfg"
+  elif hermes_installed && ! grep -A3 -E '^[[:space:]]+post_llm_call:' "$cfg" | grep -qF "command: $cmd"; then
+    printf 'hermes: %s has a post_llm_call of its own — add ours by hand:\n' "$cfg" >&2; hermes_print_hook >&2; return 1
+  elif hermes_installed; then
     printf 'hermes: hook already installed (%s)\n' "$cfg"
   elif [ -r "$cfg" ] && grep -qE '^hooks:' "$cfg"; then
     # Appending a second top-level `hooks:` key would silently shadow the first (YAML last-wins),
@@ -127,6 +136,7 @@ hermes_install() {
       printf 'hooks:\n'
       printf '  on_session_start:\n    - command: %s\n      timeout: 180\n' "$cmd"
       printf '  pre_llm_call:\n    - command: %s\n      timeout: 60\n' "$cmd"
+      printf '  post_llm_call:\n    - command: %s\n      timeout: 60\n' "$cmd"
     } >> "$cfg"
     printf 'hermes: hooks block appended to %s (append-only; no existing key rewritten)\n' "$cfg"
   fi
@@ -149,7 +159,7 @@ except Exception:
 now = datetime.now(tz=timezone.utc).isoformat().replace("+00:00", "Z")
 kept = [e for e in (d.get("approvals") or [])
         if not (isinstance(e, dict) and e.get("command") == cmd)]
-for ev in ("on_session_start", "pre_llm_call"):
+for ev in ("on_session_start", "pre_llm_call", "post_llm_call"):
     entry = {"event": ev, "command": cmd, "approved_at": now}
     if mtime:
         entry["script_mtime_at_approval"] = mtime

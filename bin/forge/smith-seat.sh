@@ -56,6 +56,7 @@ for a in d.get("result",{}).get("agents",[]):
     text="${*:-}"
     [ -n "$target" ] || refuse "ask needs an agent name or pane id"
     [ -n "$text" ] || refuse "ask needs a prompt"
+    . "$(dirname "${BASH_SOURCE[0]}")/../agents/msg-origin.sh" && text="$(msg_stamp "$text")"   # the road back (plan 381)
     herdr agent prompt "$target" "$text" >/dev/null 2>&1 && say "asked $target" || refuse "the agent at $target did not take the prompt"
     exit 0 ;;
   ensure) shift ;;
@@ -151,6 +152,7 @@ case "$st" in working|idle|done|blocked) ;; *) refuse "the agent in $pane never 
 # was not yet pi's. Wait for `interactive_ready`, then hand it over and confirm the agent went to
 # work; retry once, and refuse loudly if it never takes.
 if [ -n "$PROMPT" ]; then
+  . "$(dirname "${BASH_SOURCE[0]}")/../agents/msg-origin.sh" && PROMPT="$(msg_stamp "$PROMPT")"   # the road back (plan 381)
   ready=0
   for _i in $(seq 1 30); do
     line="$(herdr agent get "$pane" 2>/dev/null || true)"

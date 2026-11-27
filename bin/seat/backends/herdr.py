@@ -26,6 +26,16 @@ def _json(raw):
         return {}
 
 
+def stamped(text):
+    """The road back (plan 381): the shell stamper names the sender and pane; a stamped line is left as it is."""
+    door = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "agents", "msg-origin.sh")
+    try:
+        r = subprocess.run(["bash", door, text], capture_output=True, text=True, timeout=30, stdin=subprocess.DEVNULL)
+    except (OSError, subprocess.TimeoutExpired):
+        return text
+    return r.stdout.rstrip("\n") if r.returncode == 0 and r.stdout.startswith("[") else text
+
+
 class Herdr(Backend):
     name = "herdr"
 
@@ -73,6 +83,7 @@ class Herdr(Backend):
 
     def prompt(self, target, text):
         pane = self.resolve(target)
+        text = stamped(text)
         out = _run("agent", "prompt", pane, text, timeout=90)
         if '"agent_prompted"' in out:
             return "agent prompt"
