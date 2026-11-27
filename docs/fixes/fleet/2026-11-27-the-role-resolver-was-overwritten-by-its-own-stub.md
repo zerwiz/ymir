@@ -22,3 +22,9 @@ at `bin/skuld/role.sh`, forwarding to the resolver as plan 374 intended.
 `bin/fleet/tests/test_no_stub_execs_itself.sh` scans every tracked shell script for the forwarding-stub shape and fails
 if one execs its own path, and checks that `bin/fleet/role.sh --help` returns within 20 seconds. It fails on main before
 this fix and passes after it.
+
+The test runs in the whole-tree gate through its row in `bin/gates/checks.d/` (`no-stub-execs-itself`).
+
+## CHANGE LOG
+
+- 2026-11-27 — written with the fix.

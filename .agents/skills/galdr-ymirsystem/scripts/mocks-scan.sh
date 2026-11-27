@@ -14,6 +14,8 @@
 #   · a comment line — a header that explains WHY a guard exists may use the word ("it was an empty
 #     placeholder, but the shape invited the leak"). Documentation, not behaviour.
 #   · `PUBLIC=` — the value of a public marker, not a stub.
+#   · a generated `INDEX.md` row that quotes a moved door's header (`a forwarding stub, plan N`) — the
+#     header itself is a comment and already excused; the index repeats it as data.
 #   · the KIND vocabulary of RULES/42 (`seeded · stub · defaulted · optional · generated`): a door that
 #     switches on a kind is reading the contract's vocabulary. Matched as the LIST, so a lone `stub` is still
 #     caught.
@@ -72,6 +74,7 @@ fi
 hits="$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null \
   | grep -viE '^[^:]+:[0-9]+:[[:space:]]*#' \
   | grep -v 'PUBLIC=' \
+  | grep -vE '^[^:]*/INDEX\.md:[0-9]+:.*a forwarding stub, plan [0-9]+' \
   | grep -vE 'seeded[ |·]+(stub|defaulted)|stub[ |·]+defaulted' \
   | grep -vE 'consumer:.*todo:|todo:.*consumer:' \
   | grep -vE '^[^:]*bin/(mcp|seat)/ymir-mcp\.py:[0-9]+:' \
