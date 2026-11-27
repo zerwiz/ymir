@@ -1,4 +1,4 @@
-# Rule 18 — Distinct gates: one class per service, one gate per class
+# 18 — Distinct gates: one class per service, one gate per class
 
 > Adopted 2026-10-12, on the Allfather's word: *"we need to have distinct gates from
 > what's private and what's team data, etc."*

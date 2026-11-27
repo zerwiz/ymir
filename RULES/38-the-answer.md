@@ -119,8 +119,6 @@ callouts, and never TOON. TOON stays only where only a machine reads: tool outpu
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 
----
-
 ## Appended 2026-11-17 — the buttons must say what they do, in words he would use
 
 At the Allfather's word: *"I wanna have better answers on the buttons that makes more sence."* He is right, and the fault
@@ -147,3 +145,4 @@ say_what_it_does[4]{rule,why}:
 
 **And one shape that worked, kept as the pattern:** `🗑 Drop the duplicate` — one act, one object, and a prompt that named
 the draft. That is the whole target: the label is the act, the prompt is the same act spelled out enough to run alone.
+- 2026-11-11 — review-mend: added missing heading for #662

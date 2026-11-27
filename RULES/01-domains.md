@@ -1,4 +1,4 @@
-# Rule 01 — Domains, Houses, and Eindri
+# 01 — Domains, Houses, and Eindri
 
 **Status:** law. This rule governs every other: how the work of the house is
 divided, and who does it.

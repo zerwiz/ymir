@@ -1,4 +1,4 @@
-# Rule 56 — No message is delivered until the receiver speaks
+# 56 — No message is delivered until the receiver speaks
 
 **Added 2026-11-09** at the Allfather's word: *"make a rule in ymir to never assume another agent will read
 the other agents message. we are failing with a2a and other tools the only proven are direct contact in

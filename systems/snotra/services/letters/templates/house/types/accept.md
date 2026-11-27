@@ -25,3 +25,7 @@ If anything above is not how you understood it, reply and we will put it right b
 
 Best regards,
 {{sender}}
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #686

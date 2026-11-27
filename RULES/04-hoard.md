@@ -1,4 +1,4 @@
-# Rule 04 — Hodd, the private hoard, and YMIR_HOME
+# 04 — Hodd, the private hoard, and YMIR_HOME
 
 Every private thing the Allfather holds lives in **one** place: **Hodd**
 (`hodd/`) at the repo, and **YMIR_HOME** (`$HOME/Documents/Ymir/`) as the

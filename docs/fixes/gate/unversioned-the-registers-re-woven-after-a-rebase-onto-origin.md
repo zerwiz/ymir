@@ -11,3 +11,7 @@ and the doors origin added meanwhile). No hand edits.
 
 ### Verified
 `inventory.sh --check` → current; `registers-guard` green.
+
+## CHANGE LOG
+
+- 2026-11-10 — review-mend: added missing heading for #636

@@ -1,4 +1,4 @@
-# Rule 35 — what was learned outside is kept
+# 35 — what was learned outside is kept
 
 > Adopted 2026-10-23, at the Allfather's word: *"everytime an agent do online research that research
 > should be stored by folder structure and indexing with the sources in ymir home so we know what we

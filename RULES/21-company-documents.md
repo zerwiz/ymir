@@ -1,4 +1,4 @@
-# Rule 21 — Company documents are written in business language
+# 21 — Company documents are written in business language
 
 > Adopted 2026-10-13: *"are the wording business? we need to create a rule around company
 > documents to have business wording."*

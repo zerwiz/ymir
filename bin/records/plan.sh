@@ -151,6 +151,58 @@ set_ledger_for_scope() {   # <scope> <owner> — resolve (and, where legal, crea
   return 0
 }
 
+# ── the scopes (plan 240) — a plan belongs to whoever owns the work ───────────
+seed_shelf_index() {   # <scope> <owner> — the shelf's own index, written once
+  local scope="$1" owner="$2" f="$LEDGER/README.md"
+  [ -f "$f" ] && return 0
+  {
+    case "$scope" in
+      machine)
+        printf '# %s'"'"'s plans — the machine'"'"'s own ledger\n\n' "$owner"
+        printf '**A machine plans for itself here.** Its power, its thermals, its fans, its rail, its repairs —\n'
+        printf 'deliberately *not* a project'"'"'s ledger, because a plan belongs to whoever owns the work.\n\n' ;;
+      realm|company)
+        printf '# %s — the realm'"'"'s plans\n\n' "$owner"
+        printf '**A company (realm) plans for itself here** — strategy, money, the house'"'"'s own work —\n'
+        printf 'deliberately *not* a project'"'"'s ledger (plan 240).\n\n' ;;
+      personal)
+        printf '# The Allfather'"'"'s plans\n\n'
+        printf '**His own working plans live here** — personal work, schedules, errands that belong to no project\n'
+        printf 'and no machine (plan 240).\n\n' ;;
+      *)  printf '# Plans — %s\n\n' "$owner" ;;
+    esac
+    printf '```\nplan[3]{rule,why}:\n'
+    printf '  "numbering is per shelf","%s 001 is this shelf'"'"'s first plan; no number is reused within a shelf"\n' "$owner"
+    printf '  "one index: this file","every plan gets a row here, in the same change that creates it"\n'
+    printf '  "the owner is in the plan header","owner · owner_name, so a plan keeps its provenance if it ever moves"\n'
+    printf '  "the state is in the plan header","Status: open|building|blocked|owed|parked|superseded|done — written at birth, measured by bin/records/plans-state.sh, never guessed from age"\n'
+    printf '```\n\n'
+    printf 'The **State** column below is a reading of each plan'"'"'s header, not a second truth. The door\n'
+    printf '`bin/records/plans-state.sh` reads every shelf the project registry names and answers, per plan,\n'
+    printf 'whether it is done and what proves it; `bin/day/day.sh plans` prints the open ones. A plan whose\n'
+    printf 'state nothing measures is reported open — silence is not finished work.\n\n## The plans\n'
+  } > "$f"
+}
+
+set_ledger_for_scope() {   # <scope> <owner> — resolve (and, where legal, create) the shelf
+  local scope="$1" owner="$2"
+  case "$scope" in
+    project) : ;;                      # resolved above, unchanged, never created here
+    realm|company)
+      [ -n "$owner" ] || { printf 'plan: --scope realm needs --owner <realm>\n' >&2; return 2; }
+      LEDGER="$HOME_DIR/svartalfaheim/$owner/plans" ;;
+    machine)
+      [ -n "$owner" ] || owner="${HOSTNAME%%.*}"
+      LEDGER="$HOME_DIR/hodd/machines/$owner/plans" ;;
+    personal) LEDGER="$HOME_DIR/hodd/plans" ;;
+    *) printf 'plan: unknown scope %s (project|realm|machine|personal)\n' "$scope" >&2; return 2 ;;
+  esac
+  [ "$scope" = project ] && return 0
+  mkdir -p "$LEDGER" 2>/dev/null || { printf 'plan: cannot create %s\n' "$LEDGER" >&2; return 2; }
+  seed_shelf_index "$scope" "${owner:-$REALM}"
+  return 0
+}
+
 # ── Rule 45 — a number is taken from the CURRENT ledger, never from a stale one ──
 # WHY (2026-11-04): this seat sat seven commits behind origin, asked for the next
 # number, and was told 182. The plan was written — but another machine had taken 182

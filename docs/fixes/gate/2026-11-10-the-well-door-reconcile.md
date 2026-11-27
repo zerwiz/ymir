@@ -41,3 +41,7 @@
 `rules-compliance-guard` and `pr-identity-guard` are red on `origin/main`; the pre-push guard
 names them as main's, not this branch's. `config` still trips on `test_broken.sh`,
 `test_finding_tally.sh` and `test_pr_identity.sh` paths.
+
+## CHANGE LOG
+
+- 2026-11-11 — review-mend: added missing heading for #652

@@ -1,4 +1,4 @@
-# Rule 09 — Electron is a Local Seat
+# 09 — Electron is a Local Seat
 
 A desktop window is the machine talking to itself. Every rule below follows from
 that one sentence.

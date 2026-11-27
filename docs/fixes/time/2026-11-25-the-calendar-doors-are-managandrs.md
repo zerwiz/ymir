@@ -16,3 +16,7 @@ reaches it through Mánagandr's door, so that move will change one line.
 
 - `bash bin/time/managandr/calendar-ask.sh probe` → `"status": "ok"`.
 - `bash bin/gates/guards/path-ledger-guard.sh check` → clean.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #944

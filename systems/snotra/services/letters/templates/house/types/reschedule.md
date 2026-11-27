@@ -25,3 +25,7 @@ Sorry for the change, and thank you.
 
 Best,
 {{sender}}
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #686

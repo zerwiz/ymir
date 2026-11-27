@@ -29,3 +29,7 @@ read before and after and did not change.
 ## Not proved
 
 No release flip or helm restart was run against the real clock.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #953

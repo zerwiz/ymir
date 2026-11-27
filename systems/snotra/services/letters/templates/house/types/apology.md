@@ -27,3 +27,7 @@ If there is anything else this caused that we have not covered, please tell me d
 
 Sincerely,
 {{sender}}
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #686

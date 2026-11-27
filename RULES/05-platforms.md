@@ -1,4 +1,4 @@
-# Rule 05 — Platform installations
+# 05 — Platform installations
 
 Ymir is **Omarchy-first**: the Omarchy layer is the first-class desktop
 integration. Different operating systems and desktops may have their own

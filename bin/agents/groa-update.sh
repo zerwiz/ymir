@@ -216,6 +216,17 @@ if [ "${YMIR_GROA_PIN:-on}" != off ] && [ -r "$SCRIPT_DIR/../pi/arm-pin-lib.sh" 
     else
       add_row "  \"pin\",\"runtime.env\",\"failed\",\"$(printf '%s' "$so" | grep -m1 '^FAIL' | cut -f2- | tr -d '"')\""
     fi
+  elif [ "$CHECK" = 1 ]; then
+    add_row "  \"pin\",\"runtime.env\",\"absent\",\"no pinned runtime is seated — an update seats it (bin/engine/runtime-seat.sh)\""
+  elif [ -x "$SCRIPT_DIR/../engine/runtime-seat.sh" ]; then
+    # plan 269: a machine installed before the pin was seated runs every service from its working tree.
+    # Gróa does not skip it — she seats the pin through the same step the installer runs, and the units
+    # follow it. Idempotent; a refusal is a named row, never a silent skip.
+    if so="$(setsid timeout -k 5 "${YMIR_GROA_PIN_TIMEOUT:-180}" "$SCRIPT_DIR/../engine/runtime-seat.sh" </dev/null 2>&1)"; then
+      add_row "  \"pin\",\"$(printf '%s' "$so" | grep -m1 '^cloned' | cut -f2)\",\"seated\",\"no pin was configured; it is seated now and every unit moved onto it\""
+    else
+      add_row "  \"pin\",\"runtime.env\",\"failed\",\"$(printf '%s' "$so" | grep -m1 '^FAIL' | cut -f2- | tr -d '"')\""
+    fi
   else
     add_row "  \"pin\",\"runtime.env\",\"absent\",\"no pinned runtime configured (bin/engine/runtime-deploy.sh seats one)\""
   fi

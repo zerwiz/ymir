@@ -1,4 +1,4 @@
-# Rule 44 — No agent is Brokk; every agent names itself, and says whose it is
+# 44 — No agent is Brokk; every agent names itself, and says whose it is
 
 **Appended 2026-11-03, by the Allfather's word:** *"brokk can not be called brokk on any users
 machine or any fleet. it needs to be custom names. otherwise there will be several of brokks from

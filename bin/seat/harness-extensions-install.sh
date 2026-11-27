@@ -213,6 +213,20 @@ if command -v pi >/dev/null 2>&1; then
     esac
     say "  \"pi\",\"$state\",\"$detail\""
   fi
+  case "$(pi_door_state)" in
+    current) detail="$detail · one-home door current" ;;
+    stale)   detail="$detail · one-home door stale"
+             [ "$mode" = "check" ] && { stale=$((stale+1)); [ "$state" = current ] && state="stale"; } ;;
+    absent)  if [ "$mode" = "check" ]; then
+               detail="$detail · one-home door ABSENT (a seat started in another checkout loads two homes)"
+               stale=$((stale+1)); [ "$state" = current ] && state="stale"
+             elif pi_door_seat; then
+               detail="$detail · one-home door seated → $PI_DOOR_DST"
+             else
+               detail="$detail · one-home door NOT seated ($PI_DOOR_DST is not writable)"
+             fi ;;
+  esac
+  say "  \"pi\",\"$state\",\"$detail\""
 else
   say "  \"pi\",\"absent\",\"no pi on this host\""; absent=$((absent+1))
 fi

@@ -1,4 +1,4 @@
-# Rule 06 — Append-only
+# 06 — Append-only
 
 Some records are the system's memory. They are **appended to**, never rewritten,
 never truncated, never reordered — and **never lost in a move**.

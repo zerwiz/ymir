@@ -1,4 +1,4 @@
-# Rule 14 — Every feature is explained: `FEATURES.md` and `docs/features/`
+# 14 — Every feature is explained: `FEATURES.md` and `docs/features/`
 
 > Adopted 2026-10-11, after the Allfather asked how a user is meant to *use* Ymir —
 > and the honest answer was "they are not; almost no feature is explained."

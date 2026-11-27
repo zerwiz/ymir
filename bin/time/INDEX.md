@@ -21,12 +21,13 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[67]{file,does,kind,verdict,disposition,callers,lines}:
+bin[68]{file,does,kind,verdict,disposition,callers,lines}:
   "brokk-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",0,128
   "brokk-wake-lib.sh","Shared durable wake queue and portable lock helpers.","lib","tested","keep",4,1883
   "calendar-ask.sh","bin/time/managandr/calendar-ask.sh -> systems/snotra/services/calendar/calendar-ask.sh — Mánagandr's read door (plan 374 A6).","tool","tested","keep",4,21
   "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",0,81
-  "calendar-write.sh","bin/time/managandr/calendar-write.sh -> systems/snotra/services/calendar/calendar-write.sh — Mánagandr's write door (plan 231 R2; moved her…","tool","wired","keep",1,22
+  "calendar-write.sh","bin/time/managandr/calendar-write.sh -> systems/snotra/services/calendar/calendar-write.sh — Mánagandr's write door (plan 231 R2; moved her…","tool","wired","keep",2,17
+  "calendar-write.sh","bin/time/snotra/calendar-write.sh -> bin/time/managandr/calendar-write.sh — a forwarding stub, plan 374 (A6, 2026-11-25).","tool","wired","keep",2,9
   "cron-fail-lib.sh","cron-fail-lib.sh — the ONE sentence a failed scheduled row gets (plan 292).","lib","wired","keep",3,72
   "daily-line.sh","daily-line.sh — THE daily line: what moved, what is blocked, what is owed — written from the record,","tool","wired","keep",1,135
   "daily_moved.py","'''daily_moved.py — what moved today, read from the record (plan 252).","tool","wired","keep",1,214
@@ -66,12 +67,12 @@ bin[67]{file,does,kind,verdict,disposition,callers,lines}:
   "nornir-jobs.py","'''nornir-jobs.py — every Nornir job, one row each: its schedule, whose role runs it, when it last ran, how that run","tool","wired","keep",2,167
   "nornir-status.py","'''nornir-status.py — judge every Nornir job on the machine that OWNS it (plan 365).","tool","wired","keep",1,251
   "nornir-status.sh","nornir-status.sh — every Nornir job judged on the seat that owns it (plan 365).","tool","wired","keep",4,22
-  "saga-head-core.md","FIXED CORE — every worker knows this (plan 275 §04:15/04:20/04:25).","data","wired","keep",4,15
+  "saga-head-core.md","FIXED CORE — every worker knows this (plan 275 §04:15/04:20/04:25).","data","wired","keep",4,17
   "saga-head-lib.sh","saga-head-lib.sh — what is NEWS in Sága's short head (plan 275, item 28 §3).","lib","wired","keep",3,159
   "saga-land-warnings.sh","saga-land-warnings.sh — Sága's eye on work that finished and never landed.","tool","wired","keep",2,311
   "saga-session-start.sh","saga-session-start.sh — Sága: the SHORT HEAD at session start, everything else on demand.","tool","tested","keep",14,611
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",1,117
-  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","tested","keep",12,353
+  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","tested","keep",13,364
   "sol-lib.sh","sol-lib.sh — Sól's stamp for shell roads.","lib","wired","keep",11,44
   "sol.sh","sol.sh — Sól, the sun's wheel: THE clock and date door.","tool","tested","keep",7,248
   "test_ack_holder.sh","test_ack_holder.sh — the arm's ack door answers its own holder and still refuses a stranger (plan 325 step 3).","tool","wired","keep",0,43
@@ -90,6 +91,6 @@ bin[67]{file,does,kind,verdict,disposition,callers,lines}:
   "week-pass-lib.sh","week-pass-lib.sh — the one law the three weekly passes share.","lib","wired","keep",3,135
   "well-vault-sync.sh","well-vault-sync.sh — Völundr's memory across the Allfather's machines.","tool","wired","keep",2,107
 
-**Tally.** verdict: wired=61, tested=6
+**Tally.** verdict: wired=62, tested=6
 
-**Tally.** disposition: keep=67
+**Tally.** disposition: keep=68

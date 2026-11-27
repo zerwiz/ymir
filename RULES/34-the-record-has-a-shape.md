@@ -1,4 +1,4 @@
-# Rule 34 — a record has a shape, and a view is rendered
+# 34 — a record has a shape, and a view is rendered
 
 > Adopted 2026-10-23, after the audit of the scattered record measured the house: 1,312 `.md` in
 > the repo and 1,440 in the home, and **not one in ten carrying a header that says what it is**.

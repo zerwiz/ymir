@@ -23,3 +23,7 @@ This confirms {{what was booked, ordered or agreed}}.
 
 Best regards,
 {{sender}}
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #686

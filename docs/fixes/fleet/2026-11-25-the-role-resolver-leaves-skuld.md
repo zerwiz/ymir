@@ -14,3 +14,7 @@ The old paths are **forwarding stubs** for one release cycle: `bin/skuld/role.sh
 - `bash .agents/tests/role.test.sh` → `ALL PASS`; `bash .agents/tests/role-lib.test.sh` → `ALL PASS`.
 - `bash bin/skuld/role.sh --version` → `1.0.0` (through the stub); `bash bin/fleet/role.sh resolve --why` answers.
 - `bash bin/gates/guards/path-ledger-guard.sh check` → clean.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #944

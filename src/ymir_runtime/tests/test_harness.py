@@ -145,7 +145,8 @@ class BuildLaunchCommandTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             harness.build_launch_command(selection, "/d/prompt.md", empty)
 
-    def test_opencode_shape_matches_the_shell_road(self) -> None:
+    def test_opencode_shape_is_the_launchers_one_interactive_shape(self) -> None:
+        """Plan 262: the TUI refuses --model, so the model rides in the config and the brief is --prompt."""
         selection = harness.HarnessSelection("opencode", "openai/gpt-5", "", "", "")
         self.assertEqual(
             harness.build_launch_command(selection, "/d/prompt.md"),

@@ -1,4 +1,4 @@
-# Rule 03 — Houses (companies)
+# 03 — Houses (companies)
 
 **Status:** law. Read with Rule 01 (domains · houses · Eindri).
 

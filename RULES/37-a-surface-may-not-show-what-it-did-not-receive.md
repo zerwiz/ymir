@@ -1,4 +1,4 @@
-# Rule 37 — a surface may not show what it did not receive
+# 37 — a surface may not show what it did not receive
 
 **A panel, a letter, a report or a file that Smíðja or Snotra puts in front of a person may not present a value it
 did not actually receive.** A refused read is not zero. A failed probe is not "down". An unknown attribution is not

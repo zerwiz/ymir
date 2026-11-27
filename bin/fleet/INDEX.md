@@ -23,14 +23,14 @@ folder rewrites one file instead of colliding on every branch.
 
 bin[26]{file,does,kind,verdict,disposition,callers,lines}:
   "agents-config.sh","agents-config.sh — one YAML for the Allfather's agent/harness/model combination.","tool","wired","keep",16,310
-  "arm-holder-pane.sh","arm-holder-pane.sh — which herdr pane holds this machine's arm?","tool","wired","keep",2,27
-  "arm-send.sh","arm-send.sh — the wire between the fleet's arm holders (plan 253 phase 3 'the wire'; plan 234; RULES/49).","tool","wired","keep",9,64
+  "arm-holder-pane.sh","arm-holder-pane.sh — which herdr pane holds this machine's arm?","tool","wired","keep",3,27
+  "arm-send.sh","arm-send.sh — the wire between the fleet's arm holders (plan 253 phase 3 'the wire'; plan 234; RULES/49).","tool","wired","keep",10,67
   "dispatch-profile.sh","dispatch-profile.sh — decide which Eindri dispatch profile is ACTIVE, and","tool","tested","keep",2,277
   "fleet-apply.sh","fleet-apply.sh — apply fleet-wide preferences to every registered Eindri-home.","tool","wired","keep",1,83
   "fleet-deploy.sh","fleet-deploy.sh — refresh the machine's fleet services from THIS package.","tool","wired","keep",0,116
   "fleet-ensure.sh","fleet-ensure.sh — the role-gated RAISE (plan 42's fleet services, plan 51's","tool","wired","keep",8,735
   "fleet-status.sh","fleet-status.sh — the fleet, in one answer: every machine, the road that reached it, and its state (plan 232 R6,","tool","wired","keep",1,83
-  "fleet-tell.sh","fleet-tell.sh — ONE road for talking to, and steering, any agent on any machine of the fleet.","tool","wired","keep",6,230
+  "fleet-tell.sh","fleet-tell.sh — ONE road for talking to, and steering, any agent on any machine of the fleet.","tool","wired","keep",9,238
   "fleet-version.sh","fleet-version.sh — is the fleet on ONE version?","tool","tested","keep",1,99
   "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on.","tool","wired","keep",1,247
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",0,136
@@ -38,10 +38,10 @@ bin[26]{file,does,kind,verdict,disposition,callers,lines}:
   "public-surfaces.py","'''public-surfaces.py — the operator's PUBLIC SURFACES, asked of his home and never spelled here.","tool","wired","keep",2,101
   "registry-check.sh","registry-check.sh — is the fleet's registry coherent with itself, with the machine folders, and with reality?","tool","wired","keep",0,76
   "roads.sh","Fleet roads — OUTPUT of the registry (hodd/data/fleet.json).","tool","wired","keep",1,131
-  "role-lib.sh","role-lib.sh — what this machine IS, and the components its role owes","lib","tested","keep",1,125
-  "role.sh","role.sh — declare, read, and validate a machine's ROLE (plan 51, Phase 1).","tool","tested","keep",18,191
+  "role-lib.sh","bin/skuld/role-lib.sh -> bin/fleet/role-lib.sh — a forwarding stub, plan 374 (D3, 2026-11-25).","lib","tested","keep",2,124
+  "role.sh","bin/skuld/role.sh -> bin/fleet/role.sh — a forwarding stub, plan 374 (D3, 2026-11-25).","tool","tested","keep",19,12
   "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","wired","keep",0,207
-  "test_fleet_tell.sh","test_fleet_tell.sh — the one road for talking to and steering any agent (fleet-tell.sh).","tool","wired","keep",0,103
+  "test_fleet_tell.sh","test_fleet_tell.sh — the one road for talking to and steering any agent (fleet-tell.sh).","tool","wired","keep",0,105
   "test_public_surfaces.py","'''test_surfaces.py — the surfaces come from the operator's home, and a missing one is said, never invented.","tool","wired","keep",1,84
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",8,139
   "work.py","'''work.py — `ymir work`: the one door to the work road (plan 365).","tool","wired","keep",8,381

@@ -1,4 +1,4 @@
-# Rule 07 — Configuration is never hardcoded
+# 07 — Configuration is never hardcoded
 
 Every port, host, endpoint, path, credential, and tunable is **configuration**, not
 a literal baked into shipped runtime. A hardcoded value is a bug that only appears
@@ -150,8 +150,6 @@ be fragile. So no hardcoded dev names for ops"* — and *"this way we can audit 
   fails closed without it.
 - **Not judged:** a record of who did something (a decision's author, a label's drafter, a commit's history), the
   papers, and named test fixtures (`config/test.exs`, `test/`) — they record, they do not configure.
-
-### Enforcement
 
 Each repository that deploys carries a gate that refuses such a value in its required CI check — atlas-vault's is
 `scripts/gates/ops-names.sh` (the word list beside it; exceptions only with a written reason). Names already in

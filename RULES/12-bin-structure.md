@@ -1,4 +1,4 @@
-# Rule 12 — `bin/` has a shape: one folder per system, and nothing loose
+# 12 — `bin/` has a shape: one folder per system, and nothing loose
 
 > Adopted 2026-10-03, after an attempted restructure silently collapsed the capability register
 > from 437 door rows to 2.
