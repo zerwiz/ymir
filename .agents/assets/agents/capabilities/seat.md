@@ -19,6 +19,7 @@
 | claude-seat.sh | claude-seat.sh — what a Claude Code worker needs to start with no huma | tested | keep (a human or a cron row must run it) |
 | clocks.sh | bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, upd | tested | keep (a human or a cron row must run it) |
 | context.sh | context.sh — what the agent's context ACTUALLY holds, right now. | tested+named | keep (a human or a cron row must run it) |
+| contract-coverage.sh | contract-coverage.sh — the contract may be slimmed, never emptied: pro | tested+named | keep (a human or a cron row must run it) |
 | core-four.sh | core-four.sh — the four dials that decide an agent's outcome, in ONE r | tested+named | keep (a human or a cron row must run it) |
 | desk-ceiling.sh | desk-ceiling.sh — the desk gets a ceiling, so one heavy neighbour kill | tested+named | keep (a human or a cron row must run it) |
 | desk-inventory.sh | desk-inventory.sh — which panes held a LIVE agent, written down before | tested+named | keep (a human or a cron row must run it) |
@@ -39,6 +40,7 @@
 | pending.sh | pending.sh — everything that is waiting on the operator, in ONE list. | tested+named | keep (a human or a cron row must run it) |
 | pi-door.sh | pi-door.sh — the door a SEAT THE OPERATOR STARTS BY HAND passes throug | tested+named | keep (a human or a cron row must run it) |
 | pi-launcher.sh | pi-launcher.sh — the ONE launcher generator for a pi seat. | tested+named | keep (a human or a cron row must run it) |
+| playwright-mcp-launch.sh | playwright-mcp-launch.sh — the browser door: Microsoft's Playwright MC | tested | keep (a human or a cron row must run it) |
 | rank.sh | rank.sh — ask a jev judge to score items on jev's three categories. | tested+named | keep (a human or a cron row must run it) |
 | roster.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | runtime-root.sh | runtime-root.sh — the ONE door to the runtime a root agent loads, and  | tested+named | keep (a human or a cron row must run it) |
@@ -57,6 +59,7 @@
 | test_arm_pin.sh | test_arm_pin.sh — plan 257 H6: the helm runs the PINNED code, never a  | tested | keep (a human or a cron row must run it) |
 | test_arm_pin_board.sh | test_arm_pin_board.sh — plan 257 H8: the pin's age and reach as one fa | tested | keep (a human or a cron row must run it) |
 | test_backend_door.sh | test_backend_door.sh — six verbs, one resolver, and a recovery that sh | tested+named | keep (a human or a cron row must run it) |
+| test_browser_door.sh | test_browser_door.sh — plan 373: the Playwright launcher, the seat wri | tested | keep (a human or a cron row must run it) |
 | test_claude_global_arm_opt_in.sh | test_claude_global_arm_opt_in.sh — the global Claude arm is seated onl | tested | keep (a human or a cron row must run it) |
 | test_core_four_pending_factory.sh | The ward for the three near-loop doors: core four, pending, and the fact | tested | keep (a human or a cron row must run it) |
 | test_desk_failsafes.sh | test_desk_failsafes.sh — prove the five failsafes of plan 001 §4 (the | tested+named | keep (a human or a cron row must run it) |
@@ -72,7 +75,9 @@
 | test_seat_audit.sh | The ward for "the audit says, in one line, whether a seat's work can be  | tested | keep (a human or a cron row must run it) |
 | test_seat_find.sh | test_seat_find.sh — the finder names the pane whose WORK printed the w | tested | keep (a human or a cron row must run it) |
 | test_seat_reap.sh | The ward for "the arm closes finished Eindri seats" (2026-11-10). | tested | keep (a human or a cron row must run it) |
+| test_seat_reap_one_digest_hook.sh | test_seat_reap_one_digest_hook.sh — seat-reap accepts the house's one  | tested | keep (a human or a cron row must run it) |
 | test_seat_reap_tabs.sh | The ward for "the reaper sees hand-seated tabs, not only `eindri-*` work | tested | keep (a human or a cron row must run it) |
+| test_worth_a_smith.sh | test_worth_a_smith.sh — a short question is answered in hand; a long b | tested | keep (a human or a cron row must run it) |
 | valknut-load.sh | valknut-load.sh — Valknut, the knot that binds the repo distro into ea | tested+named | keep (a human or a cron row must run it) |
 | who.sh | who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, | tested+named | keep (a human or a cron row must run it) |
 | whose-tree.sh | whose-tree.sh — whose code am I standing in? | tested | keep (a human or a cron row must run it) |

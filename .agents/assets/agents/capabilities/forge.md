@@ -30,8 +30,10 @@
 | npm-install-local-test.sh | npm-install-local-test.sh — the REAL local installation test. | tested | keep (a human or a cron row must run it) |
 | npm-pretest.sh | npm-pretest.sh — the pre-publish test gate (the Allfather's decree): | tested+named | keep (a human or a cron row must run it) |
 | npm-publish.sh | npm-publish.sh — publish through the HOARD's npm token, every single t | tested+named | keep (a human or a cron row must run it) |
+| pack-links.sh | pack-links.sh — make the tarball carry what the tree's symlinks point  | tested | keep (a human or a cron row must run it) |
 | packaged-gate.sh | packaged-gate.sh — prove the PUBLISHED artifact, not the tree. | tested | keep (a human or a cron row must run it) |
 | pr-pretest.sh | pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, be | tested+named | keep (a human or a cron row must run it) |
+| release-npm.sh | release-npm.sh — `ymir release npm <version>`: the npm runbook as one  | tested | keep (a human or a cron row must run it) |
 | park.sh | park.sh — the SURVIVAL push: an errand's commits leave this disk witho | tested | keep (a human or a cron row must run it) |
 | pr-open.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | pr-patterns.sh | pr-patterns.sh — the ONE place the forbidden-pattern list lives. | tested | keep (a human or a cron row must run it) |

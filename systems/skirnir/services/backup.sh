@@ -53,17 +53,40 @@ ls -1d "$HOME_R/hodd/saves/assistant/$SEAT/"*/ 2>/dev/null | sort | head -n -"$K
 done
 printf 'backup[1]{files,dir,kept}:\n  "%s","%s","%s"\n' "$copied" "$DEST" "$KEEP"
 if [ "$COMMIT" -eq 1 ] && [ -d "$HOME_R/.git" ]; then
-  # ONLY this shelf is staged: the home routinely carries other work in flight, and a blanket add
-  # would sweep it into a commit (the 2026-09-17 incident).
-  if ( cd "$HOME_R" && git add "hodd/saves/assistant" >/dev/null 2>&1 \
-       && ! git diff --cached --quiet ); then
-    ( cd "$HOME_R" && git commit -q -m "hoard: skírnir's ledger snapshot $(date +%Y-%m-%d)" >/dev/null 2>&1 \
-      && printf 'backup: committed to the home repo\n' )
-    if [ "$PUSH" -eq 1 ]; then
-      ( cd "$HOME_R" && git push -q 2>/dev/null && printf 'backup: pushed — the fleet gets it on the next pull\n' ) \
-        || printf 'backup: commit made, push failed (no remote, or offline)\n'
-    fi
-  else
+  # ONLY this shelf is staged and committed: the home routinely carries other work in flight, and a
+  # blanket add or a bare commit would sweep it in (the 2026-09-17 incident).
+  SHELF="hodd/saves/assistant"
+  g() { git -C "$HOME_R" "$@"; }
+  before="$(mktemp)" && after="$(mktemp)" || exit 3
+  trap 'rm -f "$before" "$after"' EXIT
+  g ls-files -s -z -- "$SHELF" >"$before" || { printf 'backup: FAILED — cannot read the home index\n' >&2; exit 4; }
+  # Put this shelf's index entries back as they were: drop what is there now, then replay `before`.
+  unstage() {
+    g ls-files -s -z -- "$SHELF" >"$after" &&
+    { while IFS= read -r -d '' e; do
+        printf '0 0000000000000000000000000000000000000000\t%s\0' "${e#*$'\t'}"
+      done <"$after"
+      cat "$before"
+    } | g update-index -z --index-info
+  }
+  fail() {  # <what was refused> <git's own words>
+    printf '%s\n' "$2" >&2
+    why="$(printf '%s\n' "$2" | grep -m1 -E 'BLOCKED|refused|^(error|fatal):' || printf '%s\n' "$2" | grep -m1 .)"
+    if unstage; then left="unstaged what this run staged"
+    else left="could NOT unstage — check: git status -- $SHELF"; fi
+    printf 'backup: FAILED — %s refused: %s (%s)\n' "$1" "${why:-no reason given}" "$left" >&2
+    exit 4
+  }
+  out="$(g add -- "$SHELF" 2>&1)" || fail "git add" "$out"
+  if g diff --cached --quiet -- "$SHELF"; then
     printf 'backup: nothing new to commit\n'
+  else
+    out="$(g commit -q -m "hoard: skírnir's ledger snapshot $(date +%Y-%m-%d)" -- "$SHELF" 2>&1)" \
+      || fail "commit" "$out"
+    printf 'backup: committed to the home repo\n'
+    if [ "$PUSH" -eq 1 ]; then
+      if g push -q 2>/dev/null; then printf 'backup: pushed — the fleet gets it on the next pull\n'
+      else printf 'backup: commit made, push failed (no remote, or offline)\n'; fi
+    fi
   fi
 fi

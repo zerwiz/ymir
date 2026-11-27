@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[40]{file,does,kind,verdict,disposition,callers,lines}:
+bin[41]{file,does,kind,verdict,disposition,callers,lines}:
   "autoboot-lib.sh","autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.","lib","wired","keep",3,263
   "hermes-ensure.sh","hermes-ensure.sh — ensure the Hermes agent runtime is present.","tool","wired","keep",4,89
   "home-seed.sh","home-seed.sh — make a home that a fresh user can understand, and offer to keep it in git.","tool","tested","keep",10,270
@@ -30,12 +30,12 @@ bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "pin-refresh.sh","pin-refresh.sh — bring the PINNED runtime to main, from a tree that is NOT the pin.","tool","wired","keep",8,227
   "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",14,354
   "prove-install.sh","prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap.","tool","wired","keep",0,166
-  "release-build.sh","release-build.sh — forge an IMMUTABLE release from one commit (plan 221, P0).","tool","wired","keep",5,332
+  "release-build.sh","release-build.sh — forge an IMMUTABLE release from one commit (plan 221, P0).","tool","wired","keep",5,334
   "release-flip.sh","release-flip.sh — make one release live, in ONE rename, health first (plan 221, P1)","tool","wired","keep",4,209
   "release-health.sh","release-health.sh — can THIS directory serve the apps?","tool","wired","keep",4,330
   "release-lib.sh","release-lib.sh — the ONE place that knows where a release lives and how a flip happens.","lib","wired","keep",5,290
   "release-services.sh","release-services.sh — which long-running services run from a RELEASE, and whether that release is the pin.","tool","wired","keep",1,169
-  "release.sh","release.sh — Ymir runs from a RELEASE: a complete, built, proved copy behind one link (plan 275 S9; plans 80 and 226).","tool","wired","keep",7,361
+  "release.sh","release.sh — Ymir runs from a RELEASE: a complete, built, proved copy behind one link (plan 275 S9; plans 80 and 226).","tool","wired","keep",9,387
   "runtime-deploy.sh","runtime-deploy.sh — move the PINNED runtime checkout to the merged tree, and prove what is running.","tool","wired","keep",12,182
   "runtime-seat.sh","runtime-seat.sh — SEAT the pinned runtime: the checkout every Ymir service and app runs from (plan 269).","tool","wired","keep",8,88
   "test_heavy_slot.sh","test_heavy_slot.sh — plan 002 §6.1: the machine's heavy lock is real.","tool","wired","keep",1,188
@@ -44,25 +44,26 @@ bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "test_release_borrow_closure.sh","test_release_borrow_closure.sh — the release's borrowed dependency closure is the WHOLE closure.","tool","wired","keep",0,70
   "test_runtime_deploy_stable.sh","test_runtime_deploy_stable.sh — plan 275 S6 and S1 for bin/engine/runtime-deploy.sh, with no real unit touched:","tool","wired","keep",1,75
   "test_unit_path_shims.sh","test_unit_path_shims.sh — every house unit's PATH can reach the house's tools.","tool","wired","keep",1,75
-  "test_units.sh","test_units.sh — plan 269: every Ymir service and app runs from the pinned runtime, from the first","tool","wired","keep",0,200
+  "test_units.sh","test_units.sh — plan 269: every Ymir service and app runs from the pinned runtime, from the first","tool","wired","keep",0,246
   "test_units_drift.sh","test_units_drift.sh — plan 278, problem 17: an installed unit that still runs a value its source has","tool","wired","keep",1,66
   "test_update_loop_proof.sh","test_update_loop_proof.sh — plan 002 §6.2: a candidate is PROVEN ONCE, and the heart flips.","tool","wired","keep",1,137
   "unit-settle-lib.sh","unit-settle-lib.sh — every script that writes a unit hands it to the register afterwards (plan 272, fault 12).","lib","wired","keep",5,50
-  "units.py","'''units.py — the ONE writer of every Ymir systemd user unit and desktop launcher (plan 269).","tool","wired","keep",7,808
+  "units.py","'''units.py — the ONE writer of every Ymir systemd user unit and desktop launcher (plan 269).","tool","wired","keep",7,820
   "units.sh","units.sh — the ONE writer of every Ymir systemd user unit and desktop launcher (plan 269).","tool","wired","keep",26,36
   "update-loop.sh","update-loop.sh — the heart keeps itself on latest main (plan 233 §10)","tool","wired","keep",2,425
   "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",0,25
   "ymir-autoboot.sh","ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whether","tool","wired","keep",4,165
-  "ymir-config.sh","ymir-config.sh — the operator's own preferences, honoured and remembered.","tool","wired","keep",2,77
+  "ymir-config.sh","ymir-config.sh — the operator's own preferences, honoured and remembered.","tool","wired","keep",2,80
   "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",0,170
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",2,74
   "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",7,63
-  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",41,2037
+  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",41,2049
   "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","tool","wired","keep",0,89
-  "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","tested","keep",9,94
+  "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","tested","keep",9,99
+  "ymir-release.sh","ymir-release.sh — `ymir release`: npm is the T2 door (plan 365); every other verb is the release engine.","tool","wired","keep",1,10
   "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",4,332
-  "ymir.js","/**","tool","wired","keep",4,281
+  "ymir.js","/**","tool","wired","keep",4,286
 
-**Tally.** verdict: wired=35, tested=5
+**Tally.** verdict: wired=36, tested=5
 
-**Tally.** disposition: keep=40
+**Tally.** disposition: keep=41

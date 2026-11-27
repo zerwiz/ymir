@@ -53,15 +53,17 @@ cd "$HOME_REPO" || exit 1
 
 # Bring our own index into the log first: never publish, never union, and never
 # reseed from a log that is behind this seat's own memory.
+# Every commit below names $LOG_REL: the vault is shared, and another job's staged files are neither
+# this door's to commit nor allowed to block it (a guard judges only what the commit carries).
 export_index() { "$LOGTOOL" export ${QUIET:+--quiet} >/dev/null 2>&1 || true; }
 
 do_push() {
   export_index
   git add -- "$LOG_REL" 2>/dev/null
-  if git diff --cached --quiet; then say "well-vault-sync: nothing new in the well"; return 0; fi
-  if [ "$DRY" = 1 ]; then git diff --cached --stat | tail -1; return 0; fi
+  if git diff --cached --quiet -- "$LOG_REL"; then say "well-vault-sync: nothing new in the well"; return 0; fi
+  if [ "$DRY" = 1 ]; then git diff --cached --stat -- "$LOG_REL" | tail -1; return 0; fi
   git -c user.name="Brokk" -c user.email="brokk@ymir.local" \
-      commit -m "well: Völundr's memory, checkpointed and riding the vault" >/dev/null 2>&1 \
+      commit -m "well: Völundr's memory, checkpointed and riding the vault" -- "$LOG_REL" >/dev/null 2>&1 \
     || { say "well-vault-sync: commit failed"; return 1; }
   if ! git push origin "$BRANCH" >/dev/null 2>&1; then
     say "well-vault-sync: push failed (non-fast-forward?) — run --mode pull first"
@@ -84,13 +86,13 @@ do_pull() {
   "$LOGTOOL" reseed ${QUIET:+--quiet} >/dev/null 2>&1 || \
     say "well-vault-sync: reseed skipped (engram engine unavailable on this seat)"
   git add -- "$LOG_REL" 2>/dev/null
-  if git diff --cached --quiet; then
+  if git diff --cached --quiet -- "$LOG_REL"; then
     say "well-vault-sync: the well is current"
   elif [ "$DRY" = 1 ]; then
-    git diff --cached --stat | tail -1
+    git diff --cached --stat -- "$LOG_REL" | tail -1
   else
     git -c user.name="Brokk" -c user.email="brokk@ymir.local" \
-        commit -m "well: the log unioned with origin, the index re-seeded" >/dev/null 2>&1 \
+        commit -m "well: the log unioned with origin, the index re-seeded" -- "$LOG_REL" >/dev/null 2>&1 \
       || { say "well-vault-sync: union commit failed"; return 1; }
     say "well-vault-sync: the well absorbed origin and the index re-seeded"
   fi

@@ -35,8 +35,19 @@ printf 'the old contract sent notes to hodd/life/ (verbatim copy)\n' > "$t/docs/
 git -C "$t" add w.md .agents/migrations/0099-x.sh docs/fixes/hoard/note.md docs/contract-history/AGENTS-old.md
 bash "$g" --repo "$t" >/dev/null 2>&1 || { echo "FAIL: a waived line or an exempt shelf was refused"; exit 1; }
 
-# 5. the range mode judges what a push adds
-git -C "$t" commit -qm clean; base="$(git -C "$t" rev-parse HEAD)"
+# 5. a dated snapshot under hodd/saves/ is a verbatim record and commits; the same text elsewhere does not
+git -C "$t" commit -qm waived
+snap=hodd/saves/assistant/host-a/2026-01-01
+mkdir -p "$t/$snap" "$t/hodd/docs"
+printf 'filed under hodd/workspaces/work\n' > "$t/$snap/digest.jsonl"; git -C "$t" add "$snap/digest.jsonl"
+bash "$g" --repo "$t" >/dev/null 2>&1 || { echo "FAIL: a snapshot under hodd/saves/ was refused"; exit 1; }
+git -C "$t" commit -qm snapshot || { echo "FAIL: the snapshot did not commit"; exit 1; }
+printf 'filed under hodd/workspaces/work\n' > "$t/hodd/docs/copy.md"; git -C "$t" add hodd/docs/copy.md
+bash "$g" --repo "$t" >/dev/null 2>&1 && { echo "FAIL: the exemption leaked outside hodd/saves/"; exit 1; }
+git -C "$t" rm -qf hodd/docs/copy.md
+
+# 6. the range mode judges what a push adds
+base="$(git -C "$t" rev-parse HEAD)"
 printf 'hodd/life/work\n' > "$t/r.md"; git -C "$t" add r.md; git -C "$t" commit -qm bad
 bash "$g" --repo "$t" --range "$base..HEAD" >/dev/null 2>&1 && { echo "FAIL: --range let a new retired path through"; exit 1; }
 echo "PASS retired-path-guard refuses new retired paths by file:line and spares old files, waivers and exempt shelves"
