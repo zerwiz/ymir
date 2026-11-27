@@ -261,6 +261,11 @@ def launcher_door() -> Path:
     return Path(__file__).resolve().parents[2] / "bin" / "seat" / "pi-launcher.sh"
 
 
+def opencode_launcher_door() -> Path:
+    """The ONE interactive-OpenCode launcher generator — bin/seat/opencode-launcher.sh."""
+    return Path(__file__).resolve().parents[2] / "bin" / "seat" / "opencode-launcher.sh"
+
+
 def build_launch_command(
     selection: HarnessSelection,
     brief_ref: str,
@@ -354,6 +359,18 @@ def build_launch_command(
             pass
         return (
             f"claude --permission-mode dontAsk --settings {proc.shell_quote(str(profile))} "
+            f'{model_flag}"$(cat {proc.shell_quote(brief_ref)})"'
+        )
+    if selection.name == "claude":
+        # An Eindri on Claude (plan 239 P5b) is interactive, so the seat stays visible
+        # in herdr and can be steered; the brief is its first turn. It is launched
+        # with the shipped worker profile (P5c): edits and commands run without a
+        # prompt (an unattended worker that stops at a prompt is a dead seat, measured
+        # 2026-11-11, pane w4M:p1), and the Allfather's moves — a push to main, a merge,
+        # a force-push, `git add -A`, a discard of unrecorded work — are denied.
+        profile = claude_worker_profile(launch_cwd)
+        return (
+            f"claude --permission-mode acceptEdits --settings {proc.shell_quote(str(profile))} "
             f'{model_flag}"$(cat {proc.shell_quote(brief_ref)})"'
         )
     raise ValueError(f"no launch shape for harness '{selection.name}'")

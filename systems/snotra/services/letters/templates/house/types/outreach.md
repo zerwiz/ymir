@@ -23,3 +23,7 @@ Hi {{name}},
 Best regards,
 {{sender}}
 {{sender role}} · {{company}}
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #686

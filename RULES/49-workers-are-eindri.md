@@ -1,4 +1,4 @@
-# Rule 49 — Workers are Eindri; no harness spawns its own subagents
+# 49 — Workers are Eindri; no harness spawns its own subagents
 
 **Appended 2026-11-10, by the Allfather's word:** *"Claude Code never spawns its own subagents —
 workers are Eindri."*

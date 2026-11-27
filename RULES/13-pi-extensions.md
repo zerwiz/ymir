@@ -1,4 +1,4 @@
-# Rule 13 — Pi extensions: one home, pi's own layout, and a gate that proves it
+# 13 — Pi extensions: one home, pi's own layout, and a gate that proves it
 
 > Adopted 2026-10-04, after an investigation that found the extension tree's source split across
 > two directories, the running harness three days stale, and the document that governs it

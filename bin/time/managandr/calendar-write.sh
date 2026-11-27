@@ -2,14 +2,9 @@
 # bin/time/managandr/calendar-write.sh -> systems/snotra/services/calendar/calendar-write.sh — Mánagandr's write door (plan 231 R2; moved here by plan 374 A6)
 # allow-superseded-path: this header RECORDS the road, it does not make one
 #
-# `bin/time/snotra/` was moved into `systems/snotra/` (plan 129, 2026-10-24) and
-# `.agents/paths-ledger.yaml` records the move. This file exists for the one caller the plan
-# names — Mánagandr's write hand — so a voice tool, a cron row or an old note can call it and
-# reach the real door. It execs, so the exit code, stdout and stderr are the door's own.
-#
-#   create --title T --when <spec> [--duration 45m|1h30m] [--attendees a@x,b@y] [--meet] [--dry-run]
-#   move <event-id|title words> --to <spec> [--duration DUR] [--dry-run]
-#   status
+# The calendar is Mánagandr's, not Snotra's (Snotra keeps the meeting ear). The door moved with its history
+# (`git log --follow bin/time/managandr/calendar-write.sh`); this stub keeps an old cron row, voice tool or note
+# working for one release cycle. It execs, so the exit code, stdout and stderr are the door's own.
 set -euo pipefail
 _d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _root="$(cd "$_d/../../.." && pwd)"

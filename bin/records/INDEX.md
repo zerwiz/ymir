@@ -57,7 +57,7 @@ bin[82]{file,does,kind,verdict,disposition,callers,lines}:
   "open-work.sh","open-work.sh — the open work, rendered for a HUMAN, from the record the doors read.","tool","wired","keep",3,80
   "plan-board.sh","plan-board.sh — how many plans are done and not done, what to work on next, and which old","tool","wired","keep",1,303
   "plan-state.sh","plan-state.sh — read and write the Status/Owner header of every plan in the ledger.","tool","wired","keep",4,92
-  "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",10,332
+  "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",10,384
   "plans-state.sh","plans-state.sh — the plans, as data: every shelf the registry names, read once (plan 298 §2.1).","tool","wired","keep",3,41
   "plans_state.py","'''plans_state.py — the plans, as data: every shelf the registry names, read once (plan 298 §2.1).","tool","wired","keep",2,848
   "project-brief.sh","project-brief.sh — 'this project', for any session in any harness (Claude Code, Pi, OpenCode, Hermes).","tool","wired","keep",1,21

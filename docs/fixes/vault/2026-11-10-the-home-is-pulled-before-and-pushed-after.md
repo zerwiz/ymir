@@ -29,3 +29,7 @@ every other seat and cron wrote on.
 ### Not done
 
 Branch-and-PR for the home was considered and declined (RULES/50 §"Branch or main?").
+
+## CHANGE LOG
+
+- 2026-11-10 — review-mend: added missing heading for #636

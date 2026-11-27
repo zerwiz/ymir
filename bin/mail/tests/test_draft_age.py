@@ -36,6 +36,18 @@ The WEEKLY sweep (plan 305, appended 2026-11-17) is a different job and gets its
   WeeklySkip    a seat with no grant records NO trend row and sends nothing — a skip must never
                 look like a quiet week.
 
+The WEEKLY sweep (plan 305, appended 2026-11-17) is a different job and gets its own proofs:
+
+  WeeklyQuiet   a week with no drafts says NOTHING to the phone, records the trend row anyway
+                (zero drafts is a fact, not a silence), and carves one no-op Rune.
+  WeeklyEvery   a week with drafts names EVERY one of them — oldest first, numbered — even the
+                ones too young for the daily limit, and carries three buttons per draft.
+  WeeklyAged    an aged draft makes the sweep exit 1, with the same one line and no second one.
+  WeeklyTrend   two sweeps append two rows to hodd/state/draft-trend.jsonl and never rewrite the
+                first: the trend is the point, and an append-only record that overwrites is not one.
+  WeeklySkip    a seat with no grant records NO trend row and sends nothing — a skip must never
+                look like a quiet week.
+
 The Gmail API is stood in for by a local HTTP server, and the endpoints are configuration
 (Rule 07: YMIR_GMAIL_API_BASE · YMIR_OAUTH_TOKEN_URL). Nothing here talks to Google.
 

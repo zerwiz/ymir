@@ -38,3 +38,5 @@ allow:
     reason: ordinary English words; Ymir's own book shelf, not a client
   - word: zerwiz
     reason: the operator's own public code-host login, the owner of this repository; a handle the operator publishes is not a private person
+  - word: accounted
+    reason: ordinary English — the verb "accounted for" in a refusal message; a project happens to share the word

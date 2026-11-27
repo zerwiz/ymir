@@ -1,4 +1,4 @@
-# Rule 36 — the run is visible, or it did not happen
+# 36 — the run is visible, or it did not happen
 
 > Adopted 2026-10-23, at the Allfather's word while looking at a real run in the Smíðja:
 > *"we shoulw allways see this Smíðja … this are a rule"*.

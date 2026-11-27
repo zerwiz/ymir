@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# role-lib.sh — what this machine IS, and the components its role owes
-# (plan 51 Phase 1, the install half). SOURCE-ONLY: functions, no side effects
-# beyond resolving the home; callers set the state they need.
+# bin/skuld/role-lib.sh -> bin/fleet/role-lib.sh — a forwarding stub, plan 374 (D3, 2026-11-25).
+# allow-superseded-path: this header RECORDS the move, it does not make one
 #
 # One owner for three things the installer must not re-decide:
 #

@@ -42,3 +42,7 @@ As promised, here is our proposal for {{project}}.
 
 Best regards,
 {{sender}}
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #686

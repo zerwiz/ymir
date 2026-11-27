@@ -1,4 +1,5 @@
 # 57 — A broken function is reported in the same breath
+# Rule 57 — A broken function is reported in the same breath
 
 > Renumbered from `50` when this rule was gathered on 2026-11-18: main had taken `50` for
 > *the home is pulled before and pushed after*. The law is unchanged; only its number is new, and

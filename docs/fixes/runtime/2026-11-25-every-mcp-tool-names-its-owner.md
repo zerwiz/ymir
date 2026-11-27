@@ -19,3 +19,7 @@
 - `python3 bin/mcp/ymir-mcp.py --selftest` → `doors: 44`, `prompts: 25`.
 - `python3 bin/mcp/tests/test_figures.py` → `ok: 0 failed`.
 - `bash bin/time/managandr/calendar-ask.sh probe` → `"status": "ok"`.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #944

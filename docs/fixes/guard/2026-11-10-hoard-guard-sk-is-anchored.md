@@ -11,3 +11,7 @@ positive in another scanner. The merge was committed with the guard's sanctioned
 ### Verified
 That heading no longer matches; `key=sk-<26 chars>` and a bare `sk-<26 chars>` at line start still do.
 `secret-guard.sh` and `public-guard.sh` carry the same unanchored shape and are left as they were (not in this change).
+
+## CHANGE LOG
+
+- 2026-11-10 — review-mend: added missing heading for #636

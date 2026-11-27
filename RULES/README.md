@@ -6,6 +6,13 @@ the rule (append-only; never silently rewritten).
 
 ```
 rules_index[54]{file,subject}:
+rules_index[47]{file,subject}:
+rules_index[45]{file,subject}:
+rules_index[46]{file,subject}:
+rules_index[48]{file,subject}:
+rules_index[49]{file,subject}:
+rules_index[51]{file,subject}:
+rules_index[52]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -39,6 +46,13 @@ rules_index[54]{file,subject}:
   "48-a-repository-that-is-not-ours.md","a repository that is not ours: the owner comes from the registry, their law wins, the words are their reader's and never the hall's, our discipline travels and our identity does not, the stack is probed not assumed, an install is proved by one real change, their data stays theirs, the merge is sealed by their door"
   "57-a-broken-function-is-reported.md","a broken function is reported in the same breath: the function, the command that shows it broken and its output; a workaround is a report with a debt; a broken function that carried something is an incident"
   "58-atlas-is-not-ymir.md","Atlas and Ymir are two projects: no Atlas material, path or word inside Ymir (a move, never a delete); the ward is rules-compliance-guard R5, whole word only"
+  "56-no-message-until-the-receiver-speaks.md","no message is delivered until the receiver speaks: a write is not a delivery, only the herdr pane and the Gna arm are proven, a new channel is guilty until it answers, and no agent assumes another read it"
+  "49-workers-are-eindri.md","workers are Eindri: every worker is an Eindri on a Yggdrasil worktree, no harness spawns its own subagents, and the refusal is a user-scope PreToolUse hook that denies Agent|Task and names the Eindri road"
+  "50-the-home-is-pulled-before-and-pushed-after.md","the home is pulled before and pushed after: an edit to ymirhome begins with a pull and ships by push in the same breath, never a stale base"
+  "51-ymir-is-a-program.md","ymir is a program: the repo is the source it ships from; ymir runs globally in every harness's root agent, seated by install and update, loaded from the runtime, never a working tree"
+  "52-documents-are-for-people.md","a document is written for a person to read: headings, short paragraphs, Markdown tables, Mermaid diagrams, callouts — never TOON blocks; TOON stays in what only a machine reads"
+  "53-no-ai-tool-signs-the-work.md","no AI tool signs the work and none adds itself: no Co-Authored-By or Generated-with lines in commits, PRs, code, documents or letters; no tool adds itself to a repo, org or contributor list unless asked; outranks a harness default"
+  "54-no-blue-no-purple.md","no blue and no purple: every colour is a house colour (stone, bone, bronze, steel, blood); a cool hue 185-330 is refused by the house-colour ward and mapped to its nearest house role; fix notes and Sessrúmnir user themes are held for the Allfather"
   "56-no-message-until-the-receiver-speaks.md","no message is delivered until the receiver speaks: a write is not a delivery, only the herdr pane and the Gna arm are proven, a new channel is guilty until it answers, and no agent assumes another read it"
   "README.md","this index"
   "37-a-surface-may-not-show-what-it-did-not-receive.md","a surface may not show what it did not receive"
@@ -139,3 +153,17 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 ## CHANGE LOG
 
 - 2026-11-18 — review-mend: added missing heading for #817
+
+- **50 — the home is pulled before and pushed after** · `RULES/50-the-home-is-pulled-before-and-pushed-after.md`
+
+- 2026-11-10 — review-mend: added missing heading for #636
+
+- **49 — workers are Eindri; no harness spawns its own subagents** · `RULES/49-workers-are-eindri.md`
+
+- **50 — the home is pulled before and pushed after** · `RULES/50-the-home-is-pulled-before-and-pushed-after.md`
+- **51 — Ymir is a program; it runs globally, in the user's root agents** · `RULES/51-ymir-is-a-program.md`
+- **52 — a document is written for a person to read** · `RULES/52-documents-are-for-people.md`
+
+- 2026-11-11 — review-mend: added missing heading for #662
+| 53 | `53-no-ai-tool-signs-the-work.md` | No AI tool signs the work, and none adds itself |
+| 54 | `54-no-blue-no-purple.md` | No blue and no purple — every colour is a house colour |

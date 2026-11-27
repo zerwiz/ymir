@@ -36,7 +36,9 @@ esac; done
 
 [ -d "$REPO/.git" ] || { echo "no Ymir checkout at $REPO" >&2; exit 1; }
 
-# stagger per host so installs never update at the same minute
+# Stagger per host so installs never update at the same minute. The minute is DERIVED from the
+# host's own name (a stable hash, never a table of our machines): a list here named this fleet in a
+# public repository and left every other operator's fleet on the same fallback minute (Rule 07).
 if [ -z "$MINUTE" ]; then
   # A per-machine minute, OFF the hour, never a machine named in this file (RULES/04): the host name
   # is hashed to one of five minutes, so two seats sharing a clock do not start together.

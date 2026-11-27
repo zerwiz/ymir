@@ -22,3 +22,7 @@ You can reply to this email, or use the form:
 
 Thank you,
 {{sender}}
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #686

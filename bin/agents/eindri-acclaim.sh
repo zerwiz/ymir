@@ -43,9 +43,9 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
-. "$SCRIPT_DIR/eindri-wake-lib.sh"
-eindri_helm_state STATE "$YMIR_STATE_DIR"
+STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
 
+. "$SCRIPT_DIR/eindri-wake-lib.sh"
 EINDRI_STATE="$STATE"
 
 AGENT=""
@@ -218,11 +218,7 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
   fi
   status_file="$STATE/$AGENT.status"
   last="$(tail -n1 "$status_file" 2>/dev/null || true)"
-  # The status line keeps `<state>: ` first (readers parse it) and carries the Sol stamp right after it, so the line
-  # a person reads says WHEN. A repeat of the same act is recognised through the stamp, not written twice.
-  _bare="$(printf '%s' "$last" | sed -E 's/^([a-z-]+): [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} [A-Za-z0-9+-]+ — /\1: /')"
-  [ "$_bare" = "$TERMINAL: $LINE" ] || printf '%s: %s — %s\n' "$TERMINAL" "$(sol_line)" "$LINE" >>"$status_file"
-  unset _bare
+  [ "$last" = "$TERMINAL: $LINE" ] || printf '%s: %s\n' "$TERMINAL" "$LINE" >>"$status_file"
   case "$TERMINAL" in
     needs-decision) shelf="$STATE/eindri-questions/$AGENT.md" ;;
     *)              shelf="$STATE/eindri-reports/$AGENT.md" ;;
@@ -290,7 +286,7 @@ detail=""
 corrected=0
 if [ -f "$STATE/eindri-questions/$AGENT.md" ]; then
   kind="QUESTION"
-  detail="QUESTION at $STATE/eindri-questions/$AGENT.md — answer with bin/agents/eindri-send.sh $AGENT \"…\""
+  detail="QUESTION at state/eindri-questions/$AGENT.md — answer with bin/agents/eindri-send.sh $AGENT \"…\""
 elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
   # The shelf may be the SWEEP's snapshot rather than the worker's word: a liveness
   # pass files "# <id> — finished without a terminal word" when it finds a quiet
@@ -314,10 +310,10 @@ elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
         detail="report healed from the terminal status line, replacing the sweep's snapshot and keeping its evidence ($STATE/eindri-reports/$AGENT.md)"
         corrected=1 ;;
       *)
-        detail="report filed at $STATE/eindri-reports/$AGENT.md (the sweep's snapshot; no terminal word yet)" ;;
+        detail="report filed at state/eindri-reports/$AGENT.md (the sweep's snapshot; no terminal word yet)" ;;
     esac
   else
-    detail="report filed at $STATE/eindri-reports/$AGENT.md"
+    detail="report filed at state/eindri-reports/$AGENT.md"
   fi
   [ "$TERMINAL" = unproven ] && { kind="UNPROVEN"; detail="UNPROVEN ($UNPROVEN_WHY) — $detail"; }
 else
@@ -328,15 +324,15 @@ else
   case "$last" in
     done:*|failed:*)
       printf '%s\n' "$last" >"$STATE/eindri-reports/$AGENT.md"
-      detail="report healed from the terminal status line ($STATE/eindri-reports/$AGENT.md)" ;;
+      detail="report healed from the terminal status line (state/eindri-reports/$AGENT.md)" ;;
     needs-decision:*)
       kind="QUESTION"
       printf '%s\n' "$last" >"$STATE/eindri-questions/$AGENT.md"
-      detail="question healed from the terminal status line ($STATE/eindri-questions/$AGENT.md)" ;;
+      detail="question healed from the terminal status line (state/eindri-questions/$AGENT.md)" ;;
     *)
       if [ -n "$WORKTREE" ] && [ -f "$WORKTREE/REPORT.md" ]; then
         cp "$WORKTREE/REPORT.md" "$STATE/eindri-reports/$AGENT.md" 2>/dev/null || true
-        detail="report filed from $WORKTREE/REPORT.md ($STATE/eindri-reports/$AGENT.md)"
+        detail="report filed from $WORKTREE/REPORT.md (state/eindri-reports/$AGENT.md)"
       else
         detail="left working (herdr state flipped; read the pane: herdr agent read $AGENT)"
       fi ;;

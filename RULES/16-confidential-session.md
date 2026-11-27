@@ -1,4 +1,4 @@
-# Rule 16 — The confidential session: work on the vault without a route off it
+# 16 — The confidential session: work on the vault without a route off it
 
 > Adopted 2026-10-11, as Rule 15's companion. Rule 15 says *vault content never
 > leaves*. Rule 16 makes that **structural**: a way to work on vault projects in

@@ -63,6 +63,7 @@ log_err() {
 trap 'log_err "$LINENO" "${BASH_COMMAND:-}"' ERR
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OPENCODE_LAUNCHER="$SCRIPT_DIR/../seat/opencode-launcher.sh"   # plan 262: the one interactive OpenCode shape
 # shellcheck source=bin/fleet/ymir-platform.sh
 . "$SCRIPT_DIR/../fleet/ymir-platform.sh"
 # Docker or rootless Podman (Fedora). Empty when neither is reachable.
@@ -978,8 +979,8 @@ if [ "$DRY" -eq 1 ]; then
     "$HARNESS" "${HARNESS_PROV:-}" "${MODEL:-<harness default>}" "${MODEL_PROV:-}" "$_wt" "$BRIEF" \
     "${MODE:-scout}" "$YOLO" "$WORTH_VERDICT" "${LOCKED:-no}${LOCK_HOLDER:+ (busy: $LOCK_HOLDER)}"
   if [ "$HARNESS" = opencode ]; then
-    printf '  launch: cd %s && opencode run%s --auto "$(cat %s)"\n' \
-      "$_cwd" "${MODEL:+ --model $MODEL}" "$BRIEF"
+    printf '  launch: cd %s && %s\n' "$_cwd" \
+      "$("$OPENCODE_LAUNCHER" print ${MODEL:+--model "$MODEL"} --brief "$BRIEF" 2>/dev/null | tr -d '\n')"
   else
     printf '  launch: cd %s && %s%s --prompt "$(cat %s)"\n' \
       "$_cwd" "$HARNESS" "${MODEL:+ --model $MODEL}" "$BRIEF"
@@ -1165,6 +1166,19 @@ build_launch_command() {  # prints the worker command WITHOUT the leading exec
       local profile
       if ! profile="$(python3 "$ROOT/src/ymir_runtime/claude_seat.py" profile "$ROOT" "$SEAT_ROLE" 2>/dev/null)" || [ ! -f "$profile" ]; then
         echo "error: the Claude permission profile for role '${SEAT_ROLE:-worker}' is missing under $ROOT/.agents/harnesses — a Claude seat without it stops at its first permission prompt (plan 239 P5c)" >&2
+        return 1
+      fi
+      printf 'claude --permission-mode acceptEdits --settings %s %s"$(cat %s)"' \
+        "$(shell_quote "$profile")" "$model_flag" "$(shell_quote "$brief_ref")"
+      ;;
+    claude)
+      # Plan 239 P5b/P5c — the same shape as src/ymir_runtime/harness.py (one shape, two
+      # callers; the parity test holds it). Interactive, so the seat stays steerable; the
+      # shipped worker profile lets it edit and run without a prompt and denies the
+      # Allfather's moves. A missing profile is a refusal, never a bare `claude`.
+      local profile="$ROOT/.agents/harnesses/claude-worker.settings.json"
+      if [ ! -f "$profile" ]; then
+        echo "error: the Claude worker profile is missing at $profile — a Claude seat without it stops at its first permission prompt (plan 239 P5c)" >&2
         return 1
       fi
       printf 'claude --permission-mode acceptEdits --settings %s %s"$(cat %s)"' \

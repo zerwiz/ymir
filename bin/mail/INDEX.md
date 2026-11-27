@@ -37,7 +37,7 @@ bin[20]{file,does,kind,verdict,disposition,callers,lines}:
   "install.sh","install.sh — seat Gná's desk on THIS machine.","tool","tested","keep",68,59
   "ledger.sh","ledger.sh — the one mail record: what went out, what came in, and when.","tool","wired","keep",3,279
   "mail-scan.sh","mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.","tool","wired","keep",3,80
-  "test_draft_age.py","'''The proofs for `bin/mail/draft-age.sh` — a draft cannot grow old quietly.","tool","wired","keep",2,482
+  "test_draft_age.py","'''The proofs for `bin/mail/draft-age.sh` — a draft cannot grow old quietly.","tool","wired","keep",2,494
   "test_gna.py","'''The proofs plan 116 asks for before the desk is shown to a human.'''","tool","wired","keep",3,889
   "test_headers.py","'''The RFC headers: a reply can name the message it answers (plan 305 §7.1, phase 7).","tool","wired","keep",0,718
   "test_threads.py","'''The proofs plan 305 phase 1 asks for: three fixtures — answered, unanswered, waiting.","tool","wired","keep",0,536

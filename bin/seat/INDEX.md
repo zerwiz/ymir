@@ -45,16 +45,16 @@ bin[86]{file,does,kind,verdict,disposition,callers,lines}:
   "door.py","'''door.py — the six verbs, dispatched through the one resolver.","tool","wired","keep",5,143
   "fleet-plans.sh","fleet-plans.sh — read every LIVE host's claims over the tailnet; merge; report collisions + dark hosts.","tool","wired","keep",0,92
   "harness-contract-install.sh","harness-contract-install.sh — every harness reads ONE contract, and an update keeps it true.","tool","wired","keep",1,81
-  "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",15,581
+  "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",15,599
   "helm-identity.sh","helm-identity.sh — WHO holds this helm, WHAT it is for, WHICH machine and fleet it","tool","wired","keep",6,145
   "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",16,259
   "herdr-editor.py","'''herdr-editor.py — read the INPUT BOX of an agent's pane, and say what is in it.","tool","wired","keep",3,184
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
-  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",21,853
-  "herdr.py","'''herdr as a backend — the first one, and the shape the second is measured against.'''","tool","wired","keep",0,111
+  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",21,859
+  "herdr.py","'''herdr as a backend — the first one, and the shape the second is measured against.'''","tool","wired","keep",0,122
   "hermes-seat.sh","hermes-seat.sh — a one-line launcher: the Hermes seat is src/ymir_runtime/hermes/seat.py (plan 317 slices 2–3).","tool","wired","keep",3,5
   "hermes-session-hook.sh","hermes-session-hook.sh — a one-line launcher: Hermes' session side (the Sága digest on the first turn, in any cwd)","tool","wired","keep",1,5
-  "hermes-soul.md.in","<!-- ymir-seat:begin - written by bin/seat/seat-surface.sh on install and every update -->","data","wired","keep",1,40
+  "hermes-soul.md.in","<!-- ymir-seat:begin - written by bin/seat/seat-surface.sh on install and every update -->","data","wired","keep",1,42
   "hermes-telegram.sh","hermes-telegram.sh — seat THIS machine's Telegram bot into the Hermes gateway (the machine agent's ear).","tool","wired","keep",2,150
   "hermes.py","'''Hermes as a backend — the same six verbs, so a session is reached like a pane.","tool","wired","keep",0,206
   "lock-ask.sh","lock-ask.sh — a read-only agent asks the LOCK OWNER for work, and the owner answers.","tool","wired","keep",4,376
@@ -76,7 +76,7 @@ bin[86]{file,does,kind,verdict,disposition,callers,lines}:
   "seat-reap.sh","seat-reap.sh — the hand that closes a finished seat.","tool","wired","keep",17,1128
   "seat-surface.sh","seat-surface.sh — render THIS seat's own name into the AGENTS.md every harness reads.","tool","tested","keep",7,267
   "seat-wake.sh","seat-wake.sh — the seat's word to the ARM, not to a desktop.","tool","wired","keep",3,83
-  "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",2,393
+  "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",2,395
   "seats.sh","seats.sh — where the work actually is: panes in either backend, and the dead shells named.","tool","wired","keep",6,78
   "sessrumnir-wire.sh","sessrumnir-wire.sh — the seat wire: talk to a Sessrúmnir seat, and read its last answer.","tool","wired","keep",1,226
   "test_agent_ready.sh","test_agent_ready.sh — the ready-check answers in ONE vocabulary, for both backends.","tool","wired","keep",0,171

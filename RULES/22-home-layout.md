@@ -1,4 +1,4 @@
-# Rule 22 — The home has a layout, and nothing is created outside it
+# 22 — The home has a layout, and nothing is created outside it
 
 > Adopted 2026-10-13: *"we clearly need to tighten the way Ymir is allowed to find and create
 > documents inside the Ymir home."*

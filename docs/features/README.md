@@ -56,6 +56,8 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
   `whole` or names what is owed: [an-update-finishes-the-installs.md](an-update-finishes-the-installs.md)
 **Newest doors** — built 2026-11-12, catalogued the same day:
 
+- Every service and app runs from the pinned runtime, from the first install — one register, one writer:
+  [every-service-runs-from-main.md](every-service-runs-from-main.md)
 - Bilskirnir, the business hall — every agent in its own room, in its own window, on every screen:
   [bilskirnir.md](bilskirnir.md)
 

@@ -19,3 +19,7 @@ other, with the homepage and with the code.
 - `bin/records/lore-audit.sh run` before: **24 true · 13 partial · 4 false · 3 planned**. After: **36 true · 11 partial · 0 false · 4 planned**, over 51 claims (seven new rows). Nothing reads false: Gungnir, Gunnlöð and Kádlín are planned, and Hermóðr is the gateway that runs.
 - `bin/agents/name-registry.sh collisions` (against a scratch copy of a home): one collision before, the same one
   after (`heimdall`, a host and a subsystem); the 38 new rows add none.
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #944

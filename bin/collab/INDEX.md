@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[129]{file,does,kind,verdict,disposition,callers,lines}:
+bin[133]{file,does,kind,verdict,disposition,callers,lines}:
   "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",3,54
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",2,50
   "17-one-agent-one-worktree.md","17 — One task, one worktree, and it is closed when the task is","data","wired","keep",4,71
@@ -41,7 +41,7 @@ bin[129]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",71,-
   "TEMPLATE.md","---","data","wired","keep",6,48
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
-  "__init__.py","'''kitlib — the collaboration kit's modules, imported by scripts/kit.py.'''","tool","tested","migrate → src/ymir_runtime/tests/__init__.py",2,3
+  "__init__.py","'''kitlib — the collaboration kit's modules, imported by scripts/kit.py.'''","tool","tested","migrate → src/ymir_runtime/dispatch/__init__.py",2,3
   "a-company-suite.md","---","data","wired","keep",2,123
   "a2a-guard.sh","a2a-guard — a card in the constellation must stay true, and a changed one must still be valid.","tool","wired","keep",4,38
   "a2a.md","---","data","wired","keep",4,80
@@ -51,6 +51,7 @@ bin[129]{file,does,kind,verdict,disposition,callers,lines}:
   "advantage.md","---","data","wired","keep",2,150
   "arc42-logo.png","PNG","data","wired","keep",2,75
   "architecture-arc42.md","---","data","wired","keep",1,208
+  "architecture.md","---","data","wired","keep",2,78
   "architecture.md","---","data","wired","keep",2,78
   "areas-guard.sh","areas-guard — a change to an area nobody holds is refused, and the AREA is named, never the author.","tool","wired","keep",6,81
   "areas.md","---","data","wired","keep",2,100
@@ -116,6 +117,7 @@ bin[129]{file,does,kind,verdict,disposition,callers,lines}:
   "notices.md","---","data","wired","keep",1,52
   "notify.sh","notify.sh — hand a gate's refusal to whoever should hear it, not only to the terminal that typed the command.","tool","tested","keep",34,38
   "plan.md","---","data","tested","keep",11,58
+  "plan.md","---","data","tested","keep",11,58
   "platform.py","'''platform — the one place the kit asks the operating system to stop a process.","tool","wired","keep",1,33
   "pr-check.sh","pr-check — is every commit that exists proposed for review?","tool","tested","keep",7,26
   "pr-guard.sh","pr-guard — a branch that exists on the remote must have a pull request.","tool","wired","keep",2,35
@@ -129,8 +131,10 @@ bin[129]{file,does,kind,verdict,disposition,callers,lines}:
   "reference.md","Reference template","data","wired","keep",2,40
   "release-notes.md","Release notes - {Product name} {Release number - 0.0.0}","data","wired","keep",1,97
   "research.md","---","data","wired","keep",2,38
+  "research.md","---","data","wired","keep",2,38
   "reviews-shelf.sh","reviews-shelf — a review nobody can find is a review that did not happen.","tool","wired","keep",1,35
   "reviews.sh","reviews.sh — a review is a file in the repository, so the next hand gets it without asking anyone.","tool","wired","keep",2,70
+  "rule.md","{NN} — {The rule, said as a sentence}","data","tested","keep",2,32
   "rule.md","{NN} — {The rule, said as a sentence}","data","tested","keep",2,32
   "runbook.md","Runbook template","data","wired","keep",2,146
   "secret-scan.sh","secret-scan — a credential must never enter this repository, and a hook is cheaper than a history rewrite.","tool","wired","keep",7,37
@@ -152,6 +156,6 @@ bin[129]{file,does,kind,verdict,disposition,callers,lines}:
   "worktree.sh","worktree.sh — one task, one worktree, and nothing left behind when it is finished (RULES/17, RULES/24).","tool","wired","migrate → src/ymir_runtime/worktree.py",7,13
   "worktrees.py","'''worktrees — one task, one worktree, and a lifecycle the kit enforces from creation to removal.","tool","wired","keep",2,415
 
-**Tally.** verdict: wired=117, tested=12
+**Tally.** verdict: wired=119, tested=14
 
-**Tally.** disposition: keep=126, migrate → src/ymir_runtime/tests/__init__.py=1, migrate → src/ymir_runtime/status.py=1, migrate → src/ymir_runtime/worktree.py=1
+**Tally.** disposition: keep=130, migrate → src/ymir_runtime/dispatch/__init__.py=1, migrate → src/ymir_runtime/status.py=1, migrate → src/ymir_runtime/worktree.py=1

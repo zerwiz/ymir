@@ -1,4 +1,4 @@
-# Rule 19 — Two planes: ours and the team's
+# 19 — Two planes: ours and the team's
 
 > Adopted 2026-10-12, on the Allfather's word: *"my well are not the team well etc. we need
 > to have clear distinctions on what's team functions and our functions."*

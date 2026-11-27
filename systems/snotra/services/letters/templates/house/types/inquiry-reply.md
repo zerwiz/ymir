@@ -31,3 +31,7 @@ Thank you for your message about {{topic}}. Here is how we can help.
 
 Best regards,
 {{sender}}
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #686

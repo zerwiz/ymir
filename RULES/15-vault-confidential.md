@@ -1,4 +1,4 @@
-# Rule 15 — The vault is a confidential domain: its content never leaves it
+# 15 — The vault is a confidential domain: its content never leaves it
 
 > Adopted 2026-10-11, on the Allfather's word: **some vault projects are under NDA
 > and legally cannot leave the vault.** A leak is not an embarrassment — it is

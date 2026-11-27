@@ -18,3 +18,7 @@
 
 - `bash bin/agents/eindri-role.sh choose "write the docs and a readme for the release"` → `"bragi","document — prose, guides, references",2`.
 - `python3 bin/mcp/ymir-mcp.py --selftest` → `prompts: 25` (the `snotra` prompt is now the ear's).
+
+## CHANGE LOG
+
+- 2026-11-25 — review-mend: added missing heading for #944

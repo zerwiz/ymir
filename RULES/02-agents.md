@@ -1,4 +1,4 @@
-# Rule 02 — Agents (Brokk, the Eindri, and where they live)
+# 02 — Agents (Brokk, the Eindri, and where they live)
 
 **Status:** law. Read with Rule 01 (domains · houses · Eindri).
 

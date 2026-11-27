@@ -1,4 +1,4 @@
-# Rule 08 — Delivery Gate & Worktree Engine
+# 08 — Delivery Gate & Worktree Engine
 
 ## 08.1 Every Change Leaves by Pull Request
 
@@ -109,8 +109,6 @@ head — the flood brake this house has already paid for.
 
 The tool is `bin/agents/pr-seal.sh` (`watch` · `seal <n>`); the law it enforces is this section.
 
----
-
 ## Appended 2026-11-06 — the delivery switch: a project may declare that its reviewer merges
 
 **The Allfather's word, and it settles a contradiction this rule has carried since plan 203 §10:**
@@ -150,8 +148,6 @@ with no record is refused, because the record is what makes `main` explainable.
 The doors are `bin/agents/eindri-review-spawn.sh --pr <url>` (seat the judge once per head),
 `bin/forge/review-watch.sh` (the trigger), `bin/seat/lock-ask.sh` (the read-only agent's mouth) and
 `bin/notify/mail.sh` (the word reaching him).
-
----
 
 ## Appended 2026-11-12 — two more roads: documents may land on main, and a batch ships once
 

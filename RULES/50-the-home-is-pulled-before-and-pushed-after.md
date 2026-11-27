@@ -46,3 +46,4 @@ A number (a plan, a rule, a ticket) is an allocation. Allocate it **after** `beg
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-20** — correction to the row "GENERATED FILES ARE REGENERATED, NOT RESOLVED": its last clause, "the next run re-stamps it", is superseded. Since PR #831 `learn-home.sh` no longer re-stamps a fact whose text is unchanged, so an unchanged night writes nothing; the fact keeps the stamp it was last written with. A conflict on that shelf is still resolved by `merge=ours`, and the next run rewrites only a fact whose text moved, then ships it itself through `home-sync.sh ship`.
+- 2026-11-10 — review-mend: added missing heading for #636

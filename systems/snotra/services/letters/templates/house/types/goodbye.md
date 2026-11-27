@@ -27,3 +27,7 @@ If you need us again, reply to this email or reach {{sender}} directly. It was a
 
 Best regards,
 {{sender}}
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #686

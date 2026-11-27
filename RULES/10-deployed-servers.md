@@ -1,4 +1,4 @@
-# Rule 10 — Every server runs from a file the repo owns
+# 10 — Every server runs from a file the repo owns
 
 Every server, service, worker, and MCP the runtime runs has exactly **one**
 source: **this repo**. A running process whose code exists only on a machine is a

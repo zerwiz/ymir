@@ -1,4 +1,4 @@
-# Rule 11 — Never delete, only move
+# 11 — Never delete, only move
 
 **A file is never deleted from this repository.** Ever. Not a shell script, not a vendored
 `fm-*` provenance file, not a document, not a test. When something must go, it **moves** — and the

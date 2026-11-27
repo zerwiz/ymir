@@ -22,3 +22,7 @@ Audit 2026-11-10 (plan 239): Claude had no MCP row at all — `ymir-install.sh` 
 ### Not done
 Pi's third check (`syn-asset-pretool-check.sh`, governed-path asset reads) takes a path, not a command; not wired yet.
 Plan 239 P3–P6 (the 18 Pi-only tools into the packet, the remaining seams, Claude as an Eindri, the parity gate) remain.
+
+## CHANGE LOG
+
+- 2026-11-10 — review-mend: added missing heading for #636
