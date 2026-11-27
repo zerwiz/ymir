@@ -31,3 +31,7 @@
 ## 2026-11-27 — two clock tests kept a lock outside their state dir
 
 Restoring item 17 made the clock refuse a `.lock-path` that points outside the state dir. `nornir-schedule-shapes` and `nornir-catchup` kept their lock in `$WORK/lock`, beside the state dir. They passed on a machine with a live session lock (the clock fell back to it) and failed in CI, where none exists (16 cases: "want 2, got 0"). Both now keep the lock in `$STATE/lock`. Proof: both PASS with `XDG_STATE_HOME` and `HOME` pointed at an empty dir.
+
+## CHANGE LOG
+
+- 2026-11-26 — review-mend: added missing heading for #968
