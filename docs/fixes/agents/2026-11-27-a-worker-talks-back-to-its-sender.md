@@ -77,12 +77,45 @@ What reached the operator, checked in the same run:
 The errand record's mode was set to `scout` by hand after the dispatch, because the errand owed no pull request. The
 terminal act read the worker's own state shelf, so the edit did not change the result.
 
-### Second machine
+### Second machine (2026-11-27)
 
-Not run yet. It was handed to the arm holder to relay (a release of this head, dispatched with `--sender`).
+**Question road: proven. Done road: not proven.**
+
+A release of head `dfeb81923` was built on a second machine, its pin not flipped. The arm holder there dispatched
+`proof-971-far` from that release with `--sender` naming a pane on the first machine.
+
+The sender's pane read on the first machine:
+
+```text
+❯ [from agent <far-helm> · herdr pane <far-pane> · <far-machine>] [reply from agent <agent> · herdr pane <far-pane> · <far-machine>] QUESTION from errand proof-971-far, waiting for your
+  answer: Proof question from <far-machine>: did this question reach you directly? — answer with bin/agents/eindri-answer.sh proof-971-far "<answer>" on <far-machine>
+```
+
+The sender answered with `bin/fleet/fleet-tell.sh --to <far-machine>:<far-pane> "<answer>"`. The first try reported no
+answer within 25 s and the second reported a refusal, yet the worker had the answer.
+
+The worker then said it had run `eindri-acclaim.sh proof-971-far --terminal done`, exit 0, with a Veil receipt id.
+**No terminal line from that act reached the sender.** What did reach it were four near-identical chat replies of the
+worker, relayed through the far arm holder. The worker's pane was closed by the seat reaper before it could be read,
+so there is no worker-side read.
+
+**Cause, reproduced here but not confirmed on that machine:** the act sent its message only when it was given
+`--line`. The command the worker quoted has none, and an exit of 0 fits that: a done line with no evidence ends
+`unproven`, not 0.
+
+**Fixed after this run:** a terminal act with no `--line` now tells the sender once, and says nothing is proven. The
+fix is proven with fakes only. The done road across two real machines is an **open gap** until it is run again.
+
+Also open:
+
+- A worker that asks and waits leaves its errand unfinished when nobody answers.
+- The seat reaper can close a finished worker's pane before anyone reads it.
+- An answer sent to a pane the send door could not verify was reported as not delivered although it arrived, and the
+  worker saw it more than once.
 
 ## CHANGE LOG
 
 - 2026-11-27 — a dispatched worker sends its result and questions to its sender.
 - 2026-11-27 — appended: the live run on one machine; a brief keeps one sender stamp; a reply stamp never names the
   sender. The proof text that said no live pane was used is replaced by the run.
+- 2026-11-27 — appended: the second-machine run: the question road proven, the done road not proven.

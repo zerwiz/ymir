@@ -191,6 +191,17 @@ for brief in ("[reply from agent other] done", "[from agent asker] go"):
 [ "$got" = "agent real
 agent asker" ] && good "engine: a reply stamp is never taken as the sender" || bad "reply stamp" "$got"
 
+# ── a terminal act with no --line still reaches the sender, once ───────────────
+reset
+bash "$ROOT/bin/agents/sender.sh" record road-noline --sender "$far" >/dev/null
+for _ in 1 2; do
+  ( cd "$PROJ" && YMIR_REPLY_PANE=w9:p9 YMIR_REPLY_ORIGIN="agent road-noline · herdr pane w9:p9 · $ME" \
+    bash "$ROOT/bin/agents/eindri-acclaim.sh" road-noline "$PROJ" --terminal done ) >"$T/noline" 2>&1
+done
+[ "$(grep -c 'errand road-noline said done with no line' "$SENTLOG")" = 1 ] && has "$(cat "$SENTLOG")" "w2:pZ" \
+  && good "cross-machine: a done with no line reaches the sender once, and says nothing is proven" \
+  || bad "no line" "$(cat "$T/noline" "$SENTLOG")"
+
 # ── by hand ────────────────────────────────────────────────────────────────────
 reset
 bash "$ROOT/bin/agents/sender.sh" record road-bare --sender "$ORIGIN" >/dev/null
