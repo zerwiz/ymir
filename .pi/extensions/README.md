@@ -40,6 +40,7 @@ are **retired**.
 |---|---|---|
 | `syn-turnend-guard.ts` | **Sýn** (watchful sight) | inject the Sága digest at session start, re-emit on compaction, refuse a blind turn end, PreToolUse seatbelts |
 | `gna-pi-watch.ts` | **Gná** (Frigg's messenger) | watcher continuity: arm, re-arm, deliver actionable wakes; emits the Skuld dispatch offer |
+| `gna-telegram-follow.ts` | **Gná** | a pi session that takes the arm connects the machine's Telegram bot by itself (`bin/notify/telegram-reader.sh`) |
 | `skuld-branch-supervision/index.ts` | **Skuld** (the Norn of what shall be) | supervision branch: handles routine wakes with a cheaper model; `/skuld-model` |
 | `ymir-well.ts` | **Mimirsbrunn** (the well) | `well_recall` / `well_observe` over the `:4602` bridge |
 | `excalidraw/index.ts` | the excalidraw door | the team whiteboard fork: read its `tickets/` from the files, and probe/raise/lower its board, text-to-diagram bridge and room server |
@@ -76,3 +77,7 @@ OpenCode, Claude Code, Codex, and Cursor adapters are wired too; see
 
 Agents live in `.agents/agents/` and are bound per tool by `bin/seat/valknut-load.sh`
 (OpenCode reads `.opencode/agents/`; Pi links resolve under `.pi/agents/`).
+
+## CHANGE LOG
+
+- 2026-11-27 — review-mend: added missing heading for #970
