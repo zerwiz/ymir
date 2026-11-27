@@ -79,7 +79,7 @@ terminal act read the worker's own state shelf, so the edit did not change the r
 
 ### Second machine (2026-11-27)
 
-**Question road: proven. Done road: not proven.**
+**Question road: proven. Done road: proven by the last run, `proof-971-live`.** The first run, below, did not prove it.
 
 A release of head `dfeb81923` was built on a second machine, its pin not flipped. The arm holder there dispatched
 `proof-971-far` from that release with `--sender` naming a pane on the first machine.
@@ -104,12 +104,52 @@ so there is no worker-side read.
 `unproven`, not 0.
 
 **Fixed after this run:** a terminal act with no `--line` now tells the sender once, and says nothing is proven. The
-fix is proven with fakes only. The done road across two real machines is an **open gap** until it is run again.
+fix was then proven with fakes only. The two runs below took it across two machines.
+
+#### The fallback run, `proof-971-far2` (head `aafa9bf8a`)
+
+The second machine built a release of that head, its pin not flipped, and dispatched `proof-971-far2` from it with
+`--sender 'agent claude · herdr pane <pane-A> · <machine-A>'`. The brief did not wait for an answer: `date -u`, then
+`eindri-acclaim.sh proof-971-far2 --terminal done` with no line.
+
+By then `<pane-A>` was gone, because the seat reaper had closed the finished seat. The message still went out. It came
+back to the first machine's arm holder as an undelivered answer, wake `rodd-1795802037`:
+
+```text
+undelivered answer for pane <pane-A> (the pane did not take it …): [reply from agent claude · herdr pane <pane-B> ·
+<machine-B>] errand proof-971-far2 said done with no line and no evidence weighed, so nothing is proven — record, if
+any: …/proof-971-far2/eindri-reports/proof-971-far2.md
+```
+
+This text is copied from the pull request comment that recorded the run. It shows that a no-line terminal act reaches
+across two machines, and that a line for a pane that is gone falls back to that machine's arm holder.
+
+#### The live run, `proof-971-live` (head `aafa9bf8a`)
+
+The first machine's pane `<pane-A>` was the sender and stayed open. A release of head `aafa9bf8a` on the second
+machine dispatched `proof-971-live` with `--sender 'agent claude · herdr pane <pane-A> · <machine-A>'`. The second
+machine's pin still pointed at another release. The brief did not wait for an answer and told the worker to run:
+
+```bash
+bin/agents/eindri-acclaim.sh proof-971-live --terminal done --line 'done: proof-971-live result rune' --evidence 'test -f bin/agents/sender.sh'
+```
+
+`herdr agent read <pane-A> --source visible` on the first machine showed the done line in the live pane:
+
+```text
+❯ [from agent <far-helm> · herdr pane <pane-B> · <machine-B>] [reply from agent <agent> · herdr pane <pane-B> · <machine-B>] errand proof-971-live done: done: proof-971-live result
+  rune — full record: <seat-state>/eindri-reports/proof-971-live.md
+```
+
+The report named there, read on the second machine, shows the evidence command with exit 0, the commit `aafa9bf8a`
+and the release tree as its repository. The errand's status there reads `done: done: proof-971-live result rune`.
 
 Also open:
 
 - A worker that asks and waits leaves its errand unfinished when nobody answers.
 - The seat reaper can close a finished worker's pane before anyone reads it.
+- A worker that is idle while it waits for a reply can be taken as finished without a terminal word. In the live run
+  the sender kept its pane by appending `working:` status lines.
 - An answer sent to a pane the send door could not verify was reported as not delivered although it arrived, and the
   worker saw it more than once.
 
@@ -119,3 +159,6 @@ Also open:
 - 2026-11-27 — appended: the live run on one machine; a brief keeps one sender stamp; a reply stamp never names the
   sender. The proof text that said no live pane was used is replaced by the run.
 - 2026-11-27 — appended: the second-machine run: the question road proven, the done road not proven.
+- 2026-11-27 — appended: two more two-machine runs. `proof-971-far2`: a no-line done for a pane that was gone came
+  back to that machine's arm holder. `proof-971-live`: the done line landed in a live pane on the other machine. The
+  second-machine summary that said "not proven" and "open gap" is replaced.
