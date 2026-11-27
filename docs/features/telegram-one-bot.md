@@ -7,19 +7,35 @@ When the arm moves, the bot moves with it. The operator's id is written down onc
 
 Telegram allows one reader for each bot. A second reader gets `409 Conflict`.
 
-| The arm holder runs in | What reads the bot | What you do after the arm moves mid-session |
+| The arm holder runs in | What reads the bot | After the arm moves to a session already running |
 |---|---|---|
-| pi | the pi-telegram package | run `/telegram-connect` in that session |
-| Claude Code | the Telegram plugin | run `/mcp` there and reconnect the telegram server |
-| Hermes | the Hermes gateway | nothing; the gateway is restarted for you |
+| pi | the pi-telegram package | automatic: the session runs `/telegram-connect` itself |
+| Hermes | the Hermes gateway | automatic: the gateway is restarted |
+| Claude Code | the Telegram plugin | **not automatic**: see below |
 | OpenCode or another harness | nothing: there is no channel | move the arm to a harness that has one |
 
-A session that **starts** after the hand-over connects by itself in Claude Code. pi connects by itself only when it
-already owned the connection in that folder.
+### pi
 
-> [!IMPORTANT]
-> The old reader is stopped by itself. A session that is already running cannot be made to start reading, so pi and
-> Claude Code need the one step above.
+The extension `.pi/extensions/gna-telegram-follow.ts` looks every 10 seconds. It acts only in the session that holds
+the arm, while that session is idle, and only when nothing reads the bot yet. So it never meets a takeover question.
+It tries at most once a minute. The session must have loaded the extension: restart a pi session once after the update.
+
+### Claude Code cannot reconnect by itself
+
+The plugin is a local server that Claude Code starts with the session. With no token it exits at once. Claude Code
+offers no command, hook or signal that lets another program restart such a server in a running session. The only
+program-free ways are `/mcp`, typed in that session, and a new session. Ymir does not type into the holder's input
+box, which is often in use.
+
+The door sends the holder a message in the arm's queue. It asks the agent to search its tools for
+`plugin_telegram_telegram`, which in some Claude Code versions retries a server that failed to connect. This has not
+been tried. If `status` still shows no reader, run `/mcp` and reconnect the telegram server.
+
+### Hermes
+
+While the desk is in a call the gateway is not restarted. The arm service tries again until the call ends.
+
+A session that **starts** after the hand-over connects by itself in Claude Code.
 
 ## What you need
 
@@ -79,6 +95,7 @@ removed from a harness that does not hold the arm. The holder's harness is given
 
 ## Notes and limits
 
+- pi's automatic connect has been tested with a stand-in pi, not with a live bot.
 - Releasing the arm leaves the bot unread. An arm holder that dies changes nothing until the next holder appears.
 - Outgoing alerts (`bin/notify/send.sh`) post to the Bot API directly with their own token from the vault. They work
   whoever reads, as long as that token's bot is not retired.

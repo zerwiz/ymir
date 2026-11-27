@@ -20,9 +20,14 @@ to. Telegram allows one reader for each bot, so the two harnesses could not simp
   the same folder, so a worker's start could have taken the holder's connection.
 - A seat or test with its own lock folder never moves the machine's bot.
 
+- `.pi/extensions/gna-telegram-follow.ts` runs `/telegram-connect` in a pi session that already holds the arm.
+- A Hermes gateway restart that fails is undone in its env file, so the next beat tries again. Before this, a
+  restart refused during a call was never retried.
+
 ## What is not closed
 
-- pi and Claude Code cannot be made to start reading inside a running session. The door names the one command.
+- Claude Code cannot be made to start reading inside a running session: nothing outside it can restart its plugin
+  server. The holder is asked to retry it, which is untried, or to run `/mcp`.
 - pi is stopped by recording another owner in its `state.json`, which pi-telegram watches every second. This reads a
   format that is not Ymir's, and a new pi-telegram release could change it.
 - The test uses stand-in processes. Neither the real pi-telegram nor the real plugin was run against a live bot, and

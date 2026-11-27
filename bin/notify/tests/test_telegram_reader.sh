@@ -52,6 +52,10 @@ t "exactly one harness holds the bot" test "$(holders)" = 1
 t "pi gets the home's allowlist" grep -q '"allowedUserId": 4242' "$PI"
 t "other pi settings are kept" grep -q '"keep": 1' "$PI"
 t "the token file is private" bash -c "ls -l '$PI' | grep -q '^-rw-------'"
+t "a pi holder with the bot and no reader may connect itself" "$R" wants pi
+t "a harness that does not hold the arm may not" bash -c "! '$R' wants claude"
+printf '{"profiles":{"default":{"transport":{"pid":%s}}}}\n' "$PISESSION" >"$PIST"
+t "once pi reads, nothing is asked of it" bash -c "! '$R' wants pi"
 
 # the arm moves to Claude while pi is reading
 printf '{"profiles":{"default":{"transport":{"pid":%s,"journalPath":"/j"},"other":1}}}\n' "$PISESSION" >"$PIST"
@@ -82,6 +86,13 @@ t "a Hermes holder takes the bot and the allowlist" bash -c "grep -qF '$BOT:' '$
 t "its gateway is restarted" grep -q 'gateway restart' "$T/hermes.calls"
 t "exactly one harness holds the bot" test "$(holders)" = 1
 
+arm "$PISESSION" pi; "$R" sync >/dev/null
+printf '#!/bin/sh\nexit 1\n' >"$YMIR_HERMES_CMD.fail"; chmod +x "$YMIR_HERMES_CMD.fail"
+arm "$S" hermes
+t "a failed gateway restart is a failure" bash -c "! YMIR_HERMES_CMD='$YMIR_HERMES_CMD.fail' '$R' sync"
+: >"$T/hermes.calls"; "$R" sync >/dev/null
+t "and the next beat restarts it" grep -q 'gateway restart' "$T/hermes.calls"
+
 arm "$S" opencode; OUT="$("$R" sync)"
 t "a holder with no channel: nobody reads" test "$(holders)" = 0
 t "and it says so" grep -q no-channel <<<"$OUT"
@@ -107,6 +118,18 @@ rm "$YMIR_HOME/hodd/secrets/platform.env"
 t "no operator id: refused, nothing granted" bash -c "! '$R' sync && ! grep -qF '$BOT:' '$CL/.env'"
 
 t "a private seat never moves the bot" bash -c "env -u YMIR_TELEGRAM_READER_FORCE '$R' sync | grep -q private-seat"
+
+if command -v node >/dev/null 2>&1 && node --experimental-strip-types -e 0 >/dev/null 2>&1; then
+  EXT="$ROOT/.pi/extensions/gna-telegram-follow.ts"
+  # a worktree leaves .pi/extensions out of its checkout (one home, RULES/13): read the committed copy
+  [ -r "$EXT" ] || { EXT="$T/gna-telegram-follow.ts"; git -C "$ROOT" show :.pi/extensions/gna-telegram-follow.ts >"$EXT"; }
+  t "the pi extension connects only the arm holder, only when asked" \
+    node --experimental-strip-types "$ROOT/bin/notify/tests/pi_follow_check.mjs" "$EXT" "$T"
+else
+  echo "  skip the pi extension: no node that reads TypeScript here"
+fi
+
+t "a private seat is never asked to connect" bash -c "! env -u YMIR_TELEGRAM_READER_FORCE '$R' wants pi"
 
 printf 'test_telegram_reader: %s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

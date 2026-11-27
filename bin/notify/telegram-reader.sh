@@ -5,6 +5,7 @@
 #   telegram-reader.sh check             # exit 1 on two readers, or a reader that is not the holder's
 #   telegram-reader.sh sync              # move the bot to the holder's harness (idempotent)
 #   telegram-reader.sh sync --released   # the arm was given back: nobody reads
+#   telegram-reader.sh wants pi          # exit 0 when the holder's harness should connect itself now
 #
 # OFF until the home says so. In $YMIR_HOME/hodd/identity/machines.yaml, on this machine's row:
 #   telegram: { reader: arm, bot_id: '<id>', token_ref: 'secrets/<file>.env' }
@@ -18,13 +19,14 @@
 # Exit: 0 done or off · 1 refused or a reader stands where it must not · 2 usage.
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-case "${1-}" in -h|--help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
 # A PRIVATE SEAT'S ARM NEVER MOVES THE MACHINE'S BOT: a worker or a test runs with its own lock dir.
 primary="${XDG_STATE_HOME:-$HOME/.local/state}/ymir"
-if [ "${1-}" = sync ] && [ -n "${BROKK_MACHINE_STATE_DIR:-}" ] && [ "$BROKK_MACHINE_STATE_DIR" != "$primary" ] \
+if { [ "${1-}" = sync ] || [ "${1-}" = wants ]; } && [ -n "${BROKK_MACHINE_STATE_DIR:-}" ] && [ "$BROKK_MACHINE_STATE_DIR" != "$primary" ] \
    && [ "${YMIR_TELEGRAM_READER_FORCE:-0}" != 1 ]; then
   printf 'telegram-reader[1]{result,detail}:\n  "private-seat","this seat has its own lock: the machine bot is not moved"\n'
+  [ "$1" = wants ] && exit 1
   exit 0
 fi
 exec python3 "$HERE/telegram-reader.py" "$@"

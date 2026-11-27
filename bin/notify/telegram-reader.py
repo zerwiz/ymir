@@ -27,9 +27,11 @@ SENTINEL = "ymir-arm-handover"
 CHANNELS = ("pi", "claude", "hermes")
 ROLE_HARNESS = {"pi": "pi", "counsellor": "pi", "claude": "claude", "hermes": "hermes"}
 NEXT_STEP = {
-    "pi": "in the holding pi session run /telegram-connect (a session started now connects with it)",
-    "claude": "in the holding Claude session run /mcp and reconnect the telegram server, or restart it",
-    "hermes": "hermes gateway restart",
+    "pi": "nothing: an idle pi session connects by itself within a minute (else run /telegram-connect)",
+    "claude": "agent: search your tools for plugin_telegram_telegram, which retries a server that failed to "
+    "connect, then run bin/notify/telegram-reader.sh status; if nothing reads, ask for /mcp and a "
+    "reconnect of the telegram server",
+    "hermes": "nothing: the gateway is restarted by this door",
 }
 
 
@@ -350,9 +352,14 @@ class Hermes:
         return True
 
     def grant(self, token: str, ident: str, ids: list[str]) -> bool:
+        before = self.env.read_text() if self.env.exists() else ""
         changed = env_set(self.env, {TOKEN_KEY: token, "TELEGRAM_ALLOWED_USERS": ",".join(ids)})
         if changed:
-            self.restart()
+            try:
+                self.restart()
+            except Refused:
+                write_private(self.env, before)  # so the next beat sees the change as owed and restarts
+                raise
         return changed
 
 
@@ -480,11 +487,29 @@ def status(check: bool) -> int:
     return 1 if check and (readers > 1 or strays) else 0
 
 
+def wants(name: str) -> int:
+    """0 when the holder's harness has the bot and nothing reads it yet: it may connect itself."""
+    base = home()
+    row = machine_row(base)
+    pid, role = holder()
+    if row.get("reader") != "arm" or not pid or ROLE_HARNESS.get(role) != name:
+        return 1
+    _, ident = machine_bot(base, row)
+    channel = channels()[name]
+    return 0 if bot_id(channel.token()) == ident and not channel.reader() else 1
+
+
 def main(argv: list[str]) -> int:
     verb = argv[0] if argv else "status"
+    if verb == "wants" and argv[1:] and argv[1] in CHANNELS:
+        try:
+            return wants(argv[1])
+        except Refused as exc:
+            print(f"telegram-reader: {exc}", file=sys.stderr)
+            return 1
     flags = set(argv[1:])
     if verb not in ("sync", "status", "check") or flags - {"--released", "--quiet"}:
-        print("usage: telegram-reader.sh status | check | sync [--released] [--quiet]", file=sys.stderr)
+        print("usage: telegram-reader.sh status | check | wants <harness> | sync [--released] [--quiet]", file=sys.stderr)
         return 2
     try:
         if verb != "sync":
