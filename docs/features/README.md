@@ -84,6 +84,8 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
   [build-a-fleet.md](build-a-fleet.md)
 - Telegram across the fleet — a bot per machine, and the road between them:
   [telegram-across-the-fleet.md](telegram-across-the-fleet.md)
+- One Telegram bot per machine, read by the arm holder:
+  [telegram-one-bot.md](telegram-one-bot.md)
 - The home push door — named paths only, never `-A`:
   [the-home-push-door.md](the-home-push-door.md)
 - One Ymir skill in every root — the index of every skill, by path:
