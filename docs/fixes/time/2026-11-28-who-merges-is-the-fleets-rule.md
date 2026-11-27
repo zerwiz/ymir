@@ -14,3 +14,7 @@ Who merges is a fleet's own policy, so the shipped core no longer states one. It
 rule in the home's overlay (`config/eindri-core.md`, printed into every brief on top of the core) and keeps the one
 universal line: a worker never merges its own branch. A fleet's overlay names its merger; this fleet's says the heart
 fixes and merges.
+
+## CHANGE LOG
+
+- 2026-11-27 — review-mend: added missing heading for #978
