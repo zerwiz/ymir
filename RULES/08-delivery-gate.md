@@ -235,6 +235,7 @@ or a body saying it was gathered by `gather.sh`, takes `--merge`; every other PR
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- 2026-11-28 — added "Who mends a pull request": the heart only, never another person's branch unasked.
 
 ## 2026-11-14 — the queue-warden is not a merger, so it asks nothing of the merge method
 
