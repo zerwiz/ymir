@@ -217,6 +217,10 @@ def http_json(url: str, headers: dict | None = None, body: dict | None = None, t
 _CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f​-‏‪-‮⁦-⁩]")
 
 
+def is_web(url: str) -> bool:
+    return url.partition("://")[0].lower() in ("http", "https") and "://" in url
+
+
 def clean(text: object) -> str:
     """One plain line: no markup, no control or direction characters."""
     s = re.sub(r"<[^<>]{0,200}>", " ", str(text or ""))
@@ -295,7 +299,7 @@ def search_raw(cfg: dict, provider: str, query: str, limit: int) -> list[tuple[s
         data = http_json(f"{url}/search", {"X-API-KEY": need_secret(cfg, provider)}, {"q": query, "num": limit})
         rows = [(r.get("title"), r.get("link"), r.get("snippet")) for r in data.get("organic") or []]
     return [(str(t or ""), str(u), str(x or "")) for t, u, x in rows
-            if str(u or "").startswith(("http://", "https://"))][:limit]
+            if is_web(str(u or ""))][:limit]
 
 
 def render_search(head: dict, rows: list[dict], max_bytes: int) -> str:
@@ -480,7 +484,7 @@ class _Markdown(HTMLParser):
             words = "".join(self.buf[at:]).strip()
             if words == "¶":  # a heading's permalink mark
                 self.buf[at:] = []
-            elif (words and href.startswith(("http://", "https://")) and len(href) <= 200 and not self.pre
+            elif (words and is_web(href) and len(href) <= 200 and not self.pre
                   and urllib.parse.urldefrag(href)[0] != urllib.parse.urldefrag(self.base)[0]):
                 self.buf[at:] = [f"[{words}]({href}) "]  # a link within the same page costs tokens and says nothing
         if tag in self.BLOCK:

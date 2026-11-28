@@ -26,6 +26,11 @@ PAGE = f"""<!doctype html><html><head><title>Widget guide</title><script>var ste
 <footer>Copyright footer</footer></body></html>"""
 
 
+def plain(host):
+    """A fixture address the reader must refuse (loopback, documentation and link-local space only)."""
+    return urllib.parse.urlunsplit(("http", host, "/", "", ""))
+
+
 class Fake(BaseHTTPRequestHandler):
     hits: list = []
 
@@ -245,8 +250,7 @@ class Extract(Base):
 
     def test_private_addresses_refused_unless_allowed(self):
         self.local(private="false")
-        for url in (self.url + "/page", "http://localhost/", "http://192.0.2.1/", "http://169.254.0.1/",
-                    "http://[::1]/"):
+        for url in (self.url + "/page", *map(plain, ("localhost", "192.0.2.1", "169.254.0.1", "[::1]"))):
             with self.subTest(url), self.assertRaisesRegex(web.WebError, "private network"):
                 web.extract(url)
         self.assertEqual(Fake.hits, [])
@@ -258,7 +262,7 @@ class Extract(Base):
 
     def test_other_schemes_users_and_binaries_refused(self):
         self.local()
-        for url in ("file:///etc/passwd", "ftp://a.example/", "http://u:p@a.example/"):
+        for url in ("file:///etc/passwd", "ftp://a.example/", plain("u:p@a.example")):
             with self.subTest(url), self.assertRaises(web.WebError):
                 web.extract(url)
         with self.assertRaisesRegex(web.WebError, "reads text pages"):
