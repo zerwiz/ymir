@@ -13,6 +13,9 @@ The door refuses on every seat but the heart (exit 4, and it says what to do ins
 someone else unless asked with `--mend-others`, and skips when the commit address is not a no-reply one. The law is in
 RULES/08.
 
+A dry run now routes nothing, fetches nothing and switches no branch. A real mend works in a temporary worktree,
+so the caller's tree is never switched.
+
 ## What it does not do
 
 A seat still on an older tree keeps the old behaviour until it updates.
@@ -20,3 +23,4 @@ A seat still on an older tree keeps the old behaviour until it updates.
 ## CHANGE LOG
 
 - 2026-11-27 — written with the fix.
+- 2026-11-28 — the review's items: a dry run changes nothing; the tests reach no real pull request.
