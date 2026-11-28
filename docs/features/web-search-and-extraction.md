@@ -61,3 +61,7 @@ Agents on the Ymir MCP use `ymir_search` and `ymir_extract`.
 | `searxng found nothing and its engines did not answer` | Wait, or enable other engines in SearXNG. |
 | `no model for the 'extract' role` | Add the `extract` row to `agents.yaml`. |
 | `found no content on that page` | Use a provider that renders scripts. |
+
+## CHANGE LOG
+
+- **2026-11-28** — written with the change it describes.
