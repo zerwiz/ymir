@@ -305,3 +305,18 @@ For every agent, on every seat:
 3. **A commit carries a GitHub no-reply address**, never a private mailbox.
 4. **Write the `## CHANGE LOG` heading yourself** in every document you add, so nothing has to be mended.
 5. Refused by `bin/forge/review-mend.sh`? That is the answer. Do not do the same thing by hand.
+
+## 2026-11-28 — done means it has run live
+
+At the Allfather's word, 2026-11-27 (*"so many things in our system never get to work … what do we need to do?"*),
+answered with *"6 yes"*: a merged change is **delivered**, not **done**.
+
+| Stage | What it means |
+|---|---|
+| **merged** | the gates passed and the PR is on `main` |
+| **released** | the change is in a release that a seat's pin points at (`bin/engine/release.sh flip`) |
+| **done** | it has run **live, on the machine whose role it serves, for a day**, with the proof recorded: the command that shows it working, its output and the date, appended to the change's fix note or feature page |
+
+A worker's report, a PR body, a plan or a wake never says *done* for a change that has only merged or released; it says
+which stage it reached. A test with stand-ins proves the code, not the house; only the live run proves the house. The
+prior text of this rule stays as written above (RULES/06).
