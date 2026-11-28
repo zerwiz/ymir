@@ -201,7 +201,7 @@ class Adapters(Base):
 
     def test_search_only_provider_cannot_extract(self):
         for name in ("brave", "searxng"):
-            with self.assertRaisesRegex(web.WebError, "not a extract provider"):
+            with self.assertRaisesRegex(web.WebError, "not a provider for extract"):
                 web.extract("https://a.example/", provider=name)
 
     def test_a_redirect_never_carries_the_key(self):
@@ -228,6 +228,14 @@ class Extract(Base):
         self.assertIn(f"[Read the docs]({self.url}/docs)", full)
         for noise in ("Home menu", "cookies", "steal", "footer", "hidden bait", "¶"):
             self.assertNotIn(noise, full)
+
+    def test_untidy_html_keeps_its_content(self):
+        words = "real content " * 30
+        for html in (f"<html><head><title>T</title><body><p>{words}</p>",
+                     f'<body><div class="page with-sidebar"><p>{words}</p></div>',
+                     f'<body><div class="layout sidebar"><p>{words}</p></div>'):
+            with self.subTest(html[:40]):
+                self.assertIn("real content", web.html_to_markdown(html)[1])
 
     def test_same_page_is_read_once(self):
         self.local()

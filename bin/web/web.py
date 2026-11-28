@@ -128,7 +128,7 @@ def choose_provider(cfg: dict, kind: str, flag: str) -> str:
     if not name:
         raise WebError(f"no {kind} provider is configured", how, 3)
     if name not in known:
-        raise WebError(f"'{name}' is not a {kind} provider", how, 3)
+        raise WebError(f"'{name}' is not a provider for {kind}", how, 3)
     return name
 
 
@@ -406,9 +406,9 @@ class _Markdown(HTMLParser):
     NOISE = re.compile(r"(^|[\s_-])(cookie|consent|banner|sidebar|breadcrumbs?|menu|navbar|footer|promo|advert|"
                        r"ads?|share|social|newsletter|subscribe|popup|modal|related|comments?)($|[\s_-])", re.I)
 
-    def __init__(self, base: str):
+    def __init__(self, base: str, by_name: bool = True):
         super().__init__(convert_charrefs=True)
-        self.base, self.title = base, ""
+        self.base, self.title, self.by_name = base, "", by_name
         self.blocks: list[tuple[str, bool]] = []  # (text, inside <article>/<main>)
         self.buf: list[str] = []
         self.stack: list[tuple[str, bool]] = []  # (tag, skipped)
@@ -429,12 +429,16 @@ class _Markdown(HTMLParser):
         a = {k: (v or "") for k, v in attrs}
         if tag == "title":
             self.in_title = True
+        if tag == "body":  # </head> may be left out; the body is never part of the skipped head
+            self.stack, self.skip = [], 0
         if tag in self.BLOCK:
             self.flush()
         if tag in self.VOID:
             return
+        names = " ".join(n for n in (a.get("class", "") + " " + a.get("id", "")).split()
+                         if not re.match(r"(has|with|no)[-_]", n, re.I))  # "with-sidebar" is the content beside it
         noisy = tag not in ("html", "body", "main", "article") and bool(
-            self.NOISE.search(a.get("class", "") + " " + a.get("id", ""))
+            (self.by_name and self.NOISE.search(names))
             or a.get("aria-hidden") == "true" or "hidden" in a
             or re.search(r"display\s*:\s*none|visibility\s*:\s*hidden", a.get("style", "")))
         skipped = tag in self.SKIP or noisy
@@ -493,15 +497,18 @@ class _Markdown(HTMLParser):
             self.buf.append(data)
 
 
-def html_to_markdown(html: str, base: str = "") -> tuple[str, str]:
-    parser = _Markdown(base)
+def html_to_markdown(html: str, base: str = "", by_name: bool = True) -> tuple[str, str]:
+    parser = _Markdown(base, by_name)
     parser.feed(html)
     parser.close()
     parser.flush()
     core = [t for t, inside in parser.blocks if inside]
     # Take <article>/<main> when it holds real content; a near-empty one means the page does not use it.
     blocks = core if sum(map(len, core)) >= 200 else [t for t, _ in parser.blocks]
-    return clean(parser.title), _CONTROL.sub("", "\n\n".join(blocks))
+    text = _CONTROL.sub("", "\n\n".join(blocks))
+    if by_name and len(text) < 200:  # the class names misled: keep what only the tags and styles rule out
+        return html_to_markdown(html, base, False)
+    return clean(parser.title), text
 
 
 class _CheckedRedirect(urllib.request.HTTPRedirectHandler):
