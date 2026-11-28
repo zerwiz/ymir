@@ -75,6 +75,8 @@ case "$SEAT" in
   *) . "$ROOT/bin/agents/msg-origin.sh" 2>/dev/null && PANE_SELF="$(_pane_of_self)"
      [ -n "${PANE_SELF:-}" ] && ORIGIN="agent $SEAT ($ME) · herdr pane $PANE_SELF · $ME" ;;
 esac
+# With no pane to name, an agent sender is still answerable: through the arm holder of this machine.
+case "$SEAT" in script*|"the Allfather"*) ;; *) ORIGIN="${ORIGIN:-agent $SIGN · arm $ME · $ME}" ;; esac
 ORIGIN="${ORIGIN:-$SIGN}"
 [ "$VERB" = stop ] && [ -z "$LINE" ] && LINE="stop at the next safe point: commit what stands, write your report, then stop"
 [ "$VERB" = stop ] && case "$LINE" in "stop at the next safe point"*) ;; *) LINE="stop at the next safe point ($LINE): commit what stands, write your report, then stop" ;; esac

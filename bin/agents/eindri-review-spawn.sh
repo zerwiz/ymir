@@ -465,6 +465,11 @@ JUDGED="$REVIEWED_DIR/$REVIEW_ID.judged"
 } >"$JUDGED" 2>/dev/null || true
 unset _slug
 
+# ── the judge answers whoever sent the judged errand, never the worker that is closing it ──
+_sent_by="$("$SCRIPT_DIR/sender.sh" get "$ID" 2>/dev/null || true)"
+[ -z "$_sent_by" ] || spawn+=( --sender "$_sent_by" )
+unset _sent_by
+
 # ── seat the judge through the einherjar road ────────────────────────────────
 # The review's records belong to the SHARED state, never the caller's seat: the
 # spawn is a Brokk-level act, and its meta/status must be read by supervision.

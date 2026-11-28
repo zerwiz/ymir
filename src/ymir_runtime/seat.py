@@ -105,6 +105,7 @@ class Errand:
     lock: str = ""
     force: bool = False
     role: str = ""
+    sender: str = ""
     worth_a_smith: str = "unknown"
     worth_why: str = "not consulted by the engine"
     extra: Mapping[str, str] = field(default_factory=dict)
@@ -125,7 +126,9 @@ def _slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
 
 
-def _bearings(roots: paths.Roots, project_dir: str, *, runner: proc.Runner) -> str:
+def _bearings(
+    roots: paths.Roots, project_dir: str, *, runner: proc.Runner, seat_id: str = "", sender: str = ""
+) -> str:
     """The Bearings section every brief carries (plan 291 part 2).
 
     ONE implementation is asked for it — `bin/agents/eindri-bearings.sh` — so the shell road and
@@ -136,7 +139,10 @@ def _bearings(roots: paths.Roots, project_dir: str, *, runner: proc.Runner) -> s
     if not door.is_file():
         return ("## Bearings\n\n> The bearings door is missing (`bin/agents/eindri-bearings.sh`), so this "
                 "brief carries no core, no records and no map. The seat is recorded with that fault.")
-    result = runner([str(door), str(project_dir)])
+    argv = [str(door), str(project_dir)]
+    if seat_id:
+        argv += ["--errand", seat_id] + (["--sender", sender] if sender else [])
+    result = runner(argv)
     out = proc.out(result) if proc.ok(result) else ""
     if not out.strip():
         return ("## Bearings\n\n> The bearings could not be read from `bin/agents/eindri-bearings.sh` for "
@@ -144,17 +150,28 @@ def _bearings(roots: paths.Roots, project_dir: str, *, runner: proc.Runner) -> s
     return out.strip()
 
 
-def _stamped(body: str, *, runner: proc.Runner) -> str:
-    """`body` with the sender's stamp first (plan 381). A turn with no stamp reads as the operator's own.
+def _sender_door() -> Path:
+    # The door ships beside the engine, so the engine finds it from its OWN tree.
+    return Path(__file__).resolve().parents[2] / "bin" / "agents" / "sender.sh"
 
-    `bin/agents/msg-origin.sh` names the sender; a stamped body keeps its own stamp. A door that
-    cannot answer still gets a script's stamp, never none.
+
+def _sender_for(errand: "Errand", brief_text: str, *, runner: proc.Runner) -> str:
+    """Who sent this errand (plan 381). A turn with no stamp reads as the operator's own, so there is always one.
+
+    The caller's `sender` first; else the stamp already leading the brief; else `bin/agents/sender.sh`, which
+    names the dispatching session. A door that cannot answer still gets a script's stamp, never none.
     """
-    door = Path(__file__).resolve().parents[2] / "bin" / "agents" / "msg-origin.sh"
+    if errand.sender:
+        return errand.sender
+    # only a `[from …]` stamp names a sender: a `[reply from …]` line is an answer, never a dispatch
+    held = _LEADING_STAMP.match(brief_text or "")
+    if held and held.group(1).startswith("[from "):
+        return held.group(1)[len("[from "):].split("]", 1)[0]
     # empty stdin: a dispatch typed at a terminal must not be stamped as a person's own line
-    result = runner(["bash", str(door), "--origin"], input_text="")
+    result = runner(["bash", str(_sender_door()), "origin"], input_text="")
     origin = proc.out(result) if proc.ok(result) else ""
-    return f"[from {origin or 'script ymir-engine · ' + os.uname().nodename.split('.')[0]}]\n{body}"
+    node = os.uname().nodename.split(".")[0]
+    return origin or f"script ymir-engine · arm {node} · {node}"
 
 
 def _prompt_for(
@@ -163,9 +180,11 @@ def _prompt_for(
     seat_id: str,
     brief_text: str,
     *,
+    sender: str = "",
     runner: proc.Runner,
 ) -> tuple[Path, str]:
     """Write `data/<id>/prompt.md`: the sender's stamp, the bearings, the brief, and the well's recall."""
+    sender = sender or _sender_for(errand, brief_text, runner=runner)
     data_dir = roots.data / seat_id
     data_dir.mkdir(parents=True, exist_ok=True)
     prompt = data_dir / "prompt.md"
@@ -180,15 +199,26 @@ def _prompt_for(
     body = brief_text.rstrip("\n") + "\n"
     # A stamp the brief already leads with is set aside, so the bearings cannot push it down.
     held = _LEADING_STAMP.match(body)
+    if held and not held.group(1).startswith("[from "):
+        held = None  # a reply stamp is not the sender's: it stays in the brief, under the sender's own
     if held:
         body = body[held.end():]
     # The bearings are PREPENDED, so they are read before the errand — and only when the brief does
     # not already carry them (eindri-start.sh adds the same section on the ordinary road).
     if "eindri-bearings:v1" not in body:
-        body = _bearings(roots, str(errand.project_dir or roots.root), runner=runner) + "\n\n---\n\n" + body
+        carried = _bearings(roots, str(errand.project_dir or roots.root), runner=runner,
+                            seat_id=seat_id, sender=sender)
+        body = carried + "\n\n---\n\n" + body
+    if "eindri-sender:v1" not in body:
+        told = runner(["bash", str(_sender_door()), "block", seat_id, "--sender", sender])
+        section = proc.out(told) if proc.ok(told) else ""
+        if "eindri-sender:v1" in section:
+            body += "\n\n---\n\n" + section.strip() + "\n"
     if recalled:
         body += "\n\n---\n\n" + recalled + "\n"
-    body = f"{held.group(1).rstrip()}\n{body}" if held else _stamped(body, runner=runner)
+    # The brief's own stamp stays when it names the sender; a named sender that differs replaces it.
+    stamp = held.group(1).rstrip() if held and not errand.sender else f"[from {sender}]"
+    body = f"{stamp}\n{body}"
     prompt.write_text(body, encoding="utf-8")
     return prompt, body
 
@@ -582,7 +612,14 @@ def seat(
                 "answer it in hand, or pass --force to override and record the override",
             )
 
-    prompt_path, prompt_body = _prompt_for(roots, errand, seat_id, brief_text or errand.request, runner=runner)
+    # WHO SENT IT, recorded before the worker can finish: the reply record `bin/agents/reply.sh` reads and the
+    # errand's own `<id>.sender`. A record that cannot be written is kept in the meta, never a refusal.
+    sender = _sender_for(errand, brief_text or errand.request, runner=runner)
+    sender_argv = ["bash", str(_sender_door()), "record", seat_id, "--sender", sender, "--shelf", str(state)]
+    sender_kept = proc.ok(runner(sender_argv))
+    prompt_path, prompt_body = _prompt_for(
+        roots, errand, seat_id, brief_text or errand.request, sender=sender, runner=runner
+    )
     # The generator is told WHERE THE PINS LIVE, and that is the project tree, never
     # the worktree: the spawn deletes the worktree's `.pi/extensions` so pi does not
     # load one tool twice (the one-home change), and a door that removed what it then
@@ -692,6 +729,8 @@ def seat(
             "launch": str(script),
             "spawn_gen": spawn_gen,
             "role": errand.role,
+            "sender": sender,
+            "sender_recorded": "yes" if sender_kept else "no",
         }
     )
     # H1 — the helm this seat answers to, recorded beside everything else. An errand
@@ -703,6 +742,8 @@ def seat(
     for key, value in (errand.extra or {}).items():
         record.setdefault(key, str(value))
     heartbeat.write_meta(state, seat_id, record)
+    # the door adds the road, address and machine of the answer to the same record
+    runner(sender_argv + ["--meta", str(heartbeat.meta_path(state, seat_id))])
 
     data_dir = data / seat_id
     data_dir.mkdir(parents=True, exist_ok=True)

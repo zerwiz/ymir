@@ -16,7 +16,47 @@ and sends the answer back on the same road.
 | a person at a terminal | that terminal |
 | a stamp naming Telegram | the operator's Telegram chat |
 | a Hermes session | that session |
+| a stamp naming an arm holder (`arm <machine>`) | that arm holder's wake queue |
 | a script, or a stamp with no road | nowhere; the door says so and sends nothing |
+
+## A worker you send out talks back to you
+
+Every road that sends a worker records who sent it: `eindri-start.sh`, `herdr-run.sh eindri` and
+`einherjar-spawn.sh`, with or without the engine. The worker's brief names that sender and the commands that reach
+them. The report file stays as the full record. It is never the only channel.
+
+| The worker | What the sender gets |
+|---|---|
+| finishes (`eindri-acclaim.sh <id> --terminal done` or `failed`) | a message with the verdict, the line and the report's path |
+| needs a decision (`reply.sh --ask --errand <id> "<question>"`) | the question as a message; it is also filed under `eindri-questions/<id>.md` |
+| ends its turn (Claude Code, pi) | the final answer, unless it was already sent by hand in that turn |
+
+The sender is the session that dispatched the worker. A sender with no pane, such as a script or an arm holder
+outside herdr, is answered through the arm holder's wake queue on its machine.
+
+### Sending a worker from another machine
+
+Name the sender when the dispatch runs somewhere else. The worker then answers that pane, over the fleet road:
+
+```bash
+bin/agents/eindri-start.sh "<request>" --sender "agent <name> · herdr pane <pane> · <machine>"
+```
+
+`$YMIR_SENDER` does the same. A line sent with `fleet-tell.sh` from a session with no pane names the arm holder of
+the sending machine.
+
+> [!IMPORTANT]
+> When the arm holder of another machine dispatches on your behalf, it passes `--sender` with the stamp of your
+> line. Without it the worker answers that arm holder, who has to relay it.
+
+### Which harnesses
+
+| Harness | The terminal act and `reply.sh` | The turn-end hook |
+|---|---|---|
+| Claude Code | works (a shell command) | tested with fakes |
+| pi | works | built and in use; not re-proven in this change |
+| OpenCode | works | built, not yet proven live |
+| Hermes | works | built, not yet proven live |
 
 ## What you need
 
@@ -98,3 +138,6 @@ bin/agents/reply.sh --to <machine>:<pane> "<your answer>"
 - 2026-11-26 — written with the answer-back door.
 - 2026-11-26 — appended: a turn of the operator's own answers the operator and agents get a receipt; a line sent by
   hand with `eindri-send.sh` is not copied.
+- 2026-11-27 — appended: a dispatched worker sends its result and its questions directly to the recorded sender.
+- 2026-11-27 — appended: the Claude Code hook row now reads "tested with fakes"; a brief carries one sender stamp, and a
+  reply stamp never names the sender.
