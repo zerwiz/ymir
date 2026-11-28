@@ -191,6 +191,14 @@ class Adapters(Base):
                 self.assertEqual(json.loads(out.splitlines()[1]),
                                  {"title": "T", "url": self.HIT["url"], "highlight": "alpha beta"})
 
+    def test_a_result_without_a_host_is_left_out(self):
+        bad = [urllib.parse.urlunsplit(("http", "", "/go/v1/abc", "", "")), plain("[broken"), plain(":80"), "go/v1"]
+        found = [{"title": "T", "url": u, "content": "x"} for u in [*bad, self.HIT["url"]]]
+        with mock.patch.object(web, "http_json", return_value={"results": found}):
+            head, *rows = web.search("x", limit=1, provider="searxng").splitlines()
+        self.assertEqual([json.loads(r)["url"] for r in rows], [self.HIT["url"]])
+        self.assertEqual(json.loads(head)["count"], 1)
+
     def test_every_hosted_extractor(self):
         shapes = {"firecrawl": {"data": {"markdown": "body", "metadata": {"title": "T"}}},
                   "exa": {"results": [{"title": "T", "text": "body"}]},
