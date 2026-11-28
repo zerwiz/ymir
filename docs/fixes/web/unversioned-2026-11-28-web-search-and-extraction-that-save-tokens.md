@@ -1,4 +1,4 @@
-## runtime · unversioned · 2026-11-28 — web search and extraction that save tokens
+## web · unversioned · 2026-11-28 — web search and extraction that save tokens
 
 ### Why
 
@@ -44,3 +44,4 @@ context.
 ## CHANGE LOG
 
 - 2026-11-27 — review-mend: added missing heading for #980
+- **2026-11-28** — moved from `docs/fixes/runtime/` and the heading's component changed from `runtime` to `web`, which covers `bin/web/` (review of #980).

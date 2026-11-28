@@ -218,7 +218,12 @@ _CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f​-‏‪-‮⁦-⁩]")
 
 
 def is_web(url: str) -> bool:
-    return url.partition("://")[0].lower() in ("http", "https") and "://" in url
+    """An http(s) address that names a host. A search engine can answer with one that does not."""
+    try:
+        parts = urllib.parse.urlsplit(url)
+        return parts.scheme in ("http", "https") and bool(parts.hostname)
+    except ValueError:
+        return False
 
 
 def clean(text: object) -> str:
