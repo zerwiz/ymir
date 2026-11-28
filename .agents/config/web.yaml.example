@@ -1,0 +1,36 @@
+# config/web.yaml.example — TEMPLATE for web search and extraction (bin/web/).
+#
+# Copy to $YMIR_HOME/config/web.yaml and choose. There is NO default provider: until a provider is named
+# here (or with --provider) the scripts refuse and say so. Never write a key in this file: `key:` is the
+# NAME of a secret, read from the environment or from the home's secrets (bin/vault/hodd.sh emit).
+
+version: 1
+
+search:
+  provider: ""            # firecrawl | exa | brave | tavily | serper | searxng
+  limit: 10               # results per query (1-20)
+  max_bytes: 4096         # cap on the whole output
+
+extract:
+  provider: ""            # builtin | firecrawl | exa | tavily | serper
+  max_chars: 12000        # cap on main-content markdown
+  model_chars: 60000      # how much of a page the 'extract' model reads
+  allow_private: false    # true lets extract read this machine's and private-network addresses
+
+cache:
+  ttl: 3600               # seconds; 0 turns the cache off
+
+secrets: secrets/platform.env   # path under the home's hoard
+
+# Only what differs from the vendor's public address and usual secret name is needed.
+providers:
+  firecrawl: { key: FIRECRAWL_API_KEY }   # add `url:` for a self-hosted server (then a key is optional)
+  exa:       { key: EXA_API_KEY }
+  brave:     { key: BRAVE_API_KEY }
+  tavily:    { key: TAVILY_API_KEY }
+  serper:    { key: SERPER_API_KEY }
+  searxng:   {}                           # url: defaults to YMIR_SEARCH_URL, else the loopback instance
+                                          # that bin/voice/search-ensure.sh raises
+
+# The model for `extract --mode answer|fields` is not named here. It is the 'extract' role in
+# $YMIR_HOME/config/agents.yaml:   agents: { extract: { model: <provider/model> } }

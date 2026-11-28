@@ -219,6 +219,14 @@ contract:
     door: bin/engine/home-seed.sh
     required: true
     why: "each agent's harness and model — the one file that decides what runs"
+  # Web search and extraction (bin/web/, 2026-11-28). A STUB: no provider is a default, so the shape ships empty
+  # and the scripts say how to name one.
+  - path: config/web.yaml
+    kind: stub
+    template: .agents/config/web.yaml.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "which providers search and read the web; unset, bin/web/ refuses and says how to set one"
   # Which machines may open the secrets vault (plan 342, 2026-11-20). A STUB, because only
   # the operator knows which of his keys should be able to read it: the shape prompts and
   # ships with invented titles commented out, so a seeded home declares nothing and the

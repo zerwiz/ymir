@@ -19,7 +19,7 @@ surfaces[4]{surface,where}:
 `.agents/assets/agents/capabilities/`, generated in the same run, so a change in one folder
 rewrites one file instead of colliding with every other branch (plan 211).
 
-capability_folders[34]{folder,index}:
+capability_folders[35]{folder,index}:
   "agents",".agents/assets/agents/capabilities/agents.md"
   "apps",".agents/assets/agents/capabilities/apps.md"
   "assistant",".agents/assets/agents/capabilities/assistant.md"
@@ -54,6 +54,7 @@ capability_folders[34]{folder,index}:
   "vault",".agents/assets/agents/capabilities/vault.md"
   "voice",".agents/assets/agents/capabilities/voice.md"
   "ward",".agents/assets/agents/capabilities/ward.md"
+  "web",".agents/assets/agents/capabilities/web.md"
 
 ## 1b · The engine — src/ymir_runtime/*.py (the part a bin-only register skipped)
 

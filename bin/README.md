@@ -31,7 +31,7 @@ cause on every branch is designed out (plan 211).
 Counts live in each folder's own index; this page lists the folders.
 
 
-folders[36]{folder,what,index}:
+folders[37]{folder,what,index}:
   "agents","the Einherjar and Eindri doors — spawn, brief, sweep, recover","bin/agents/INDEX.md"
   "apps","(no purpose recorded)","bin/apps/INDEX.md"
   "assistant","Skirnir's mouth and the assistant doors an answer comes through","bin/assistant/INDEX.md"
@@ -67,6 +67,7 @@ folders[36]{folder,what,index}:
   "vault","the vault: hoard, secrets, confidential sessions","bin/vault/INDEX.md"
   "voice","the voice: speak, dictate, translation","bin/voice/INDEX.md"
   "ward","Vordr, Garmr, Vidarr and the security doors","bin/ward/INDEX.md"
+  "web","web search and page extraction that save tokens","bin/web/INDEX.md"
   "TOTAL","every door in the shelf","—"
 
 A folder with no row in `bin/gates/registers/folders.tsv` is not an error — it
