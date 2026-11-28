@@ -1333,6 +1333,7 @@ def cycle(
         pin_behind=pin_behind,
     )
     sweep_handoff(paths, env=env, runner=runner)
+    follow_telegram(paths, session, env=env, runner=runner, now=now)
     if not emit and paths.event.exists() and paths.event.stat().st_size > 0:
         # The slot still holds an undelivered line. Raising now would consume a
         # trigger or mark an errand finding as woken while `publish` drops the line
@@ -1354,6 +1355,31 @@ def cycle(
     publish(paths, line)
     say_err(f"raised: {line}")
     return ""
+
+
+TELEGRAM_RESYNC_SECONDS = 15
+_telegram_synced: dict[str, tuple[str, float]] = {}
+
+
+def follow_telegram(
+    paths: ArmPaths, session: str, *, env: Mapping[str, str], runner: proc.Runner = proc.run, now: float | None = None
+) -> None:
+    """The machine's Telegram reader follows the arm: at once when the holder changes, then on a slow beat.
+
+    This covers what `rodd-arm.sh hold` cannot see: a helm taken by an arm client, and a stray
+    second reader started after the hand-over. The door is a no-op unless the home opts in.
+    """
+    door = paths.root / "bin" / "notify" / "telegram-reader.sh"
+    if session in ("", "none") or not os.access(door, os.X_OK):
+        return
+    moment = time.time() if now is None else now
+    last = _telegram_synced.get(str(paths.state))
+    if last and last[0] == session and moment - last[1] < TELEGRAM_RESYNC_SECONDS:
+        return
+    _telegram_synced[str(paths.state)] = (session, moment)
+    child_env = dict(env)
+    child_env["BROKK_STATE_OVERRIDE"] = str(paths.state)
+    runner([str(door), "sync", "--quiet"], env=child_env)
 
 
 def sweep_handoff(paths: ArmPaths, *, env: Mapping[str, str], runner: proc.Runner = proc.run) -> None:

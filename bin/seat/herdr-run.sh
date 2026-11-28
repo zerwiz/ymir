@@ -212,6 +212,8 @@ local_model_guard() {  # <model-string>
   esac
 }
 
+# A WORKER NEVER READS THE MACHINE'S TELEGRAM BOT: Claude's telegram plugin is pointed at an empty
+# state dir, so a worker's session cannot take the arm holder's poller (bin/notify/telegram-reader.sh).
 seat_tab() {  # <name> <cwd> -> prints "<tab_id> <pane_id>"
   local name=$1 cwd=$2 ws out env_arg
   env_arg="$(seat_state_dir "$name")"
@@ -219,10 +221,10 @@ seat_tab() {  # <name> <cwd> -> prints "<tab_id> <pane_id>"
   ws="$(home_workspace)"
   if [ -n "$ws" ]; then
     out="$(hdr tab create --workspace "$ws" --cwd "$cwd" --label "$name" \
-      --env "BROKK_MACHINE_STATE_DIR=$env_arg" --env "BROKK_STATE_OVERRIDE=$env_arg" 2>/dev/null)"
+      --env "BROKK_MACHINE_STATE_DIR=$env_arg" --env "BROKK_STATE_OVERRIDE=$env_arg" --env "TELEGRAM_STATE_DIR=$env_arg/no-telegram" 2>/dev/null)"
   else
     out="$(hdr tab create --cwd "$cwd" --label "$name" \
-      --env "BROKK_MACHINE_STATE_DIR=$env_arg" --env "BROKK_STATE_OVERRIDE=$env_arg" 2>/dev/null)"
+      --env "BROKK_MACHINE_STATE_DIR=$env_arg" --env "BROKK_STATE_OVERRIDE=$env_arg" --env "TELEGRAM_STATE_DIR=$env_arg/no-telegram" 2>/dev/null)"
   fi
   printf '%s' "$out" | python3 -c '
 import json,sys
@@ -241,7 +243,7 @@ seat_space() {  # <name> <cwd> -> prints "<workspace_id> <tab_id> <pane_id>"
   local name=$1 cwd=$2 out d
   d="$(seat_state_dir "$name")"
   out="$(hdr workspace create --cwd "$cwd" --label "ymir:$name" \
-    --env "BROKK_MACHINE_STATE_DIR=$d" --env "BROKK_STATE_OVERRIDE=$d" 2>/dev/null)"
+    --env "BROKK_MACHINE_STATE_DIR=$d" --env "BROKK_STATE_OVERRIDE=$d" --env "TELEGRAM_STATE_DIR=$d/no-telegram" 2>/dev/null)"
   printf '%s' "$out" | python3 -c '
 import json,sys
 try:
@@ -294,7 +296,7 @@ seat_pane() {  # <name> <cwd>
   target="$(current_pane)"; [ -n "$target" ] || target="$(home_pane)"
   [ -n "$target" ] || return 1
   out="$(hdr pane split "$target" --direction right --cwd "$cwd" \
-    --env "BROKK_MACHINE_STATE_DIR=$d" --env "BROKK_STATE_OVERRIDE=$d" 2>/dev/null)"
+    --env "BROKK_MACHINE_STATE_DIR=$d" --env "BROKK_STATE_OVERRIDE=$d" --env "TELEGRAM_STATE_DIR=$d/no-telegram" 2>/dev/null)"
   printf '%s' "$out" | python3 -c '
 import json,sys
 try:

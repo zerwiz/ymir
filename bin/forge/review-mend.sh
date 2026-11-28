@@ -9,12 +9,13 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 . "$ROOT/bin/vault/hoard-lib.sh"
 ymir_home_root YMIR_HOME
 
-PR=""; DRY=0; ONLY="all"; REPORT=0
+PR=""; DRY=0; ONLY="all"; REPORT=0; MEND_OTHERS=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1; shift ;;
     --only) ONLY="${2:-all}"; shift 2 ;;
     --report) REPORT=1; shift ;;
+    --mend-others) MEND_OTHERS=1; shift ;;
     *) if [ -z "$PR" ]; then PR="$1"; shift; else shift; fi ;;
   esac
 done
@@ -24,6 +25,19 @@ case "$PR" in ''|*[!0-9]*) printf 'review-mend: refused — no PR number\n' >&2;
 if [ "$REPORT" = "1" ]; then
   printf '{"pr":%s,"rungs":[]}\n' "$PR"
   exit 0
+fi
+
+# ONE MACHINE MENDS: THE HEART (2026-11-27). Every seat that ran this door committed and pushed onto the
+# same open pull requests, so one branch collected commits from machines nobody had asked. Only the heart
+# mends, routes or seats a fixer. A dry run changes nothing and is allowed anywhere.
+if [ "$DRY" = "0" ]; then
+  _roles="$(timeout 20 bash "$ROOT/bin/fleet/role.sh" resolve 2>/dev/null | head -1 || true)"
+  case ",$(printf '%s' "$_roles" | tr ' ' ',')," in
+    *,heart,*) ;;
+    *) printf 'review-mend: refused — only the heart mends a pull request (this machine: %s).\n' "${_roles:-no role}" >&2
+       printf 'next: change nothing and push nothing. Send your findings to the author of PR #%s (RULES/08).\n' "$PR" >&2
+       exit 4 ;;
+  esac
 fi
 
 # 1. branch
@@ -66,7 +80,24 @@ fi
 
 # 2. mechanical mends
 MENDED=0
-if [ "$ONLY" = "mechanical" ] || [ "$ONLY" = "all" ]; then
+MECHANICAL=0
+if [ "$ONLY" = "mechanical" ] || [ "$ONLY" = "all" ]; then MECHANICAL=1; fi
+# NEVER PUSH TO ANOTHER PERSON'S BRANCH UNASKED, and never publish a private address (2026-11-27).
+if [ "$MECHANICAL" = "1" ] && [ "$DRY" = "0" ]; then
+  _author="$(gh pr view "$PR" --json author -q .author.login 2>/dev/null || true)"
+  _me="$(gh api user -q .login 2>/dev/null || true)"
+  if [ "$MEND_OTHERS" = "0" ] && { [ -z "$_me" ] || [ "$_author" != "$_me" ]; }; then
+    printf 'skip: PR #%s belongs to %s — no commit without being asked (--mend-others)\n' "$PR" "${_author:-unknown}"
+    MECHANICAL=0
+  else
+    case "$(git config user.email 2>/dev/null)" in
+      *@users.noreply.github.com) ;;
+      *) printf "skip: git user.email is not a GitHub no-reply address — no commit into a public repository\n"
+         MECHANICAL=0 ;;
+    esac
+  fi
+fi
+if [ "$MECHANICAL" = "1" ]; then
   # checkout branch in a temp clone? We operate in current repo worktree.
   git fetch origin "$BRANCH" 2>/dev/null || true
   git checkout "$BRANCH" 2>/dev/null || true
