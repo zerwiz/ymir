@@ -46,6 +46,8 @@ providers:
 # `primary: true` marks the agent runnable directly (mode: all), not only
 # dispatchable by another agent.
 agents:
+  # extract: the model that reads web pages for bin/web/extract.sh (answer and fields modes).
+  # extract: { model: <provider/model> }   # without it the default_model above is used
   brokk:   { model: opencode-go/deepseek-v4.1-flash }
   # Hnoss the Shaper runs local (no cloud key) -> pi, and is directly runnable.
   hnoss:   { model: "llama.cpp/frontend-design-expert-8b", primary: true }

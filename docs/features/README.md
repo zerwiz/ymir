@@ -16,6 +16,11 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 | The outbound gate (nothing leaves until you have read it) | [the-outbound-gate.md](the-outbound-gate.md) |
 | The collaboration doors (who is with us, and how far) | [the-collaboration-doors.md](the-collaboration-doors.md) |
 
+**Built 2026-11-28:**
+
+- Search the web and read pages without wasting tokens — highlights only, capped and cached, with your own provider:
+  [web-search-and-extraction.md](web-search-and-extraction.md)
+
 **Built 2026-11-25:**
 
 - The gate pack — every app repository carries Ymir's own secret, personal-data, identity and vault gates, and Eir
