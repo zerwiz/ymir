@@ -40,3 +40,7 @@ context.
 ### Test
 
 `python3 bin/web/tests/test_web.py` — providers mocked, the SearXNG path and the extractor against a loopback fake.
+
+## CHANGE LOG
+
+- 2026-11-27 — review-mend: added missing heading for #980
