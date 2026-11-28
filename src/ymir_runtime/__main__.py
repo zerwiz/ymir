@@ -60,6 +60,7 @@ def _add_errand_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--backend", default="", choices=("", "tmux", "herdr"))
     parser.add_argument("--isolation", default="auto", choices=("auto", "herdr", "utgard", "on", "off"))
     parser.add_argument("--role", default="")
+    parser.add_argument("--sender", default="", help="who is answered (default: bin/agents/sender.sh resolves it)")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--worth-a-smith", default="unknown")
     parser.add_argument("--worth-why", default="not consulted by the engine")
@@ -324,6 +325,7 @@ def main(
             lock=args.lock,
             force=args.force,
             role=args.role,
+            sender=args.sender,
             worth_a_smith=args.worth_a_smith,
             worth_why=args.worth_why,
         )
